@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'navigation_menu.dart';
-
+import 'package:cacao_apps/screens/introduction_screen.dart';
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
@@ -10,8 +9,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
-      home: const NavigationMenu(),
-    );
+      // Keep your existing theme
+      theme: ThemeData(
+        useMaterial3: true, 
+        colorSchemeSeed: Colors.green,
+      ),
+      // CHANGE THIS: Start with the Intro
+// Inside your MaterialApp
+home: const IntroductionScreen(),    );
   }
 }

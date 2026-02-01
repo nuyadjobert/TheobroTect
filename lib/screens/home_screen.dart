@@ -17,9 +17,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // Disease Data
   final List<Map<String, dynamic>> _diseaseData = [
     {
-      "image": "assets/images/img1.png",
+      "image": "assets/images/pb_bg.png",
       "images": ["assets/images/pb1.png", "assets/images/pb2.png", "assets/images/pb3.png"],
-      "title": "Cocoa Pod Borer",
+      "title": "Cacao Pod Borer",
       "origin": "Southeast Asia",
       "description": "A small moth whose larvae tunnel into cocoa pods, disrupting bean development.",
       "symptoms": ["Premature ripening", "Uneven pod coloring", "Small exit holes", "Clumped, damaged beans"],
@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     },
     {
-      "image": "assets/images/img2.png",
+      "image": "assets/images/bp_bg.png",
       "images": ["assets/images/bp1.png", "assets/images/bp2.png", "assets/images/bp3.png"],
       "title": "Black Pod Rot",
       "origin": "Worldwide (Tropical)",
@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     },
     {
-      "image": "assets/images/img3.png",
+      "image": "assets/images/mb_bg.png",
       "images": ["assets/images/mb1.png", "assets/images/mb2.png", "assets/images/mb3.png"],
       "title": "Mealybugs",
       "origin": "Global Tropics",

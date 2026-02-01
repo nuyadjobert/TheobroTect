@@ -1,5 +1,5 @@
 name: cacao_apps
-description: "A new Flutter project."
+description: "AI-powered Cacao disease detection and farm management."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -11,21 +11,31 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   
-  # Camera and Permissions
-  camera: ^0.11.0      #
+  # --- Core Functionality ---
+  camera: ^0.11.0
   permission_handler: ^11.0.0
-
   flutter_map: ^6.0.0 
   latlong2: ^0.9.0
+
+  # --- New UI & Logic Dependencies ---
+  # For the smooth dots in onboarding
+  smooth_page_indicator: ^1.1.0 
+  
+  # For saving the "first time" and "login" status
+  shared_preferences: ^2.2.2 
+
+  # For professional typography
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0  #
+  # Using standard lints for clean code
+  flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true
 
-  # Ensure the folder assets/images/ exists in your project
+  # Asset management for your Cacao images
   assets:
     - assets/images/
