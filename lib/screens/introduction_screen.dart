@@ -117,10 +117,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     ),
                     const Spacer(),
                     const Text(
-                      "CacaoSafe AI",
+                      "TheobroTect ML",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 44,
+                        fontSize: 40,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Required for System UI control
 import '../widgets/disease_detail_sheet.dart';
 import 'scanner_screen.dart';
 import 'disease_map_screen.dart';
@@ -14,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  // Disease Data
   final List<Map<String, dynamic>> _diseaseData = [
     {
       "image": "assets/images/pb_bg.png",
@@ -72,7 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-scroll the slider
     Timer.periodic(const Duration(seconds: 4), (timer) {
       if (mounted) {
         setState(() {
@@ -93,82 +92,85 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFBFDFB),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- FIXED HEADER SECTION ---
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Greeting Header
-                  Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.green.withOpacity(0.2), width: 2),
-                        ),
-                        child: const CircleAvatar(
-                          radius: 24,
-                          backgroundColor: Color(0xFFF1F1F1),
-                          child: Icon(Icons.person_outline, color: Colors.green),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Good Morning,", style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                          const Text("Farmer John!", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
-                        ],
-                      ),
-                      const Spacer(),
-                      _buildNotificationIcon(),
-                    ],
-                  ),
-                  const SizedBox(height: 25),
-                  
-                  // Section Header
-                  _buildSectionHeader("Common Diseases", "CATALOG"),
-                  const SizedBox(height: 10),
-                  
-                  // Cinematic Glass Slider
-                  _buildEnhancedSlider(),
-                ],
-              ),
-            ),
-
-            // --- SCROLLABLE SECTION ---
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+    // Wrap in AnnotatedRegion to control System UI
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // Makes the bar transparent
+        statusBarIconBrightness: Brightness.dark, // Dark icons for light background
+        systemNavigationBarColor: Color(0xFFFBFDFB), // Optional: colors the bottom nav area
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFBFDFB),
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 15),
-                    const Text("Quick Inspection", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 15),
-                    _buildInspectionCard(),
-                    const SizedBox(height: 30),
-                    const Text("Health Alerts", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 15),
-                    _buildAlertCard(),
-                    const SizedBox(height: 40),
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.green.withOpacity(0.2), width: 2),
+                          ),
+                          child: const CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Color(0xFFF1F1F1),
+                            child: Icon(Icons.person_outline, color: Colors.green),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Good Morning,", style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                            const Text("Farmer John!", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                          ],
+                        ),
+                        const Spacer(),
+                        _buildNotificationIcon(),
+                      ],
+                    ),
+                    const SizedBox(height: 25),
+                    _buildSectionHeader("Common Diseases", "CATALOG"),
+                    const SizedBox(height: 10),
+                    _buildEnhancedSlider(),
                   ],
                 ),
               ),
-            ),
-          ],
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 15),
+                      const Text("Quick Inspection", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 15),
+                      _buildInspectionCard(),
+                      const SizedBox(height: 30),
+                      const Text("Health Alerts", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 15),
+                      _buildAlertCard(),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  // --- Utility methods kept exactly as they were ---
 
   Widget _buildSectionHeader(String title, String action) {
     return Row(
@@ -178,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
         TextButton(
           onPressed: () {},
           style: TextButton.styleFrom(
-            backgroundColor: const Color(0xFFD8F3DC), // Light mint
+            backgroundColor: const Color(0xFFD8F3DC),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: Text(action, style: const TextStyle(color: Color(0xFF2D6A4F), fontSize: 12, fontWeight: FontWeight.bold)),
@@ -187,7 +189,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- ENHANCED SLIDER (COMPACT GLASS BOX) ---
   Widget _buildEnhancedSlider() {
     return GestureDetector(
       onTap: () => _showDiseaseDetails(_diseaseData[_currentIndex]),
@@ -209,7 +210,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // 1. The Animated Image
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 800),
                 switchInCurve: Curves.easeInOut,
@@ -225,8 +225,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: double.infinity,
                 ),
               ),
-
-              // 2. Gradient overlay
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -237,8 +235,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-
-              // 3. Top Right Badge
               Positioned(
                 top: 20,
                 right: 20,
@@ -262,18 +258,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-
-              // 4. COMPACT Floating Glass Info Card
               Positioned(
                 bottom: 20,
                 left: 20,
                 right: 20,
                 child: Container(
-                  // Reduced padding to make it smaller/slimmer
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7), // Slightly darker for better contrast
-                    borderRadius: BorderRadius.circular(20), // Slightly smaller radius
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.white.withOpacity(0.15)),
                   ),
                   child: Row(
@@ -282,12 +275,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Smaller Font Size
                           Text(
                             _diseaseData[_currentIndex]["title"]!,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 16, // Reduced from 20
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.3,
                             ),
@@ -299,14 +291,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(width: 4),
                               Text(
                                 _diseaseData[_currentIndex]["origin"] ?? "Unknown",
-                                style: const TextStyle(color: Colors.white70, fontSize: 11), // Smaller text
+                                style: const TextStyle(color: Colors.white70, fontSize: 11),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      
-                      // Smaller Arrow Button
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
@@ -319,8 +309,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              
-              // 5. Slider Indicator Dots
               Positioned(
                 top: 25,
                 left: 25,

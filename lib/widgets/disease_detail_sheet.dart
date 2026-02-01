@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Added for potential UI overlays
 
 class DiseaseDetailSheet extends StatefulWidget {
   final Map<String, dynamic> disease;
@@ -65,6 +66,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
         : List<String>.from(widget.disease["symptoms"]);
 
     return Container(
+      // Ensure height allows the status bar to remain visible at the very top
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -72,14 +74,18 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
       ),
       child: Column(
         children: [
-          // 1. Drag Handle
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 14, bottom: 10),
-              height: 5, width: 45,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10),
+          // 1. Drag Handle & Status Bar Padding
+          // Added padding to ensure visibility is maintained below the status bar area
+          Padding(
+            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top > 0 ? 10 : 0),
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 14, bottom: 10),
+                height: 5, width: 45,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),
@@ -162,7 +168,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                             style: const TextStyle(
                               fontSize: 26, 
                               fontWeight: FontWeight.w800, 
-                              color: Color(0xFF1B4332), // Darker green text
+                              color: Color(0xFF1B4332), 
                               letterSpacing: -0.5
                             ),
                           ),
@@ -224,7 +230,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8F9FA), // Very light grey bg
+                        color: const Color(0xFFF8F9FA),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -260,7 +266,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         child: Text(
-                          isTagalog ? "Naintindihan Ko" : "I Acknowledge",
+                          isTagalog ? "Naintindidihan Ko" : "I Acknowledge",
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                         ),
                       ),
