@@ -66,7 +66,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
         : List<String>.from(widget.disease["symptoms"]);
 
     return Container(
-      // Ensure height allows the status bar to remain visible at the very top
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -74,8 +73,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
       ),
       child: Column(
         children: [
-          // 1. Drag Handle & Status Bar Padding
-          // Added padding to ensure visibility is maintained below the status bar area
           Padding(
             padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top > 0 ? 10 : 0),
             child: Center(
@@ -90,7 +87,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
             ),
           ),
           
-          // 2. Image Slider Section
           Stack(
             alignment: Alignment.bottomCenter,
             children: [
@@ -119,7 +115,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                   ),
                 ),
               ),
-              // Custom Dot Indicators
               Positioned(
                 bottom: 25,
                 child: Container(
@@ -148,7 +143,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
             ],
           ),
 
-          // 3. Scrollable Details Section
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -173,7 +167,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                             ),
                           ),
                         ),
-                        // Enhanced Language Toggle
                         GestureDetector(
                           onTap: () => setState(() => isTagalog = !isTagalog),
                           child: AnimatedContainer(
@@ -198,7 +191,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     
                     const SizedBox(height: 12),
                     
-                    // Origin Chip
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -221,7 +213,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     
                     const SizedBox(height: 25),
                     
-                    // Description Section
                     Text(
                       isTagalog ? "Paglalarawan" : "Description", 
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])
@@ -241,7 +232,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     
                     const SizedBox(height: 30),
                     
-                    // Symptoms Section
                     Text(
                       isTagalog ? "Mga Sintomas" : "Common Symptoms", 
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])
@@ -252,7 +242,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     
                     const SizedBox(height: 30),
 
-                    // Acknowledgment Button (Mint Theme)
                     SizedBox(
                       width: double.infinity,
                       height: 56,
