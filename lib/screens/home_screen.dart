@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:showcaseview/showcaseview.dart'; // 1. Import Showcase
+import 'package:showcaseview/showcaseview.dart';
 import '../widgets/disease_detail_sheet.dart';
 import 'scanner_screen.dart';
 import 'disease_map_screen.dart';
@@ -14,13 +14,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // 2. Define GlobalKeys for each feature you want to highlight
   final GlobalKey _profileKey = GlobalKey();
   final GlobalKey _catalogKey = GlobalKey();
   final GlobalKey _scannerKey = GlobalKey();
-  final GlobalKey _mapKey = GlobalKey();
 
   int _currentIndex = 0;
+  int _bottomNavIndex = 0; // Added for the bottom menu state
 
   final List<Map<String, dynamic>> _diseaseData = [
     {
@@ -72,13 +71,11 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
-    // 3. Trigger the Showcase after the screen builds
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ShowCaseWidget.of(context).startShowCase([
         _profileKey,
         _catalogKey,
         _scannerKey,
-        _mapKey,
       ]);
     });
   }
@@ -114,7 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Row(
                       children: [
-                        // 4. Showcase wrapped around Profile
                         Showcase(
                           key: _profileKey,
                           title: 'Your Profile',
@@ -146,7 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 25),
                     _buildSectionHeader("Common Diseases", "CATALOG"),
                     const SizedBox(height: 10),
-                    // 5. Showcase wrapped around Catalog Slider
                     Showcase(
                       key: _catalogKey,
                       title: 'Disease Catalog',
@@ -166,22 +161,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 15),
                       const Text("Quick Inspection", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 15),
-                      // 6. Showcase wrapped around Scanner Card
                       Showcase(
                         key: _scannerKey,
                         title: 'AI Scanner',
                         description: 'Use your camera to identify diseases in the field.',
                         child: _buildInspectionCard(),
-                      ),
-                      const SizedBox(height: 30),
-                      const Text("Health Alerts", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 15),
-                      // 7. Showcase wrapped around Map Card
-                      Showcase(
-                        key: _mapKey,
-                        title: 'Outbreak Map',
-                        description: 'Check real-time health alerts in your local area.',
-                        child: _buildAlertCard(),
                       ),
                       const SizedBox(height: 40),
                     ],
@@ -191,11 +175,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+        // --- RESTORED BOTTOM MENU ---
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _bottomNavIndex,
+          onTap: (index) {
+            setState(() {
+              _bottomNavIndex = index;
+            });
+          },
+          selectedItemColor: const Color(0xFF2D6A4F),
+          unselectedItemColor: Colors.grey,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner), label: 'Scan'),
+            BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Map'),
+            BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+          ],
+        ),
       ),
     );
   }
 
-  // --- Existing Utility Methods (Unchanged) ---
+  // --- Utility Methods (Slider, Card, etc.) remain unchanged below ---
+
   Widget _buildSectionHeader(String title, String action) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -217,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: () => _showDiseaseDetails(_diseaseData[_currentIndex]),
       child: Container(
-        height: 240, 
+        height: 240,
         margin: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
@@ -275,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 12),
                       SizedBox(width: 4),
                       Text(
-                        "Common Threat", 
+                        "Common Threat",
                         style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ],
@@ -363,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFD8F3DC), Color(0xFFF1F8E9)], 
+          colors: [Color(0xFFD8F3DC), Color(0xFFF1F8E9)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -414,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "Detect diseases instantly using our AI camera.", 
+                  "Detect diseases instantly using our AI camera.",
                   style: TextStyle(fontSize: 14, color: Color(0xFF40916C)),
                 ),
                 const SizedBox(height: 25),
@@ -429,7 +435,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2D6A4F), 
+                      backgroundColor: const Color(0xFF2D6A4F),
                       foregroundColor: Colors.white,
                       shadowColor: const Color(0xFF2D6A4F).withOpacity(0.4),
                       elevation: 8,
@@ -449,114 +455,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAlertCard() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const DiseaseMapScreen()),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFF5F5), Color(0xFFFFF0F0)], 
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.redAccent.withOpacity(0.15)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.redAccent.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -15,
-              bottom: -15,
-              child: Icon(
-                Icons.map_outlined,
-                size: 100,
-                color: Colors.redAccent.withOpacity(0.05),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(
-                children: [
-                  Container(
-                    height: 56, width: 56,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.red.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.add_location_alt_rounded, color: Colors.redAccent, size: 28),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Text(
-                              "Disease Outbreak", 
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold, 
-                                fontSize: 16, 
-                                color: Color(0xFF2D3436)
-                              )
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                "LIVE", 
-                                style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          "High risk of Black Pod Rot detected near Tagum City.", 
-                          style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.3),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8.0),
-                    child: Icon(Icons.arrow_forward_ios_rounded, color: Colors.redAccent, size: 16),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
