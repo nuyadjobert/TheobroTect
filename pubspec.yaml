@@ -17,6 +17,8 @@ dependencies:
   flutter_map: ^6.0.0 
   latlong2: ^0.9.0
 
+  showcaseview: ^3.0.0
+
   # --- New UI & Logic Dependencies ---
   # For the smooth dots in onboarding
   smooth_page_indicator: ^1.1.0 

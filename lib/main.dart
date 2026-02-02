@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart'; 
 import 'package:cacao_apps/screens/introduction_screen.dart';
+
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
@@ -7,15 +9,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      // Keep your existing theme
-      theme: ThemeData(
-        useMaterial3: true, 
-        colorSchemeSeed: Colors.green,
+    return ShowCaseWidget(
+      builder: (context) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true, 
+          colorSchemeSeed: Colors.green,
+        ),
+        home: const IntroductionScreen(),
       ),
-      // CHANGE THIS: Start with the Intro
-// Inside your MaterialApp
-home: const IntroductionScreen(),    );
+    );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Required for System UI control
+import 'package:flutter/services.dart';
+import 'package:showcaseview/showcaseview.dart'; // 1. Import Showcase
 import '../widgets/disease_detail_sheet.dart';
 import 'scanner_screen.dart';
 import 'disease_map_screen.dart';
@@ -13,6 +14,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // 2. Define GlobalKeys for each feature you want to highlight
+  final GlobalKey _profileKey = GlobalKey();
+  final GlobalKey _catalogKey = GlobalKey();
+  final GlobalKey _scannerKey = GlobalKey();
+  final GlobalKey _mapKey = GlobalKey();
+
   int _currentIndex = 0;
 
   final List<Map<String, dynamic>> _diseaseData = [
@@ -25,12 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
       "symptoms": ["Premature ripening", "Uneven pod coloring", "Small exit holes", "Clumped, damaged beans"],
       "tagalog": {
         "description": "Isang maliit na gamu-gamo kung saan ang mga uod nito ay bumubutas sa loob ng bunga ng kakaw, na sumisira sa paglaki ng mga buto.",
-        "symptoms": [
-          "Maagang pagkahinog ng bunga",
-          "Hindi pantay na kulay ng balat",
-          "Maliit na mga butas sa labas ng bunga",
-          "Magkakadikit at sirang mga buto sa loob"
-        ],
+        "symptoms": ["Maagang pagkahinog ng bunga", "Hindi pantay na kulay ng balat", "Maliit na mga butas sa labas ng bunga", "Magkakadikit at sirang mga buto sa loob"],
       },
     },
     {
@@ -42,12 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
       "symptoms": ["Expanding dark brown spots", "White fungal growth", "Firm rot on pod surface", "Rotted internal beans"],
       "tagalog": {
         "description": "Sanhi ng halamang-singaw na Phytophthora, mabilis itong kumakalat lalo na sa panahon ng tag-ulan o basang kapaligiran.",
-        "symptoms": [
-          "Lumalawak na maitim o kulay-kape na mga batik",
-          "Puting amag sa ibabaw ng bunga",
-          "Matigas na pagkabulok ng balat",
-          "Mabahong pagkabulok ng mga buto sa loob"
-        ],
+        "symptoms": ["Lumalawak na maitim o kulay-kape na mga batik", "Puting amag sa ibabaw ng bunga", "Matigas na pagkabulok ng balat", "Mabahong pagkabulok ng mga buto sa loob"],
       },
     },
     {
@@ -59,12 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
       "symptoms": ["White cottony clusters", "Sticky honeydew on leaves", "Sooty mold growth", "Yellowing of foliage"],
       "tagalog": {
         "description": "Malambot na insekto na sumisipsip ng dagta ng puno at naglalabas ng malagkit na likido na nagiging sanhi ng virus.",
-        "symptoms": [
-          "Mapuputi at parang bulak na kumpol sa sanga o bunga",
-          "Malagkit na likido sa mga dahon",
-          "Pangungitim o pagkakaroon ng maitim na amag (sooty mold)",
-          "Pagkapanilaw ng mga dahon"
-        ],
+        "symptoms": ["Mapuputi at parang bulak na kumpol sa sanga o bunga", "Malagkit na likido sa mga dahon", "Pangungitim o pagkakaroon ng maitim na amag (sooty mold)", "Pagkapanilaw ng mga dahon"],
       },
     },
   ];
@@ -79,6 +71,16 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     });
+
+    // 3. Trigger the Showcase after the screen builds
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ShowCaseWidget.of(context).startShowCase([
+        _profileKey,
+        _catalogKey,
+        _scannerKey,
+        _mapKey,
+      ]);
+    });
   }
 
   void _showDiseaseDetails(Map<String, dynamic> disease) {
@@ -92,12 +94,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Wrap in AnnotatedRegion to control System UI
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // Makes the bar transparent
-        statusBarIconBrightness: Brightness.dark, // Dark icons for light background
-        systemNavigationBarColor: Color(0xFFFBFDFB), // Optional: colors the bottom nav area
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Color(0xFFFBFDFB),
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
@@ -113,15 +114,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.green.withOpacity(0.2), width: 2),
-                          ),
-                          child: const CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Color(0xFFF1F1F1),
-                            child: Icon(Icons.person_outline, color: Colors.green),
+                        // 4. Showcase wrapped around Profile
+                        Showcase(
+                          key: _profileKey,
+                          title: 'Your Profile',
+                          description: 'Manage your farm settings and account details here.',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.green.withOpacity(0.2), width: 2),
+                            ),
+                            child: const CircleAvatar(
+                              radius: 24,
+                              backgroundColor: Color(0xFFF1F1F1),
+                              child: Icon(Icons.person_outline, color: Colors.green),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -139,7 +146,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 25),
                     _buildSectionHeader("Common Diseases", "CATALOG"),
                     const SizedBox(height: 10),
-                    _buildEnhancedSlider(),
+                    // 5. Showcase wrapped around Catalog Slider
+                    Showcase(
+                      key: _catalogKey,
+                      title: 'Disease Catalog',
+                      description: 'Tap or swipe to see symptoms of common cacao diseases.',
+                      child: _buildEnhancedSlider(),
+                    ),
                   ],
                 ),
               ),
@@ -153,11 +166,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 15),
                       const Text("Quick Inspection", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 15),
-                      _buildInspectionCard(),
+                      // 6. Showcase wrapped around Scanner Card
+                      Showcase(
+                        key: _scannerKey,
+                        title: 'AI Scanner',
+                        description: 'Use your camera to identify diseases in the field.',
+                        child: _buildInspectionCard(),
+                      ),
                       const SizedBox(height: 30),
                       const Text("Health Alerts", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 15),
-                      _buildAlertCard(),
+                      // 7. Showcase wrapped around Map Card
+                      Showcase(
+                        key: _mapKey,
+                        title: 'Outbreak Map',
+                        description: 'Check real-time health alerts in your local area.',
+                        child: _buildAlertCard(),
+                      ),
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -170,8 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- Utility methods kept exactly as they were ---
-
+  // --- Existing Utility Methods (Unchanged) ---
   Widget _buildSectionHeader(String title, String action) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
