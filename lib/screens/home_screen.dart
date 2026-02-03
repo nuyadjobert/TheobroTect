@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../widgets/disease_detail_sheet.dart';
 import 'scanner_screen.dart';
-import 'disease_map_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
