@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for potential UI overlays
+import 'package:flutter/services.dart';
 
 class DiseaseDetailSheet extends StatefulWidget {
   final Map<String, dynamic> disease;
@@ -17,16 +17,16 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
   int _currentPage = 0;
   bool isTagalog = false;
 
-  // Theme Colors
   final Color _primaryGreen = const Color(0xFF2D6A4F);
   final Color _lightMint = const Color(0xFFD8F3DC);
-  final Color _bgWhite = const Color(0xFFFBFDFB);
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
-    final List<String> images = List<String>.from(widget.disease["images"] ?? []);
+    final List<String> images = List<String>.from(
+      widget.disease["images"] ?? [],
+    );
 
     if (images.isNotEmpty) {
       _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
@@ -55,14 +55,20 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> diseaseImages = List<String>.from(widget.disease["images"] ?? []);
-    
-    final String description = isTagalog 
-        ? (widget.disease["tagalog"]?["description"] ?? widget.disease["description"])
+    final List<String> diseaseImages = List<String>.from(
+      widget.disease["images"] ?? [],
+    );
+
+    final String description = isTagalog
+        ? (widget.disease["tagalog"]?["description"] ??
+              widget.disease["description"])
         : widget.disease["description"];
-        
+
     final List<String> symptoms = isTagalog
-        ? List<String>.from(widget.disease["tagalog"]?["symptoms"] ?? widget.disease["symptoms"])
+        ? List<String>.from(
+            widget.disease["tagalog"]?["symptoms"] ??
+                widget.disease["symptoms"],
+          )
         : List<String>.from(widget.disease["symptoms"]);
 
     return Container(
@@ -74,11 +80,14 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top > 0 ? 10 : 0),
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top > 0 ? 10 : 0,
+            ),
             child: Center(
               child: Container(
                 margin: const EdgeInsets.only(top: 14, bottom: 10),
-                height: 5, width: 45,
+                height: 5,
+                width: 45,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(10),
@@ -86,12 +95,15 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
               ),
             ),
           ),
-          
+
           Stack(
             alignment: Alignment.bottomCenter,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Container(
                   height: 260,
                   decoration: BoxDecoration(
@@ -99,9 +111,9 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     boxShadow: [
                       BoxShadow(
                         color: _primaryGreen.withOpacity(0.15),
-                        blurRadius: 20, 
+                        blurRadius: 20,
                         offset: const Offset(0, 10),
-                      )
+                      ),
                     ],
                   ),
                   child: ClipRRect(
@@ -109,8 +121,10 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     child: PageView.builder(
                       controller: _pageController,
                       itemCount: diseaseImages.length,
-                      onPageChanged: (index) => setState(() => _currentPage = index),
-                      itemBuilder: (context, index) => Image.asset(diseaseImages[index], fit: BoxFit.cover),
+                      onPageChanged: (index) =>
+                          setState(() => _currentPage = index),
+                      itemBuilder: (context, index) =>
+                          Image.asset(diseaseImages[index], fit: BoxFit.cover),
                     ),
                   ),
                 ),
@@ -118,7 +132,10 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
               Positioned(
                 bottom: 25,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(20),
@@ -132,7 +149,9 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                         height: 6,
                         width: _currentPage == index ? 16 : 6,
                         decoration: BoxDecoration(
-                          color: _currentPage == index ? Colors.white : Colors.white.withOpacity(0.5),
+                          color: _currentPage == index
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       );
@@ -151,7 +170,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header Row: Title & Language Switch
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -160,10 +178,10 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                           child: Text(
                             widget.disease["title"] ?? "Unknown",
                             style: const TextStyle(
-                              fontSize: 26, 
-                              fontWeight: FontWeight.w800, 
-                              color: Color(0xFF1B4332), 
-                              letterSpacing: -0.5
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1B4332),
+                              letterSpacing: -0.5,
                             ),
                           ),
                         ),
@@ -172,11 +190,16 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             height: 36,
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: _lightMint,
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: _primaryGreen.withOpacity(0.2)),
+                              border: Border.all(
+                                color: _primaryGreen.withOpacity(0.2),
+                              ),
                             ),
                             child: Row(
                               children: [
@@ -188,34 +211,51 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.3),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.public, size: 14, color: Colors.deepOrange),
+                          const Icon(
+                            Icons.public,
+                            size: 14,
+                            color: Colors.deepOrange,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             "Origin: ${widget.disease["origin"] ?? "Unknown"}",
-                            style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.deepOrange,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 25),
-                    
+
                     Text(
-                      isTagalog ? "Paglalarawan" : "Description", 
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])
+                      isTagalog ? "Paglalarawan" : "Description",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Container(
@@ -226,20 +266,28 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                       ),
                       child: Text(
                         description,
-                        style: TextStyle(color: Colors.grey[700], height: 1.6, fontSize: 15),
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          height: 1.6,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 30),
-                    
+
                     Text(
-                      isTagalog ? "Mga Sintomas" : "Common Symptoms", 
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[800])
+                      isTagalog ? "Mga Sintomas" : "Common Symptoms",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
                     ),
                     const SizedBox(height: 15),
-                    
+
                     ...symptoms.map((symptom) => _buildSymptomCard(symptom)),
-                    
+
                     const SizedBox(height: 30),
 
                     SizedBox(
@@ -252,11 +300,17 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                           foregroundColor: Colors.white,
                           elevation: 4,
                           shadowColor: _primaryGreen.withOpacity(0.4),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                         child: Text(
                           isTagalog ? "Naintindidihan Ko" : "I Acknowledge",
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                     ),
@@ -271,8 +325,6 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
     );
   }
 
-  // --- Helper Widgets ---
-
   Widget _buildToggleOption(String text, bool isSelected) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -280,9 +332,9 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
       decoration: BoxDecoration(
         color: isSelected ? _primaryGreen : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: isSelected 
-          ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)] 
-          : [],
+        boxShadow: isSelected
+            ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)]
+            : [],
       ),
       child: Center(
         child: Text(
@@ -327,8 +379,12 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
           const SizedBox(width: 14),
           Expanded(
             child: Text(
-              text, 
-              style: const TextStyle(fontSize: 15, color: Color(0xFF4A4A4A), fontWeight: FontWeight.w500),
+              text,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Color(0xFF4A4A4A),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

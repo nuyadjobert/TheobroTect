@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'verify_account_screen.dart';
-import '../../navigation_menu.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -10,7 +9,7 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     const Color primaryGreen = Color(0xFF2E7D32);
     const Color surfaceColor = Color(0xFFFBFDFB);
 
@@ -40,16 +39,32 @@ class LoginScreen extends StatelessWidget {
                           color: colorScheme.primaryContainer.withOpacity(0.4),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.energy_savings_leaf_rounded, 
-                             size: 56, color: colorScheme.primary),
+                        child: Icon(
+                          Icons.energy_savings_leaf_rounded,
+                          size: 56,
+                          color: colorScheme.primary,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       RichText(
                         text: TextSpan(
-                          style: TextStyle(fontSize: 32, letterSpacing: -1, color: colorScheme.onSurface),
+                          style: TextStyle(
+                            fontSize: 32,
+                            letterSpacing: -1,
+                            color: colorScheme.onSurface,
+                          ),
                           children: [
-                            const TextSpan(text: "Theobro", style: TextStyle(fontWeight: FontWeight.w300)),
-                            TextSpan(text: "Tect", style: TextStyle(fontWeight: FontWeight.w900, color: colorScheme.primary)),
+                            const TextSpan(
+                              text: "Theobro",
+                              style: TextStyle(fontWeight: FontWeight.w300),
+                            ),
+                            TextSpan(
+                              text: "Tect",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                color: colorScheme.primary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -59,29 +74,49 @@ class LoginScreen extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                Text("Welcome Back", 
-                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+                Text(
+                  "Welcome Back",
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text("Enter your credentials to manage your cacao farm.", 
-                    style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
+                Text(
+                  "Enter your credentials to manage your cacao farm.",
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: 48),
-                
-                // Enhanced TextField
-                Text("Email Address", style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  "Email Address",
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 TextField(
                   decoration: InputDecoration(
                     hintText: "farmer@theobrotect.com",
-                    prefixIcon: Icon(Icons.alternate_email_rounded, color: colorScheme.primary),
+                    prefixIcon: Icon(
+                      Icons.alternate_email_rounded,
+                      color: colorScheme.primary,
+                    ),
                     filled: true,
-                    fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    fillColor: colorScheme.surfaceContainerHighest.withOpacity(
+                      0.3,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                      borderSide: BorderSide(
+                        color: colorScheme.primary,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -91,15 +126,19 @@ class LoginScreen extends StatelessWidget {
                   height: 64,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
+                      backgroundColor: primaryGreen,
                       foregroundColor: colorScheme.onPrimary,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const VerifyAccountScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const VerifyAccountScreen(),
+                        ),
                       );
                     },
                     child: const Text(
