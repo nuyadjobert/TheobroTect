@@ -333,7 +333,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
         color: isSelected ? _primaryGreen : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         boxShadow: isSelected
-            ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)]
+            ? [BoxShadow(color: Colors.black.withAlpha(25), blurRadius: 4)]
             : [],
       ),
       child: Center(
@@ -359,7 +359,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
         border: Border.all(color: const Color(0xFFE0E0E0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withAlpha(13),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
