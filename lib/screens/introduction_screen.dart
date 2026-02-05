@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'auth/login_screen.dart'; // Import path to your login screen
 
+// Import separated widgets
+import '../widgets/intro/intro_background.dart';
+import '../widgets/intro/intro_skip_button.dart';
+import '../widgets/intro/intro_content_page.dart';
+import '../widgets/intro/intro_page_indicators.dart';
+import '../widgets/intro/intro_action_button.dart';
+
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
 
@@ -71,22 +78,9 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
         child: Stack(
           children: [
             // --- 1. BACKGROUND LAYER (The Melt Transition) ---
-            Positioned.fill(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 1000),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-                child: Image.asset(
-                  introData[_currentPage]['image']!,
-                  key: ValueKey<int>(_currentPage),
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  // Error handling for missing assets
-                  errorBuilder: (context, error, stackTrace) => Container(color: Colors.black),
-                ),
-              ),
+            IntroBackground(
+              currentPage: _currentPage,
+              introData: introData,
             ),
 
             // --- 2. GRADIENT OVERLAY (Readability & Protection) ---
@@ -113,18 +107,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
               child: Column(
                 children: [
                   // Top Skip Button
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: TextButton(
-                        onPressed: () => Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        ),
-                        style: TextButton.styleFrom(backgroundColor: Colors.white12),
-                        child: const Text("SKIP", style: TextStyle(color: Colors.white)),
-                      ),
+                  IntroSkipButton(
+                    onSkip: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
                     ),
                   ),
 
@@ -139,32 +125,9 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                         });
                       },
                       itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                introData[index]['title']!,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                introData[index]['desc']!,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 18,
-                                  height: 1.4,
-                                ),
-                              ),
-                              const SizedBox(height: 30),
-                            ],
-                          ),
+                        return IntroContentPage(
+                          title: introData[index]['title']!,
+                          description: introData[index]['desc']!,
                         );
                       },
                     ),
@@ -176,48 +139,19 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     child: Column(
                       children: [
                         // Smooth Page Indicators
-                        Row(
-                          children: List.generate(
-                            introData.length,
-                            (index) => AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              margin: const EdgeInsets.only(right: 8),
-                              height: 8,
-                              width: _currentPage == index ? 24 : 8,
-                              decoration: BoxDecoration(
-                                color: _currentPage == index ? primaryGreen : Colors.white38,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                          ),
+                        IntroPageIndicators(
+                          currentPage: _currentPage,
+                          pageCount: introData.length,
+                          primaryGreen: primaryGreen,
                         ),
                         const SizedBox(height: 30),
 
                         // Action Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 60,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryGreen,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: _handleNext,
-                            child: Text(
-                              _currentPage == introData.length - 1
-                                  ? "GET STARTED"
-                                  : "NEXT",
-                              style: const TextStyle(
-                                fontSize: 18, 
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ),
+                        IntroActionButton(
+                          currentPage: _currentPage,
+                          totalPages: introData.length,
+                          primaryGreen: primaryGreen,
+                          onPressed: _handleNext,
                         ),
                       ],
                     ),
