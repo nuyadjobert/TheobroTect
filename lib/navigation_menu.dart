@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart'; // Import your home screen
+import 'screens/home_screen.dart';
 
 class NavigationMenu extends StatefulWidget {
   const NavigationMenu({super.key});
@@ -11,7 +11,6 @@ class NavigationMenu extends StatefulWidget {
 class _NavigationMenuState extends State<NavigationMenu> {
   int _selectedIndex = 0;
 
-  // List of different screen widgets
   final List<Widget> _screens = [
     const HomeScreen(),
     const Center(child: Text("Scan Screen")),
@@ -23,7 +22,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
-        // Decoration handles the shadow and the top rounding
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.only(
@@ -32,22 +30,21 @@ class _NavigationMenuState extends State<NavigationMenu> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withAlpha((0.05 * 255).toInt()),
               blurRadius: 10,
               spreadRadius: 2,
-              offset: const Offset(0, -2), // Shadow moves slightly upward
+              offset: const Offset(0, -2),
             ),
           ],
         ),
         child: ClipRRect(
-          // ClipRRect ensures the NavigationBar itself follows the top rounding
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
           ),
           child: NavigationBarTheme(
             data: NavigationBarThemeData(
-              indicatorColor: Colors.green.withOpacity(0.1),
+              indicatorColor: Colors.green.withAlpha((0.1 * 255).toInt()),
               labelTextStyle: WidgetStateProperty.all(
                 const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
               ),
@@ -55,7 +52,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
             child: NavigationBar(
               height: 70,
               backgroundColor: Colors.white,
-              elevation: 0, // Elevation is handled by the parent Container
+              elevation: 0, 
               selectedIndex: _selectedIndex,
               onDestinationSelected: (index) => setState(() => _selectedIndex = index),
               destinations: const [
