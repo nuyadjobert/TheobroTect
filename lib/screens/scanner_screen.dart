@@ -1,7 +1,8 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For HapticFeedback
+import 'package:flutter/services.dart'; 
 import 'package:permission_handler/permission_handler.dart';
+import 'scan_result_screen.dart'; // Ensure this file exists with the code provided earlier
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -15,8 +16,8 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   List<CameraDescription>? _cameras;
   bool _isPermissionGranted = false;
   bool _isFlashOn = false;
+  bool _isAnalyzing = false; // New state for the loading overlay
   
-  // Animation variables
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -25,7 +26,6 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     super.initState();
     _setupCamera();
     
-    // Setup scanning animation (moving line)
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -68,6 +68,38 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     }
   }
 
+  // --- TRIGGER SCANNING LOGIC ---
+  Future<void> _handleCapture() async {
+    if (_isAnalyzing) return;
+
+    HapticFeedback.heavyImpact();
+    
+    setState(() {
+      _isAnalyzing = true;
+    });
+
+    // Simulate AI processing time (e.g., sending image to TFLite/Cloud)
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (mounted) {
+      setState(() {
+        _isAnalyzing = false;
+      });
+
+      // Navigate to the Result Screen we created earlier
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ScanResultScreen(
+            diseaseName: "Black Pod Disease",
+            confidence: 0.95,
+            severity: "Severe",
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _controller?.dispose();
@@ -80,7 +112,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     if (!_isPermissionGranted || _controller == null || !_controller!.value.isInitialized) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator(color: Colors.green)),
+        body: Center(child: CircularProgressIndicator(color: Colors.greenAccent)),
       );
     }
 
@@ -114,7 +146,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                     height: 300,
                     width: 300,
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: Colors.white, // This creates the "hole"
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
@@ -123,19 +155,18 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
             ),
           ),
 
-          // 3. Scanning Animation & Corner Brackets (Foreground)
+          // 3. Scanning Animation & Corner Brackets
           Center(
             child: SizedBox(
               height: 300,
               width: 300,
               child: Stack(
                 children: [
-                  // Animated Scanning Line
                   AnimatedBuilder(
                     animation: _animation,
                     builder: (context, child) {
                       return Positioned(
-                        top: _animation.value * 280, // Move down 280px
+                        top: _animation.value * 280,
                         left: 0,
                         right: 0,
                         child: Container(
@@ -154,7 +185,6 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                       );
                     },
                   ),
-                  // Custom Corner Borders
                   _buildCorner(top: 0, left: 0),
                   _buildCorner(top: 0, right: 0),
                   _buildCorner(bottom: 0, left: 0),
@@ -164,11 +194,10 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
             ),
           ),
 
-          // 4. UI Controls (Top and Bottom)
+          // 4. UI Controls
           SafeArea(
             child: Column(
               children: [
-                // Top Bar
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: Row(
@@ -186,10 +215,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                     ],
                   ),
                 ),
-
                 const Spacer(),
-
-                // Instruction Text
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
@@ -206,15 +232,11 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
                     ),
                   ),
                 ),
-                
                 const SizedBox(height: 30),
-
+                
                 // Capture Button
                 GestureDetector(
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    print("Analyzing pod...");
-                  },
+                  onTap: _handleCapture,
                   child: Container(
                     height: 84,
                     width: 84,
@@ -239,12 +261,39 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
               ],
             ),
           ),
+
+          // 5. ANALYSIS OVERLAY (Shows when _isAnalyzing is true)
+          if (_isAnalyzing)
+            Container(
+              color: Colors.black87,
+              width: double.infinity,
+              height: double.infinity,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(color: Colors.greenAccent),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "ANALYZING POD...",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Identifying disease patterns",
+                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
   }
 
-  // Widget builder for the white corners
   Widget _buildCorner({double? top, double? bottom, double? left, double? right}) {
     return Positioned(
       top: top,
@@ -272,7 +321,6 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
     );
   }
 
-  // Widget builder for top buttons
   Widget _buildGlassIconButton({required IconData icon, required VoidCallback onTap, Color color = Colors.white}) {
     return GestureDetector(
       onTap: () {
