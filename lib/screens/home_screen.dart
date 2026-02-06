@@ -1,10 +1,10 @@
 import 'dart:async';
+import 'package:cacao_apps/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../widgets/disease_detail_sheet.dart';
 import 'scanner_screen.dart';
-import 'disease_map_screen.dart';
 import 'dart:ui';
 
 // Import separated widgets
@@ -13,7 +13,8 @@ import '../widgets/home/total_scanned_card.dart';
 import '../widgets/home/disease_slider.dart';
 import '../widgets/home/inspection_card.dart';
 import '../widgets/home/notification_icon.dart';
-
+import 'learn_hub_screen.dart';
+import 'history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -125,9 +126,9 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           children: [
             _buildHomeContent(), // Index 0
-            const Center(child: Text("History Screen")), // Index 1
-            const Center(child: Text("Learn Screen")), // Index 2
-            const Center(child: Text("Settings Screen")), // Index 3
+            const HistoryScreen(), // Index 1
+            const LearnHubScreen(), // Index 2
+            const SettingsScreen(), // Index 3
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
