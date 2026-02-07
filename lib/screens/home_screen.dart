@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
 import '../widgets/disease_detail_sheet.dart';
-import 'scanner_screen.dart';
-import 'dart:ui';
 
-// Import separated widgets
 import '../widgets/home/weather_card.dart';
 import '../widgets/home/total_scanned_card.dart';
 import '../widgets/home/disease_slider.dart';
@@ -125,10 +122,10 @@ class _HomeScreenState extends State<HomeScreen> {
             setState(() => _bottomNavIndex = index);
           },
           children: [
-            _buildHomeContent(), // Index 0
-            const HistoryScreen(), // Index 1
-            const LearnHubScreen(), // Index 2
-            const SettingsScreen(), // Index 3
+            _buildHomeContent(), 
+            const HistoryScreen(), 
+            const LearnHubScreen(), 
+            const SettingsScreen(), 
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -176,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.green.withOpacity(0.2), width: 2),
+                          border: Border.all(color: Colors.green.withAlpha((0.2 * 255).toInt()), width: 2),
                         ),
                         child: const CircleAvatar(
                           radius: 24,
