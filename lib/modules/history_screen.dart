@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../widgets/history/history_card.dart';
-import '../widgets/history/history_filter.dart';
+import '../core/widgets/history/history_card.dart';
+import '../core/widgets/history/history_filter.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});

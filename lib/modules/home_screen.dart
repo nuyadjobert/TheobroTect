@@ -1,15 +1,15 @@
 import 'dart:async';
-import 'package:cacao_apps/screens/settings_screen.dart';
+import 'package:cacao_apps/modules/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
-import '../widgets/disease_detail_sheet.dart';
+import '../core/widgets/disease_detail_sheet.dart';
 
-import '../widgets/home/weather_card.dart';
-import '../widgets/home/total_scanned_card.dart';
-import '../widgets/home/disease_slider.dart';
-import '../widgets/home/inspection_card.dart';
-import '../widgets/home/notification_icon.dart';
+import '../core/widgets/home/weather_card.dart';
+import '../core/widgets/home/total_scanned_card.dart';
+import '../core/widgets/home/disease_slider.dart';
+import '../core/widgets/home/inspection_card.dart';
+import '../core/widgets/home/notification_icon.dart';
 import 'learn_hub_screen.dart';
 import 'history_screen.dart';
 

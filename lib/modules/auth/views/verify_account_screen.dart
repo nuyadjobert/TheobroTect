@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../home_screen.dart'; // Adjust path based on your folder structure
+import '../../home_screen.dart'; // Adjust path based on your folder structure
 
 class VerifyAccountScreen extends StatelessWidget {
   const VerifyAccountScreen({super.key});

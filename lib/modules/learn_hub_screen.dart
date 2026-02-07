@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../widgets/learn/guide_card.dart';
-import '../widgets/learn/prevention_tip_card.dart';
+import '../core/widgets/learn/guide_card.dart';
+import '../core/widgets/learn/prevention_tip_card.dart';
 
 class LearnHubScreen extends StatelessWidget {
   const LearnHubScreen({super.key});

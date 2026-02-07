@@ -10,6 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  dio: ^5.4.3
+  flutter_secure_storage: ^9.0.0
   
   # --- Core Functionality ---
   camera: ^0.11.0
@@ -34,6 +36,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^2.0.0
 
+
 flutter:
   uses-material-design: true
 
@@ -42,3 +45,4 @@ flutter:
     - assets/models/final_cacao_disease_model1.0.tflite
     - assets/labels/labels.txt
     - assets/rules/recommendations.json
+

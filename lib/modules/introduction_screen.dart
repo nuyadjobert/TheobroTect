@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'auth/login_screen.dart'; // Import path to your login screen
+import 'package:cacao_apps/modules/auth/login_factory.dart';
 
-// Import separated widgets
-import '../widgets/intro/intro_background.dart';
-import '../widgets/intro/intro_skip_button.dart';
-import '../widgets/intro/intro_content_page.dart';
-import '../widgets/intro/intro_page_indicators.dart';
-import '../widgets/intro/intro_action_button.dart';
+import '../core/widgets/intro/intro_background.dart';
+import '../core/widgets/intro/intro_skip_button.dart';
+import '../core/widgets/intro/intro_content_page.dart';
+import '../core/widgets/intro/intro_page_indicators.dart';
+import '../core/widgets/intro/intro_action_button.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -17,11 +16,9 @@ class IntroductionScreen extends StatefulWidget {
 }
 
 class _IntroductionScreenState extends State<IntroductionScreen> {
-  // Controller to handle page swiping
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // Structured Data for the Introduction slides
   final List<Map<String, String>> introData = [
     {
       'title': 'TheobroTect ML',
@@ -46,7 +43,6 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
     super.dispose();
   }
 
-  // Handle the primary button logic
   void _handleNext() {
     if (_currentPage < introData.length - 1) {
       _pageController.nextPage(
@@ -54,17 +50,15 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      // NAVIGATION UPDATED: Skips Onboarding and goes to Login
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (context) => buildLoginScreen()),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Using a fallback primary color if your theme isn't set yet
     final Color primaryGreen = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
@@ -77,13 +71,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
         ),
         child: Stack(
           children: [
-            // --- 1. BACKGROUND LAYER (The Melt Transition) ---
             IntroBackground(
               currentPage: _currentPage,
               introData: introData,
             ),
-
-            // --- 2. GRADIENT OVERLAY (Readability & Protection) ---
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -92,29 +83,25 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                     end: Alignment.bottomCenter,
                     stops: const [0.0, 0.3, 0.7, 1.0],
                     colors: [
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withAlpha((0.7 * 255).toInt()),
                       Colors.transparent,
                       Colors.transparent,
-                      Colors.black.withOpacity(0.9),
+                      Colors.black.withAlpha((0.9 * 255).toInt()),
                     ],
                   ),
                 ),
               ),
             ),
 
-            // --- 3. UI CONTENT LAYER ---
             SafeArea(
               child: Column(
                 children: [
-                  // Top Skip Button
                   IntroSkipButton(
                     onSkip: () => Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      MaterialPageRoute(builder: (context) => buildLoginScreen()),
                     ),
                   ),
-
-                  // Swipeable Content
                   Expanded(
                     child: PageView.builder(
                       controller: _pageController,
@@ -132,13 +119,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                       },
                     ),
                   ),
-
-                  // Bottom Controls (Indicators + Button)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(30, 0, 30, 40),
                     child: Column(
                       children: [
-                        // Smooth Page Indicators
                         IntroPageIndicators(
                           currentPage: _currentPage,
                           pageCount: introData.length,
@@ -146,7 +130,6 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                         ),
                         const SizedBox(height: 30),
 
-                        // Action Button
                         IntroActionButton(
                           currentPage: _currentPage,
                           totalPages: introData.length,

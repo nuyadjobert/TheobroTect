@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../screens/scanner_screen.dart';
+import '../../../modules/scanner_screen.dart';
 
 class InspectionCard extends StatelessWidget {
   const InspectionCard({super.key});

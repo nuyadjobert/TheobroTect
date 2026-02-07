@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // 1. IMPORT ADDED
-import '../widgets/scan/severity_alert_card.dart';
-import '../widgets/scan/action_task_tile.dart';
-import '../widgets/scan/confidence_meter.dart';
+import '../core/widgets/scan/severity_alert_card.dart';
+import '../core/widgets/scan/action_task_tile.dart';
+import '../core/widgets/scan/confidence_meter.dart';
 
 class ScanResultScreen extends StatelessWidget {
   final String diseaseName;

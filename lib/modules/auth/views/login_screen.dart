@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'verify_account_screen.dart';
+import '../controllers/login_controller.dart';
+import '../models/login_model.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  final LoginController controller;
+  final LoginModel model;
+
+  const LoginScreen({super.key, required this.controller, required this.model});
 
   @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -36,7 +45,9 @@ class LoginScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withAlpha((0.4 * 255).toInt()),
+                          color: colorScheme.primaryContainer.withAlpha(
+                            (0.4 * 255).toInt(),
+                          ),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -126,7 +137,9 @@ class LoginScreen extends StatelessWidget {
                   height: 64,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryGreen.withAlpha((0.8 * 255).toInt()),
+                      backgroundColor: primaryGreen.withAlpha(
+                        (0.8 * 255).toInt(),
+                      ),
                       foregroundColor: colorScheme.onPrimary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
