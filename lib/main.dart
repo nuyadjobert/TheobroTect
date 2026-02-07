@@ -4,7 +4,6 @@ import 'modules/introduction/views/introduction_screen.dart';
 import 'core/network/client.dart';
 
 void main() {
-  // ✅ Initialize Dio once here
   DioClient.init(baseUrl: 'http://10.0.2.2:5000'); // Android emulator
   // DioClient.init(baseUrl: 'http://localhost:5000'); // iOS simulator
   // DioClient.init(baseUrl: 'http://192.168.1.xxx:5000'); // real device
