@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../home_screen.dart'; // Adjust path based on your folder structure
+import '../../home/views/home_screen.dart'; // Adjust path based on your folder structure
 
 class VerifyAccountScreen extends StatefulWidget {
   final String email;

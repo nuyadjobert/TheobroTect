@@ -1,17 +1,17 @@
 import 'dart:async';
-import 'package:cacao_apps/modules/settings_screen.dart';
+import 'package:cacao_apps/modules/settings/views/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
-import '../core/widgets/disease_detail_sheet.dart';
+import '../../disease/views/disease_detail_sheet.dart';
 
-import '../core/widgets/home/weather_card.dart';
-import '../core/widgets/home/total_scanned_card.dart';
-import '../core/widgets/home/disease_slider.dart';
-import '../core/widgets/home/inspection_card.dart';
-import '../core/widgets/home/notification_icon.dart';
-import 'learn_hub_screen.dart';
-import 'history_screen.dart';
+import '../widgets/weather_card.dart';
+import '../widgets/total_scanned_card.dart';
+import '../widgets/disease_slider.dart';
+import '../widgets/inspection_card.dart';
+import '../widgets/notification_icon.dart';
+import '../../learn/views/learn_hub_screen.dart';
+import '../../history/views/history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

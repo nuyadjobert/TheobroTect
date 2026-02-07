@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cacao_apps/modules/auth/login_factory.dart';
 
-import '../core/widgets/intro/intro_background.dart';
-import '../core/widgets/intro/intro_skip_button.dart';
-import '../core/widgets/intro/intro_content_page.dart';
-import '../core/widgets/intro/intro_page_indicators.dart';
-import '../core/widgets/intro/intro_action_button.dart';
+import '../widgets/intro_background.dart';
+import '../widgets/intro_skip_button.dart';
+import '../widgets/intro_content_page.dart';
+import '../widgets/intro_page_indicators.dart';
+import '../widgets/intro_action_button.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
