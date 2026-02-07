@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 
 class DioClient {
-  late final Dio dio;
+ static late final Dio dio;
 
-  DioClient({required String baseUrl}) {
+  static void init({required String baseUrl}) {
     dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,

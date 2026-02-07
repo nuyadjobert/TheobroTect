@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'verify_account_screen.dart';
 import '../controllers/login_controller.dart';
 import '../models/login_model.dart';
 
@@ -15,20 +14,21 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  late final TextEditingController emailController;
+  late final LoginController controller;
+  late final LoginModel model;
 
   @override
   void initState() {
     super.initState();
-    emailController = widget.controller.emailController;
+    controller = widget.controller;
+    model = widget.model;
   }
 
   @override
   void dispose() {
-    emailController.dispose();
+    controller.dispose();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -123,9 +123,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 TextField(
-                  controller: emailController,
+                  controller: controller.emailController,
+                  onChanged: (v) {
+    
+                    if (model.emailError != null) {
+                      setState(() => model.emailError = null);
+                    }
+                  },
+
                   decoration: InputDecoration(
                     hintText: "farmer@gmail.com",
+                    errorText: model.emailError,
                     prefixIcon: Icon(
                       Icons.alternate_email_rounded,
                       color: colorScheme.primary,
@@ -162,14 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => VerifyAccountScreen(email: emailController.text),
-                        ),
-                      );
-                    },
+                    onPressed:
+                        
+() => controller.onContinue(context, () => setState(() {})),
                     child: const Text(
                       "Continue",
                       style: TextStyle(

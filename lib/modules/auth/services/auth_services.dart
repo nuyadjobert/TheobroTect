@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import '../models/request_otp_result.dart';
+import '../models/verify_otp_result.dart';
 
 class AuthService {
   final Dio _dio;
@@ -7,7 +9,7 @@ class AuthService {
   Future<RequestOtpResult> requestOtp(String email) async {
     try {
       final res = await _dio.post(
-        '/request-otp',
+        '/auth/request-otp',
         data: {'email': email},
       );
 
@@ -23,7 +25,7 @@ class AuthService {
   }) async {
     try {
       final res = await _dio.post(
-        '/verify-otp',
+        '/auth/verify-otp',
         data: {'email': email, 'otp': otp},
       );
 
@@ -37,43 +39,5 @@ class AuthService {
     final data = e.response?.data;
     if (data is Map && data['status'] != null) return data['status'].toString();
     return null;
-  }
-}
-
-class RequestOtpResult {
-  final String status;
-  final int? expiresInSeconds;
-  final int? retryAfterSeconds;
-
-  RequestOtpResult({
-    required this.status,
-    this.expiresInSeconds,
-    this.retryAfterSeconds,
-  });
-
-  factory RequestOtpResult.fromJson(dynamic json) {
-    final m = (json as Map).cast<String, dynamic>();
-    return RequestOtpResult(
-      status: m['status']?.toString() ?? 'UNKNOWN',
-      expiresInSeconds: m['expires_in_seconds'] as int?,
-      retryAfterSeconds: m['retry_after_seconds'] as int?,
-    );
-  }
-}
-
-class VerifyOtpResult {
-  final String status;
-  final String? token;
-  final String? role;
-
-  VerifyOtpResult({required this.status, this.token, this.role});
-
-  factory VerifyOtpResult.fromJson(dynamic json) {
-    final m = (json as Map).cast<String, dynamic>();
-    return VerifyOtpResult(
-      status: m['status']?.toString() ?? 'UNKNOWN',
-      token: m['token']?.toString(),
-      role: m['role']?.toString(),
-    );
   }
 }
