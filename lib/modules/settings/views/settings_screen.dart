@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../core/widgets/settings/settings_tile.dart';
+import '../widgets/settings_tile.dart';
 import 'package:flutter/services.dart'; // Add this import
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});

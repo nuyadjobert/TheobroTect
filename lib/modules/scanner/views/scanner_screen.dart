@@ -2,7 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; 
 import 'package:permission_handler/permission_handler.dart';
-import 'scan_result_screen.dart'; // Ensure this file exists with the code provided earlier
+import '../../scan/views/scan_result_screen.dart'; // Ensure this file exists with the code provided earlier
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
