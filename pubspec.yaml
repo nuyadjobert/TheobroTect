@@ -13,7 +13,6 @@ dependencies:
   dio: ^5.4.3
   flutter_secure_storage: ^9.0.0
   
-  # --- Core Functionality ---
   camera: ^0.11.0
   permission_handler: ^11.0.0
   flutter_map: ^6.0.0 
@@ -21,14 +20,10 @@ dependencies:
 
   showcaseview: ^3.0.0
 
-  # --- New UI & Logic Dependencies ---
-  # For the smooth dots in onboarding
   smooth_page_indicator: ^1.1.0 
   
-  # For saving the "first time" and "login" status
   shared_preferences: ^2.2.2 
 
-  # For professional typography
   google_fonts: ^6.1.0
 
 dev_dependencies:

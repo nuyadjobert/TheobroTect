@@ -15,6 +15,21 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  late final TextEditingController emailController;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController = widget.controller.emailController;
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -108,8 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 TextField(
+                  controller: emailController,
                   decoration: InputDecoration(
-                    hintText: "farmer@theobrotect.com",
+                    hintText: "farmer@gmail.com",
                     prefixIcon: Icon(
                       Icons.alternate_email_rounded,
                       color: colorScheme.primary,
@@ -150,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const VerifyAccountScreen(),
+                          builder: (context) => VerifyAccountScreen(email: emailController.text),
                         ),
                       );
                     },

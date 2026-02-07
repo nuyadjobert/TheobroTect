@@ -1,47 +1,79 @@
 import 'package:dio/dio.dart';
+
 class AuthService {
   final Dio _dio;
-
   AuthService(this._dio);
 
-  Future<void> requestOtp({
-    required String phoneNumber,
-  }) async {
+  Future<RequestOtpResult> requestOtp(String email) async {
     try {
-      await _dio.post(
+      final res = await _dio.post(
         '/request-otp',
-        data: {
-          'phoneNumber': phoneNumber,
-        },
+        data: {'email': email},
       );
+
+      return RequestOtpResult.fromJson(res.data);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw Exception(_readServerStatus(e) ?? 'Network/Server error');
     }
   }
 
-  Future<bool> verifyOtp({
-    required String phoneNumber,
+  Future<VerifyOtpResult> verifyOtp({
+    required String email,
     required String otp,
   }) async {
     try {
-      final response = await _dio.post(
+      final res = await _dio.post(
         '/verify-otp',
-        data: {
-          'phoneNumber': phoneNumber,
-          'otp': otp,
-        },
+        data: {'email': email, 'otp': otp},
       );
 
-      return response.data['success'] == true;
+      return VerifyOtpResult.fromJson(res.data);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw Exception(_readServerStatus(e) ?? 'Network/Server error');
     }
   }
 
-  Exception _handleError(DioException e) {
-    if (e.response != null) {
-      return Exception(e.response?.data['message'] ?? 'Server error');
-    }
-    return Exception('Network error');
+  String? _readServerStatus(DioException e) {
+    final data = e.response?.data;
+    if (data is Map && data['status'] != null) return data['status'].toString();
+    return null;
+  }
+}
+
+class RequestOtpResult {
+  final String status;
+  final int? expiresInSeconds;
+  final int? retryAfterSeconds;
+
+  RequestOtpResult({
+    required this.status,
+    this.expiresInSeconds,
+    this.retryAfterSeconds,
+  });
+
+  factory RequestOtpResult.fromJson(dynamic json) {
+    final m = (json as Map).cast<String, dynamic>();
+    return RequestOtpResult(
+      status: m['status']?.toString() ?? 'UNKNOWN',
+      expiresInSeconds: m['expires_in_seconds'] as int?,
+      retryAfterSeconds: m['retry_after_seconds'] as int?,
+    );
+  }
+}
+
+class VerifyOtpResult {
+  final String status;
+  final String? token;
+  final String? role;
+
+  VerifyOtpResult({required this.status, this.token, this.role});
+
+  factory VerifyOtpResult.fromJson(dynamic json) {
+    final m = (json as Map).cast<String, dynamic>();
+    return VerifyOtpResult(
+      status: m['status']?.toString() ?? 'UNKNOWN',
+      token: m['token']?.toString(),
+      role: m['role']?.toString(),
+    );
   }
 }

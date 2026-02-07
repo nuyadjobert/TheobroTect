@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../home_screen.dart'; // Adjust path based on your folder structure
 
-class VerifyAccountScreen extends StatelessWidget {
-  const VerifyAccountScreen({super.key});
+class VerifyAccountScreen extends StatefulWidget {
+  final String email;
 
+  const VerifyAccountScreen({super.key, required this.email});
+
+  @override
+  State<VerifyAccountScreen> createState() => _VerifyAccountScreenState();
+}
+class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
+
+  
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

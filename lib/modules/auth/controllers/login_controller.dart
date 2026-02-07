@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/login_model.dart';
 import '../services/auth_services.dart';
-
+import '../views/verify_account_screen.dart';
 class LoginController {
   final LoginModel model;
   final AuthService service;
@@ -38,27 +38,48 @@ class LoginController {
   }
 
   Future<void> onContinue(BuildContext context, VoidCallback refresh) async {
-    if (!validate()) {
-      refresh();
+  if (!validate()) {
+    refresh();
+    return;
+  }
+
+  final email = model.email.trim().toLowerCase();
+
+  try {
+    model.isLoading = true;
+    refresh();
+
+    final result = await service.requestOtp(email);
+
+if (!context.mounted) return;
+    if (result.status == 'OTP_SENT') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyAccountScreen(email: email),
+        ),
+      );
+      return;
+    }
+if (!context.mounted) return;
+    if (result.status == 'COOLDOWN') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please wait ${result.retryAfterSeconds}s then try again.')),
+      );
       return;
     }
 
-    try {
-      model.isLoading = true;
-      refresh();
-
-      // API call (optional now; remove if you haven't built backend yet)
-      // await service.requestOtp(model.email.trim());
-
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (_) => VerifyView(email: model.email.trim()),
-      //   ),
-      // );
-    } finally {
-      model.isLoading = false;
-      refresh();
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Request failed: ${result.status}')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.toString())),
+    );
+  } finally {
+    model.isLoading = false;
+    refresh();
   }
+}
+
 }
