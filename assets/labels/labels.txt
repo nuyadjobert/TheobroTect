@@ -1,0 +1,10 @@
+black_pod_disease_mild
+black_pod_disease_moderate
+black_pod_disease_severe
+cacao_pod_borer_mild
+cacao_pod_borer_moderate
+cacao_pod_borer_severe
+healthy
+mealybug_mild
+mealybug_moderate
+mealybug_severe

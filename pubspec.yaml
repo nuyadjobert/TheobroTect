@@ -32,12 +32,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  # Using standard lints for clean code
   flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true
 
-  # Asset management for your Cacao images
   assets:
     - assets/images/
+    - assets/models/final_cacao_disease_model1.0.tflite
+    - assets/labels/labels.txt
+    - assets/rules/recommendations.json

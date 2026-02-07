@@ -21,7 +21,7 @@ class AuthTextField extends StatelessWidget {
       obscureText: isPassword,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.green[800]),
-        labelText: label, // Matches the variable name
+        labelText: label, 
         filled: true,
         fillColor: Colors.grey[100],
         border: OutlineInputBorder(
