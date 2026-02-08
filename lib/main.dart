@@ -5,12 +5,18 @@ import 'modules/home/views/home_screen.dart';
 import 'core/network/client.dart';
 
 void main() {
-  DioClient.init(baseUrl: 'http://10.0.2.2:5000'); // Android emulator
-  // DioClient.init(baseUrl: 'http://localhost:5000'); // iOS simulator
-  // DioClient.init(baseUrl: 'http://192.168.1.xxx:5000'); // real device
+  const renderUrl = 'https://theorbrotect-backend.onrender.com';
+  const localUrl = 'http://10.0.2.2:3000'; 
+
+  const baseUrl =  bool.fromEnvironment('dart.vm.product')
+      ? renderUrl      
+      : localUrl;    
+
+  DioClient.init(baseUrl: baseUrl);
 
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
