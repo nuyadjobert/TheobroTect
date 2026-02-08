@@ -24,8 +24,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorSchemeSeed: Colors.green,
         ),
-        // home: const IntroductionScreen(),
-        home: const HomeScreen(),
+        home: const IntroductionScreen(),
       ),
     );
   }

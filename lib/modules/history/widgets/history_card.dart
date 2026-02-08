@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/scan_details.dart'; // Ensure this path matches your file structure
 
 class HistoryCard extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -8,7 +9,9 @@ class HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isInfected = data['status'] == 'Infected';
+    // Logic to determine theme based on status
+    final String status = data['status'] ?? 'Healthy';
+    final bool isInfected = status == 'Infected';
     final Color statusColor = isInfected ? const Color(0xFFE63946) : const Color(0xFF2D6A4F);
 
     return GestureDetector(
@@ -17,7 +20,7 @@ class HistoryCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24), // Softer corners
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: statusColor.withOpacity(0.06),
@@ -38,11 +41,10 @@ class HistoryCard extends StatelessWidget {
                   Hero(
                     tag: 'scan_${data['title']}_${data['date']}',
                     child: Image.asset(
-                      data['image'],
+                      data['image'] ?? 'assets/placeholder.png',
                       fit: BoxFit.cover,
                     ),
                   ),
-                  // Darken gradient for the status tag to pop
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -57,7 +59,7 @@ class HistoryCard extends StatelessWidget {
                   Positioned(
                     top: 12,
                     left: 12,
-                    child: _buildStatusTag(data['status'].toUpperCase(), statusColor),
+                    child: _buildStatusTag(status.toUpperCase(), statusColor),
                   ),
                 ],
               ),
@@ -75,7 +77,7 @@ class HistoryCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            data['title'],
+                            data['title'] ?? 'Untitled Scan',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -95,17 +97,16 @@ class HistoryCard extends StatelessWidget {
                         Icon(Icons.access_time, size: 10, color: Colors.grey[400]),
                         const SizedBox(width: 4),
                         Text(
-                          data['date'],
+                          data['date'] ?? 'No date provided',
                           style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
                     const Spacer(),
                     
-                    // 3. Confidence & CTA Row
+                    // 3. Confidence & View Details Trigger
                     Row(
                       children: [
-                        // Confidence Pill
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -113,7 +114,7 @@ class HistoryCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            "${data['confidence']}%",
+                            "${data['confidence'] ?? 0}%",
                             style: TextStyle(
                               color: statusColor,
                               fontWeight: FontWeight.bold,
@@ -122,16 +123,19 @@ class HistoryCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // View Details Text
                         Expanded(
-                          child: Text(
-                            "View Details",
-                            textAlign: TextAlign.end,
-                            style: TextStyle(
-                              color: statusColor.withOpacity(0.8),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10,
-                              decoration: TextDecoration.underline,
+                          child: GestureDetector(
+                            onTap: () => ScanDetailsSheet.show(context, data), // OPEN MODAL
+                            behavior: HitTestBehavior.opaque,
+                            child: Text(
+                              "View Details",
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                color: statusColor.withOpacity(0.8),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 10,
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
                           ),
                         ),

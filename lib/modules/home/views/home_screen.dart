@@ -111,11 +111,11 @@ class _HomeScreenState extends State<HomeScreen> {
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Color(0xFFFBFDFB),
+        systemNavigationBarColor: Color(0xFFF5FAF3),
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFFBFDFB),
+        backgroundColor: const Color(0xFFF5FAF3),
         body: PageView(
           controller: _pageController,
           onPageChanged: (index) {
@@ -144,11 +144,17 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: 'History'),
+BottomNavigationBarItem(
+    icon: Icon(Icons.eco_outlined), // Looks like a Cacao Leaf/Pod
+    activeIcon: Icon(Icons.eco_rounded),
+    label: 'Home',
+  ),            BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: 'History'),
             BottomNavigationBarItem(icon: Icon(Icons.menu_book_rounded), label: 'Learn'),
-            BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
-          ],
+BottomNavigationBarItem(
+    icon: Icon(Icons.tune_rounded),
+    activeIcon: Icon(Icons.settings_input_component_rounded),
+    label: 'Settings',
+  ),],
         ),
       ),
     );
