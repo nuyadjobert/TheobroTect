@@ -6,16 +6,16 @@ class VerifyAccountController extends ChangeNotifier {
   final AuthService _auth;
   final String email;
 
-  VerifyAccountController({
-    required AuthService auth,
-    required this.email,
-  }) : _auth = auth;
+  VerifyAccountController({required AuthService auth, required this.email})
+    : _auth = auth;
 
   // =========================
   // OTP text controllers
   // =========================
-  final List<TextEditingController> otpControllers =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> otpControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
 
   // =========================
   // State
@@ -41,10 +41,10 @@ class VerifyAccountController extends ChangeNotifier {
   // =========================
   // OTP helpers
   // =========================
-  String get otp =>
-      otpControllers.map((c) => c.text).join().trim();
-
+  String get otp => otpControllers.map((c) => c.text).join().trim();
   bool get isOtpValid => otp.length == 6;
+  bool get isNewUserRequired => _lastResult?.status == 'NEW_USER_REQUIRED';
+  bool get isVerified => _lastResult?.status == 'OK';
 
   // =========================
   // Verify OTP
@@ -61,10 +61,7 @@ class VerifyAccountController extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      final result = await _auth.verifyOtp(
-        email: email,
-        otp: otp,
-      );
+      final result = await _auth.verifyOtp(email: email, otp: otp);
 
       _lastResult = result;
 
@@ -104,8 +101,6 @@ class VerifyAccountController extends ChangeNotifier {
         return 'Verification failed: $status';
     }
   }
-
-  bool get isVerified => _lastResult?.status == 'OK';
 
   // =========================
   // Dispose

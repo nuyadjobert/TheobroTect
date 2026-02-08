@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import '../controllers/verify_account_controller.dart';
 import '../services/auth_services.dart';
 import '../../../core/network/client.dart';
+import '../controllers/registration_controller.dart';
+import '../models/registration_model.dart';
+import 'registration_screen.dart';
 
 class VerifyAccountScreen extends StatefulWidget {
   final String email;
@@ -146,36 +149,55 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                       ),
                     ),
                     onPressed: controller.isLoading
-                    ? null
-                    : () async {
-                        await controller.verify();
+                        ? null
+                        : () async {
+                            await controller.verify();
+                            if (!mounted) return;
+                            if (controller.isNewUserRequired) {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (_) => RegistrationScreen(
+                                    controller: RegistrationController(
+                                      AuthService(DioClient.dio),
+                                    ),
+                                    model: RegistrationRequest(
+                                      email: controller.email,
+                                      fullName: '',
+                                      address: '',
+                                      contactNumber: '',
+                                    ),
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
 
-                        if (!mounted) return;
+                            if (controller.isVerified) {
+                              Navigator.of(
+                                context,
+                              ).pushReplacementNamed('/dashboard');
+                              return;
+                            }
 
-                        // show error if any
-                        final msg = controller.errorMessage;
-                        if (msg != null && msg.isNotEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(msg)),
-                          );
-                        }
+                            final msg = controller.errorMessage;
+                            if (msg != null && msg.isNotEmpty) {
+                              ScaffoldMessenger.of(
+                                context,
+                              ).showSnackBar(SnackBar(content: Text(msg)));
+                            }
+                          },
 
-                        // navigate if verified
-                        if (controller.isVerified) {
-                          Navigator.of(context).pushReplacementNamed('/dashboard');
-                        }
-                      },
-                child: controller.isLoading
-                    ? SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            colorScheme.onPrimary,
-                          ),
-                        ),
-                      )
+                    child: controller.isLoading
+                        ? SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                colorScheme.onPrimary,
+                              ),
+                            ),
+                          )
                         : const Text(
                             "VERIFY",
                             style: TextStyle(
