@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart'; 
 import 'modules/introduction/views/introduction_screen.dart';
+import 'modules/home/views/home_screen.dart';
 import 'core/network/client.dart';
 
 void main() {
@@ -23,7 +24,8 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorSchemeSeed: Colors.green,
         ),
-        home: const IntroductionScreen(),
+        // home: const IntroductionScreen(),
+        home: const HomeScreen(),
       ),
     );
   }
