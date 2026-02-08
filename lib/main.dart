@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart'; 
 import 'modules/introduction/views/introduction_screen.dart';
-import 'modules/home/views/home_screen.dart';
 import 'core/network/client.dart';
 
 void main() {
@@ -16,8 +15,6 @@ void main() {
 
   runApp(const MyApp());
 }
-
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
