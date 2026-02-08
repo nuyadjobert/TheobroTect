@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../models/request_otp_result.dart';
 import '../models/verify_otp_result.dart';
+import '../models/registration_model.dart';
 
 class AuthService {
   final Dio _dio;
@@ -8,10 +9,7 @@ class AuthService {
 
   Future<RequestOtpResult> requestOtp(String email) async {
     try {
-      final res = await _dio.post(
-        '/auth/request-otp',
-        data: {'email': email},
-      );
+      final res = await _dio.post('/auth/request-otp', data: {'email': email});
 
       return RequestOtpResult.fromJson(res.data);
     } on DioException catch (e) {
@@ -35,9 +33,27 @@ class AuthService {
     }
   }
 
+  Future<RegistrationResponse> register(RegistrationRequest request) async {
+    try {
+      final res = await _dio.post(
+        '/users/register',
+        data: request.toJson(),
+        options: Options(headers: const {"Content-Type": "application/json"}),
+      );
+      return RegistrationResponse.fromJson(_asMap(res.data));
+    } on DioException catch (e) {
+      throw Exception(_readServerStatus(e) ?? 'Network/Server error');
+    }
+  }
+
   String? _readServerStatus(DioException e) {
     final data = e.response?.data;
     if (data is Map && data['status'] != null) return data['status'].toString();
     return null;
+  }
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    throw Exception('Unexpected response format');
   }
 }

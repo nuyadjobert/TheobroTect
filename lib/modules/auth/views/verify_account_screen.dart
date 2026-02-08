@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../home/views/home_screen.dart';
+import '../controllers/verify_account_controller.dart';
 import '../services/auth_services.dart';
 import '../../../core/network/client.dart';
 
@@ -14,75 +14,21 @@ class VerifyAccountScreen extends StatefulWidget {
 }
 
 class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
-  late final AuthService _service;
-  final List<TextEditingController> _otpCtrls = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-
-  bool _isLoading = false;
+  late final VerifyAccountController controller;
 
   @override
   void initState() {
     super.initState();
-    _service = AuthService(DioClient.dio);
+    controller = VerifyAccountController(
+      auth: AuthService(DioClient.dio),
+      email: widget.email,
+    );
   }
 
   @override
   void dispose() {
-    for (final c in _otpCtrls) {
-      c.dispose();
-    }
+    controller.dispose();
     super.dispose();
-  }
-
-  String get _otp => _otpCtrls.map((c) => c.text).join();
-
-  Future<void> _verify() async {
-    final otp = _otp.trim();
-
-    if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the 6-digit code.')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final result = await _service.verifyOtp(email: widget.email, otp: otp);
-
-      if (!mounted) return;
-
-      if (result.status == 'OK') {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-          (_) => false,
-        );
-        return;
-      }
-
-      final msg = switch (result.status) {
-        'INVALID_OTP' => 'Invalid code. Please try again.',
-        'OTP_EXPIRED' => 'Code expired. Please request a new one.',
-        'NO_ACTIVE_OTP' => 'No active code. Request a new OTP.',
-        'PENDING_APPROVAL' => 'Your account is pending approval.',
-        'ACCOUNT_DELETED' => 'This account was deleted.',
-        'NEW_USER_REQUIRED' => 'No account found. Please register.',
-        _ => 'Verification failed: ${result.status}',
-      };
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   @override
@@ -199,13 +145,37 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onPressed: _isLoading ? null : _verify,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 3),
-                          )
+                    onPressed: controller.isLoading
+                    ? null
+                    : () async {
+                        await controller.verify();
+
+                        if (!mounted) return;
+
+                        // show error if any
+                        final msg = controller.errorMessage;
+                        if (msg != null && msg.isNotEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(msg)),
+                          );
+                        }
+
+                        // navigate if verified
+                        if (controller.isVerified) {
+                          Navigator.of(context).pushReplacementNamed('/dashboard');
+                        }
+                      },
+                child: controller.isLoading
+                    ? SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            colorScheme.onPrimary,
+                          ),
+                        ),
+                      )
                         : const Text(
                             "VERIFY",
                             style: TextStyle(
@@ -266,12 +236,13 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
         ],
       ),
       child: TextField(
-        controller: _otpCtrls[index],
+        controller: controller.otpControllers[index],
         autofocus: isFirst,
         onChanged: (value) {
           if (value.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
-          if (value.isEmpty && index > 0)
+          if (value.isEmpty && index > 0) {
             FocusScope.of(context).previousFocus();
+          }
         },
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
