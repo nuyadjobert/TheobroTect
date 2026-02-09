@@ -4,15 +4,16 @@ import 'modules/introduction/views/introduction_screen.dart';
 import 'core/network/client.dart';
 
 void main() {
-  const renderUrl = 'https://theorbrotect-backend.onrender.com';
-  // const localUrl = 'http://10.0.2.2:3000'; 
+  DioClient.init(baseUrl: "https://theorbrotect-backend.onrender.com");
 
-  // const baseUrl =  bool.fromEnvironment('dart.vm.product')
-  //     ? renderUrl      
-  //     : localUrl;    
-
-  DioClient.init(baseUrl: renderUrl);
-  debugPrint('BASE URL = $renderUrl');
+  // Example POST
+  DioClient.dio.post("/auth/request-otp", data: {
+    "email": "jaysonbutawan2@gmail.com",
+  }).then((response) {
+    print("OTP sent: ${response.data}");
+  }).catchError((e) {
+    print("Error: $e");
+  });
 
 
   runApp(const MyApp());
