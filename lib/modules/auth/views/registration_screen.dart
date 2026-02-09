@@ -32,7 +32,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    // final colorScheme = theme.colorScheme;
 
     const Color primaryGreen = Color(0xFF2E7D32);
     const Color inputBorderColor = Color(0xFF4CAF50);
@@ -224,7 +224,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           )
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children:  [
                               Text(
                                 "Register",
                                 style: TextStyle(

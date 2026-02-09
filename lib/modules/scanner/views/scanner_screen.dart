@@ -16,7 +16,7 @@ class _ScannerScreenState extends State<ScannerScreen> with SingleTickerProvider
   List<CameraDescription>? _cameras;
   bool _isPermissionGranted = false;
   bool _isFlashOn = false;
-  bool _isAnalyzing = false; // New state for the loading overlay
+  bool _isAnalyzing = false; 
   
   late AnimationController _animationController;
   late Animation<double> _animation;

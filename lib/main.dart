@@ -5,13 +5,15 @@ import 'core/network/client.dart';
 
 void main() {
   const renderUrl = 'https://theorbrotect-backend.onrender.com';
-  const localUrl = 'http://10.0.2.2:3000'; 
+  // const localUrl = 'http://10.0.2.2:3000'; 
 
-  const baseUrl =  bool.fromEnvironment('dart.vm.product')
-      ? renderUrl      
-      : localUrl;    
+  // const baseUrl =  bool.fromEnvironment('dart.vm.product')
+  //     ? renderUrl      
+  //     : localUrl;    
 
-  DioClient.init(baseUrl: baseUrl);
+  DioClient.init(baseUrl: renderUrl);
+  debugPrint('BASE URL = $renderUrl');
+
 
   runApp(const MyApp());
 }
