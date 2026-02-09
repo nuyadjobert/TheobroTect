@@ -12,6 +12,7 @@ import '../widgets/inspection_card.dart';
 import '../widgets/notification_icon.dart';
 import '../../learn/views/learn_hub_screen.dart';
 import '../../history/views/history_screen.dart';
+import '../../notifications/views/notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -144,17 +145,19 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           items: const [
-BottomNavigationBarItem(
-    icon: Icon(Icons.eco_outlined), // Looks like a Cacao Leaf/Pod
-    activeIcon: Icon(Icons.eco_rounded),
-    label: 'Home',
-  ),            BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: 'History'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.eco_outlined),
+              activeIcon: Icon(Icons.eco_rounded),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: 'History'),
             BottomNavigationBarItem(icon: Icon(Icons.menu_book_rounded), label: 'Learn'),
-BottomNavigationBarItem(
-    icon: Icon(Icons.tune_rounded),
-    activeIcon: Icon(Icons.settings_input_component_rounded),
-    label: 'Settings',
-  ),],
+            BottomNavigationBarItem(
+              icon: Icon(Icons.tune_rounded),
+              activeIcon: Icon(Icons.settings_input_component_rounded),
+              label: 'Settings',
+            ),
+          ],
         ),
       ),
     );
@@ -197,8 +200,25 @@ BottomNavigationBarItem(
                       ],
                     ),
                     const Spacer(),
-                    const NotificationIcon(),
-                  ],
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        print("Notification clicked!"); 
+                        // Using rootNavigator: true to push over the PageView/BottomNav
+                        Navigator.of(context, rootNavigator: true).push(
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationScreen(),
+                          ),
+                        ).catchError((error) {
+                          print("Navigation error caught: $error");
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: const NotificationIcon(),
+                      ),
+                    ),
+                  ], 
                 ),
                 const SizedBox(height: 20),
                 WeatherCard(
