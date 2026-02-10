@@ -8,13 +8,13 @@ void main() {
   DioClient.init(baseUrl: "https://theorbrotect-backend.onrender.com");
 
   // Example POST
-  DioClient.dio.post("/auth/request-otp", data: {
-    "email": "jaysonbutawan2@gmail.com",
-  }).then((response) {
-    print("OTP sent: ${response.data}");
-  }).catchError((e) {
-    print("Error: $e");
-  });
+  // DioClient.dio.post("/auth/request-otp", data: {
+  //   "email": "jaysonbutawan2@gmail.com",
+  // }).then((response) {
+  //   print("OTP sent: ${response.data}");
+  // }).catchError((e) {
+  //   print("Error: $e");
+  // });
 
 
   runApp(const MyApp());
@@ -31,7 +31,8 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorSchemeSeed: Colors.green,
         ),
-        home: const HomeScreen(),
+        // home: const HomeScreen(),
+        home: const IntroductionScreen(),
       ),
     );
   }
