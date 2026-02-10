@@ -14,6 +14,11 @@ import '../../learn/views/learn_hub_screen.dart';
 import '../../history/views/history_screen.dart';
 import '../../notifications/views/notification_screen.dart';
 
+// Import the new drawer components (assuming you place them in widgets)
+import '../widgets/nav_drawer_header.dart';
+import '../widgets/nav_farm_info.dart';
+import '../widgets/nav_stats_card.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,6 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey _profileKey = GlobalKey();
   final GlobalKey _catalogKey = GlobalKey();
   final GlobalKey _scannerKey = GlobalKey();
+  // Key to control the Scaffold (opening the drawer)
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _showWeatherTip = false;
   int _currentIndex = 0;
@@ -116,7 +123,19 @@ class _HomeScreenState extends State<HomeScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
+        key: _scaffoldKey, // Assigned the key here
         backgroundColor: const Color(0xFFF5FAF3),
+        // Adding the Side Navigation Drawer
+        drawer: Drawer(
+          backgroundColor: Colors.white,
+          child: Column(
+            children: [
+              const NavDrawerHeader(),
+              const NavFarmInfo(),
+              const NavStatsCard(),
+            ],
+          ),
+        ),
         body: PageView(
           controller: _pageController,
           onPageChanged: (index) {
@@ -179,15 +198,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       key: _profileKey,
                       title: 'Your Profile',
                       description: 'Manage your farm settings and account details here.',
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.green.withAlpha((0.2 * 255).toInt()), width: 2),
-                        ),
-                        child: const CircleAvatar(
-                          radius: 24,
-                          backgroundColor: Color(0xFFF1F1F1),
-                          child: Icon(Icons.person_outline, color: Colors.green),
+                      child: GestureDetector(
+                        onTap: () => _scaffoldKey.currentState?.openDrawer(), // Opens drawer
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.green.withAlpha((0.2 * 255).toInt()), width: 2),
+                          ),
+                          child: const CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Color(0xFFF1F1F1),
+                            child: Icon(Icons.person_outline, color: Colors.green),
+                          ),
                         ),
                       ),
                     ),
@@ -204,7 +226,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       behavior: HitTestBehavior.opaque,
                       onTap: () {
                         print("Notification clicked!"); 
-                        // Using rootNavigator: true to push over the PageView/BottomNav
                         Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
                             builder: (context) => const NotificationScreen(),

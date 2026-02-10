@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
 
@@ -47,7 +48,15 @@ class _WeatherCardState extends State<WeatherCard>
 
   Future<void> _loadWeather() async {
     try {
-      final result = await _weatherService.fetchWeatherByCity('Tagum');
+      // Get device's current location
+      Position position = await _getCurrentLocation();
+      
+      // Fetch weather using current coordinates
+      final result = await _weatherService.fetchWeatherByCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      
       setState(() {
         _weather = result;
         _loading = false;
@@ -57,6 +66,71 @@ class _WeatherCardState extends State<WeatherCard>
       print('Weather fetch error: $e');
       setState(() => _loading = false);
     }
+  }
+
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // If GPS is off, use fallback location (Polomolok)
+      return Position(
+        latitude: 6.6397,
+        longitude: 125.0583,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        heading: 0,
+        speed: 0,
+        speedAccuracy: 0,
+        altitudeAccuracy: 0,
+        headingAccuracy: 0,
+      );
+    }
+
+    // Check location permission
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permission denied, use fallback
+        return Position(
+          latitude: 6.6397,
+          longitude: 125.0583,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          heading: 0,
+          speed: 0,
+          speedAccuracy: 0,
+          altitudeAccuracy: 0,
+          headingAccuracy: 0,
+        );
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions permanently denied, use fallback
+      return Position(
+        latitude: 6.6397,
+        longitude: 125.0583,
+        timestamp: DateTime.now(),
+        accuracy: 0,
+        altitude: 0,
+        heading: 0,
+        speed: 0,
+        speedAccuracy: 0,
+        altitudeAccuracy: 0,
+        headingAccuracy: 0,
+      );
+    }
+
+    // Get actual current position
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
   }
 
   @override
