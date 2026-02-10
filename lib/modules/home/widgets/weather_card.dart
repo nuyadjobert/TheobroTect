@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../models/weather_model.dart';
+import '../services/weather_service.dart';
 
-class WeatherCard extends StatelessWidget {
+class WeatherCard extends StatefulWidget {
   final bool showWeatherTip;
   final VoidCallback onTap;
 
@@ -11,14 +13,103 @@ class WeatherCard extends StatelessWidget {
   });
 
   @override
+  State<WeatherCard> createState() => _WeatherCardState();
+}
+
+class _WeatherCardState extends State<WeatherCard>
+    with SingleTickerProviderStateMixin {
+  final WeatherService _weatherService = WeatherService();
+  WeatherModel? _weather;
+  bool _loading = true;
+
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
+    );
+    _loadWeather();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadWeather() async {
+    try {
+      final result = await _weatherService.fetchWeatherByCity('Tagum');
+      setState(() {
+        _weather = result;
+        _loading = false;
+      });
+      _fadeController.forward();
+    } catch (e) {
+      print('Weather fetch error: $e');
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    bool isRainyExpected = true;
-    String weatherCondition = "Showers Expected";
     const Color brandGreen = Color(0xFF2D6A4F);
     const Color darkGreen = Color(0xFF1B4332);
 
+    if (_loading) {
+      return SizedBox(
+        width: double.infinity,
+        height: 80,
+        child: Center(
+          child: CircularProgressIndicator(
+            color: brandGreen,
+            strokeWidth: 2,
+          ),
+        ),
+      );
+    }
+
+    if (_weather == null) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: Colors.white.withAlpha((0.3 * 255).toInt()),
+          border: Border.all(
+            color: brandGreen.withAlpha((0.15 * 255).toInt()),
+            width: 1,
+          ),
+        ),
+        child: const Text(
+          "Weather unavailable",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
+    // Weather info
+    bool isRainyExpected = ['Rain', 'Thunderstorm', 'Drizzle', 'Squall']
+        .contains(_weather!.condition);
+    String weatherCondition = _weather!.condition;
+    String temperature = "${_weather!.temperature.round()}°C";
+    String city = _weather!.city;
+
+    // Advisory tip
+    String tipMessage = isRainyExpected
+        ? "Rain expected soon. Avoid spraying to prevent wash-off."
+        : "Weather is clear. Ideal time for field work.";
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -42,63 +133,67 @@ class WeatherCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    if (isRainyExpected)
-                      const Icon(
-                        Icons.cloud_outlined,
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      if (isRainyExpected)
+                        const Icon(Icons.cloud_outlined,
+                            color: brandGreen, size: 18)
+                      else
+                        const SizedBox(width: 18), // align text
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            city,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: darkGreen,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          Text(
+                            weatherCondition,
+                            style: TextStyle(
+                              color: brandGreen.withAlpha((0.7 * 255).toInt()),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        temperature,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: darkGreen,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        widget.showWeatherTip
+                            ? Icons.expand_less
+                            : Icons.expand_more,
                         color: brandGreen,
                         size: 18,
                       ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Tagum City",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: darkGreen,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        Text(
-                          weatherCondition,
-                          style: TextStyle(
-                            color: brandGreen.withAlpha((0.7 * 255).toInt()),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    const Text(
-                      "26°C",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: darkGreen,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      showWeatherTip ? Icons.expand_less : Icons.expand_more,
-                      color: brandGreen,
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-            if (showWeatherTip) ...[
+            if (widget.showWeatherTip) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Divider(
@@ -106,38 +201,39 @@ class WeatherCard extends StatelessWidget {
                   thickness: 1,
                 ),
               ),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.5 * 255).toInt()),
-                      shape: BoxShape.circle,
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha((0.5 * 255).toInt()),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.tips_and_updates_outlined,
+                        color: Color(0xFFE5A500),
+                        size: 14,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.tips_and_updates_outlined,
-                      color: Color(0xFFE5A500),
-                      size: 14,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "FARMER'S ADVISORY",
-                          style: TextStyle(
-                            fontSize: 7,
-                            fontWeight: FontWeight.w900,
-                            color: brandGreen,
-                            letterSpacing: 0.6,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "FARMER'S ADVISORY",
+                            style: TextStyle(
+                              fontSize: 7,
+                              fontWeight: FontWeight.w900,
+                              color: brandGreen,
+                              letterSpacing: 0.6,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 1),
-                        if (isRainyExpected)
+                          const SizedBox(height: 1),
                           Text(
-                            "Rain expected soon. Avoid spraying to prevent wash-off.",
+                            tipMessage,
                             style: TextStyle(
                               fontSize: 10,
                               height: 1.3,
@@ -145,10 +241,11 @@ class WeatherCard extends StatelessWidget {
                               color: darkGreen.withAlpha((0.8 * 255).toInt()),
                             ),
                           ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ],
