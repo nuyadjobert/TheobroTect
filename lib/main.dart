@@ -31,7 +31,10 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorSchemeSeed: Colors.green,
         ),
+<<<<<<< Updated upstream
         // home: const HomeScreen(),
+=======
+>>>>>>> Stashed changes
         home: const IntroductionScreen(),
       ),
     );
