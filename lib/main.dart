@@ -1,22 +1,14 @@
 import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart'; 
-import 'modules/introduction/views/introduction_screen.dart';
+// import 'modules/introduction/views/introduction_screen.dart';
 import 'core/network/client.dart';
+import 'core/ml/cacao_model_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   DioClient.init(baseUrl: "https://theorbrotect-backend.onrender.com");
-
-  // Example POST
-  // DioClient.dio.post("/auth/request-otp", data: {
-  //   "email": "jaysonbutawan2@gmail.com",
-  // }).then((response) {
-  //   print("OTP sent: ${response.data}");
-  // }).catchError((e) {
-  //   print("Error: $e");
-  // });
-
-
+   await CacaoModelService().loadModel()
   runApp(const MyApp());
 }
 class MyApp extends StatelessWidget {
@@ -31,7 +23,6 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorSchemeSeed: Colors.green,
         ),
-        // home: const HomeScreen(),
         home: const HomeScreen(),
       ),
     );
