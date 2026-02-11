@@ -1,0 +1,369 @@
+{
+  "schema_version": "1.0.0",
+  "app": {
+    "default_language": "en",
+    "supported_languages": ["en", "tl"]
+  },
+  "model": {
+    "type": "tflite_classification",
+    "labels_in_order": [
+      "black_pod_disease_mild",
+      "black_pod_disease_moderate",
+      "black_pod_disease_severe",
+      "cacao_pod_borer_mild",
+      "cacao_pod_borer_moderate",
+      "cacao_pod_borer_severe",
+      "healthy",
+      "mealybug_mild",
+      "mealybug_moderate",
+      "mealybug_severe"
+    ],
+    "label_format": "disease_severity",
+    "severity_values": ["mild", "moderate", "severe"],
+    "confidence": {
+      "uncertain_threshold": 0.6,
+      "show_top_k": 3
+    }
+  },
+  "ui": {
+    "severity_badges": {
+      "mild": { "icon": "🟢", "priority": 1 },
+      "moderate": { "icon": "🟡", "priority": 2 },
+      "severe": { "icon": "🔴", "priority": 3 }
+    },
+    "unknown_label_behavior": "show_uncertain"
+  },
+  "legal": {
+    "disclaimer": {
+      "en": "Guidance is based on standard integrated pest management (IPM) practices. Always consult your local DA/municipal agriculturist for approved products, correct rates, and safety rules.",
+      "tl": "Ang gabay na ito ay batay sa karaniwang Integrated Pest Management (IPM). Kumonsulta palagi sa lokal na DA/municipal agriculturist para sa aprubadong produkto, tamang dose, at mga patakaran sa kaligtasan."
+    }
+  },
+  "diseases": {
+    "healthy": {
+      "display_name": { "en": "Healthy", "tl": "Malusog" },
+      "description": {
+        "en": "No clear disease or pest symptoms detected from the scan.",
+        "tl": "Walang malinaw na sintomas ng sakit o peste batay sa scan."
+      },
+      "recommendations": {
+        "default": {
+          "what_to_do_now": {
+            "en": ["Continue regular monitoring.", "Keep records of scans (date, area, tree/pod)."],
+            "tl": ["Magpatuloy sa regular na pagmomonitor.", "Itala ang resulta ng scan (petsa, lugar, puno/bunga)."]
+          },
+          "prevention": {
+            "en": [
+              "Maintain farm sanitation: remove fallen pods and debris.",
+              "Prune to improve airflow and reduce humidity around pods and canopy.",
+              "Harvest ripe pods on schedule to reduce pest/disease buildup."
+            ],
+            "tl": [
+              "Panatilihin ang kalinisan sa taniman: alisin ang nalaglag na bunga at mga kalat.",
+              "Magpruning para sa mas maayos na daloy ng hangin at mas mababang halumigmig.",
+              "Mag-ani sa tamang oras upang mabawasan ang pagdami ng peste at sakit."
+            ]
+          },
+          "when_to_escalate": {
+            "en": ["If you notice fast-spreading spots/rot within 3–5 days, rescan and consult an agriculturist."],
+            "tl": ["Kung mabilis kumalat ang mantsa/pagkabulok sa loob ng 3–5 araw, mag-rescan at kumonsulta sa agriculturist."]
+          }
+        }
+      }
+    },
+
+    "black_pod_disease": {
+      "display_name": { "en": "Black Pod Disease", "tl": "Black Pod (Sakit sa Bunga)" },
+      "description": {
+        "en": "Often worsens in wet, humid conditions. Prevention focuses on sanitation, pruning, frequent harvesting, and drainage.",
+        "tl": "Mas lumalala kapag basa at mahalumigmig. Nakatuon ang pag-iwas sa kalinisan, pruning, madalas na pag-ani, at maayos na drainage."
+      },
+      "recommendations": {
+        "mild": {
+          "what_to_do_now": {
+            "en": [
+              "Remove and destroy early infected pods (do not leave on the ground).",
+              "Clean the area under the tree and remove pod debris."
+            ],
+            "tl": [
+              "Alisin at sirain ang mga bagong infected na bunga (huwag iwan sa lupa).",
+              "Linisin ang paligid ng puno at alisin ang mga latak ng bunga."
+            ]
+          },
+          "prevention": {
+            "en": [
+              "Harvest frequently to avoid pathogen buildup on pods.",
+              "Prune cacao and shade trees to reduce humidity and improve airflow.",
+              "Maintain good drainage to prevent standing water and splash spread."
+            ],
+            "tl": [
+              "Madalas na pag-ani upang mabawasan ang pagdami ng sanhi ng sakit sa bunga.",
+              "Magpruning ng cacao at shade trees para bumaba ang halumigmig at gumanda ang airflow.",
+              "Ayusin ang drainage upang maiwasan ang nakaimbak na tubig at pagkalat dahil sa talsik."
+            ]
+          },
+          "monitoring": {
+            "en": ["Rescan the same tree after 7 days, especially after rains."],
+            "tl": ["I-rescan ang parehong puno matapos ang 7 araw, lalo na pagkatapos ng ulan."]
+          },
+          "when_to_escalate": {
+            "en": ["If multiple pods on the same tree show new lesions/rot within a week, treat as moderate and consult guidance."],
+            "tl": ["Kung maraming bunga sa iisang puno ang may bagong mantsa/pagkabulok sa loob ng isang linggo, ituring na moderate at kumonsulta."]
+          }
+        },
+        "moderate": {
+          "what_to_do_now": {
+            "en": [
+              "Remove and destroy/bury infected, dead, and mummified pods.",
+              "Sanitize tools after removing diseased pods/branches."
+            ],
+            "tl": [
+              "Alisin at sirain/ibaon ang infected, patay, at tuyong (mummified) bunga.",
+              "Linisin ang mga gamit pagkatapos mag-alis ng apektadong bunga/sanga."
+            ]
+          },
+          "prevention": {
+            "en": [
+              "Increase harvesting frequency during wet periods.",
+              "Prune to open the canopy and reduce humidity.",
+              "Improve drainage pathways (ditches, outlets) to reduce puddling."
+            ],
+            "tl": [
+              "Dagdagan ang dalas ng pag-ani lalo na sa tag-ulan.",
+              "Magpruning upang bumukas ang canopy at bumaba ang halumigmig.",
+              "Ayusin ang daluyan ng tubig (canal/kanal) upang mabawasan ang pagbabara at puddles."
+            ]
+          },
+          "seek_help": {
+            "en": [
+              "Consult the DA/municipal agriculturist for locally approved treatment options and safe use instructions."
+            ],
+            "tl": [
+              "Kumonsulta sa DA/municipal agriculturist para sa aprubadong opsyon ng paggamot at tamang paggamit."
+            ]
+          },
+          "when_to_escalate": {
+            "en": ["If rot continues to spread despite sanitation + pruning + frequent harvest, treat as severe."],
+            "tl": ["Kung patuloy ang pagkalat kahit may sanitation + pruning + madalas na ani, ituring na severe."]
+          }
+        },
+        "severe": {
+          "what_to_do_now": {
+            "en": [
+              "Remove all infected pods immediately and destroy/bury them.",
+              "Prune cacao and shade trees to reduce humidity and improve sunlight penetration.",
+              "Prioritize sanitation rounds after rains."
+            ],
+            "tl": [
+              "Agad alisin ang lahat ng infected na bunga at sirain/ibaon.",
+              "Magpruning ng cacao at shade trees para bumaba ang halumigmig at pumasok ang sikat ng araw.",
+              "Gawin ang sanitation lalo na pagkatapos ng ulan."
+            ]
+          },
+          "prevention": {
+            "en": [
+              "Maintain strict sanitation and frequent harvesting to reduce sources of infection.",
+              "Keep drainage functional to limit water spread.",
+              "Use only government-approved products and follow label instructions if chemical control is advised by authorities."
+            ],
+            "tl": [
+              "Mahigpit na sanitation at madalas na pag-ani upang mabawasan ang pinagmumulan ng impeksiyon.",
+              "Panatilihing maayos ang drainage upang mabawasan ang pagkalat sa tubig.",
+              "Gumamit lamang ng aprubadong produkto at sundin ang label kung pinayuhan ng awtoridad ang chemical control."
+            ]
+          },
+          "seek_help": {
+            "en": [
+              "Contact your DA/municipal agriculturist for urgent field assessment and approved management plan."
+            ],
+            "tl": [
+              "Makipag-ugnayan sa DA/municipal agriculturist para sa agarang pagtingin sa bukid at aprubadong plano."
+            ]
+          }
+        }
+      }
+    },
+
+    "cacao_pod_borer": {
+      "display_name": { "en": "Cacao Pod Borer", "tl": "Cacao Pod Borer (Uod sa Bunga)" },
+      "description": {
+        "en": "Management focuses on breaking the pest life cycle through frequent harvest, sanitation, pruning, and pod bagging/sleeving.",
+        "tl": "Nakatuon ang pamamahala sa pagputol ng life cycle sa pamamagitan ng madalas na pag-ani, sanitation, pruning, at pagbalot (bagging/sleeving) ng bunga."
+      },
+      "recommendations": {
+        "mild": {
+          "what_to_do_now": {
+            "en": ["Harvest ripe pods immediately and do not delay harvest schedules.", "Remove and dispose of damaged/infested pods properly."],
+            "tl": ["Agad anihin ang hinog na bunga at huwag patagalin ang schedule ng pag-ani.", "Alisin at itapon nang tama ang apektado/infested na bunga."]
+          },
+          "prevention": {
+            "en": [
+              "Harvest weekly (or very regularly) to break the pest life cycle.",
+              "Bury empty pod husks and remove damaged/diseased pods from trees.",
+              "Prune to increase sunlight and airflow (the pest favors shaded, humid conditions).",
+              "Bag or sleeve young pods where practical to reduce egg-laying."
+            ],
+            "tl": [
+              "Mag-ani lingguhan (o napakadalas) para maputol ang life cycle ng peste.",
+              "Ibaon ang balat ng bunga at alisin ang mga sirâ/ may sakit na bunga sa mga puno.",
+              "Magpruning para dumami ang sikat ng araw at airflow (mas gusto ng peste ang makulimlim at mahalumigmig).",
+              "Balutin ang batang bunga (bagging/sleeving) kung kaya para mabawasan ang pangingitlog."
+            ]
+          },
+          "monitoring": {
+            "en": ["Rescan and inspect pods every 7 days; focus on pods in shaded areas."],
+            "tl": ["Mag-rescan at mag-inspeksiyon bawat 7 araw; tutukan ang mga bungang nasa lilim."]
+          },
+          "when_to_escalate": {
+            "en": ["If you see increasing damaged pods across multiple trees despite weekly harvest, treat as moderate."],
+            "tl": ["Kung dumarami ang apektadong bunga sa maraming puno kahit lingguhan ang ani, ituring na moderate."]
+          }
+        },
+        "moderate": {
+          "what_to_do_now": {
+            "en": [
+              "Increase harvest frequency (aim weekly) and remove all ripe pods.",
+              "Collect and dispose of infested pods and husks (bury/destroy) to reduce breeding sites."
+            ],
+            "tl": [
+              "Dagdagan ang dalas ng pag-ani (target lingguhan) at alisin ang lahat ng hinog na bunga.",
+              "Tipunin at itapon nang tama ang infested na bunga at balat (ibaon/sirain) para mabawasan ang pamugaran."
+            ]
+          },
+          "prevention": {
+            "en": [
+              "Maintain pruning to reduce shade and improve airflow.",
+              "Use pod bagging/sleeving on developing pods where feasible.",
+              "Follow IPM: prioritize cultural control first; use only approved products if advised by local authorities."
+            ],
+            "tl": [
+              "Panatilihin ang pruning para mabawasan ang lilim at gumanda ang airflow.",
+              "Gamitin ang pagbalot (bagging/sleeving) sa mga lumalaking bunga kung posible.",
+              "Sundin ang IPM: unahin ang cultural control; gumamit lamang ng aprubadong produkto kung pinayuhan ng awtoridad."
+            ]
+          },
+          "seek_help": {
+            "en": ["Consult DA/municipal agriculturist for locally recommended IPM options and approved controls."],
+            "tl": ["Kumonsulta sa DA/municipal agriculturist para sa lokal na rekomendasyon sa IPM at aprubadong control."]
+          },
+          "when_to_escalate": {
+            "en": ["If losses remain high after sanitation + weekly harvest + pruning, treat as severe."],
+            "tl": ["Kung mataas pa rin ang pinsala kahit may sanitation + lingguhang ani + pruning, ituring na severe."]
+          }
+        },
+        "severe": {
+          "what_to_do_now": {
+            "en": [
+              "Start an intensive sanitation + weekly harvest program across the whole farm block.",
+              "Dispose of all infested pods/husks properly (bury/destroy) immediately.",
+              "Prioritize pod sleeving/bagging where possible on remaining developing pods."
+            ],
+            "tl": [
+              "Gumawa ng masinsinang sanitation + lingguhang pag-ani sa buong bahagi ng taniman.",
+              "Agad itapon nang tama (ibaon/sirain) ang lahat ng infested na bunga/balat.",
+              "Unahin ang pod sleeving/bagging kung posible sa mga natitirang lumalaking bunga."
+            ]
+          },
+          "prevention": {
+            "en": [
+              "Keep canopy managed via pruning to reduce shade and humidity.",
+              "Apply only authority-approved interventions if recommended, and follow label directions and safety measures."
+            ],
+            "tl": [
+              "Panatilihing maayos ang canopy sa pamamagitan ng pruning para mabawasan ang lilim at halumigmig.",
+              "Gumamit lamang ng aprubadong intervention kung irekomenda, at sundin ang label at safety measures."
+            ]
+          },
+          "seek_help": {
+            "en": ["Request DA/municipal agriculturist support for a farm-wide IPM plan and approved products/methods."],
+            "tl": ["Humingi ng tulong sa DA/municipal agriculturist para sa farm-wide IPM plan at aprubadong produkto/paraan."]
+          }
+        }
+      }
+    },
+
+    "mealybug": {
+      "display_name": { "en": "Mealybug", "tl": "Mealybug (Kuto-puti)" },
+      "description": {
+        "en": "Sap-sucking pest that weakens plants and can cause sooty mold from honeydew. Prevention focuses on sanitation, pruning, and regular monitoring.",
+        "tl": "Pesteng sumisipsip ng katas na nagpapahina sa halaman at maaaring magdulot ng sooty mold dahil sa honeydew. Nakatuon ang pag-iwas sa sanitation, pruning, at regular na pagmomonitor."
+      },
+      "recommendations": {
+        "mild": {
+          "what_to_do_now": {
+            "en": ["Inspect undersides of leaves, stems, and pods; remove small colonies where practical.", "Wash/clean heavily affected small areas if feasible (avoid spreading to other trees)."],
+            "tl": ["Suriin ang ilalim ng dahon, tangkay, at bunga; alisin ang maliliit na kolonya kung kaya.", "Linisin ang maliliit na apektadong bahagi kung posible (iwasang ikalat sa ibang puno)."]
+          },
+          "prevention": {
+            "en": [
+              "Prune to improve airflow and reduce sheltered pest build-up sites.",
+              "Maintain sanitation: remove heavily infested plant parts and dispose properly.",
+              "Avoid unnecessary spraying; protect beneficial insects when possible."
+            ],
+            "tl": [
+              "Magpruning para gumanda ang airflow at mabawasan ang pamugaran ng peste.",
+              "Panatilihin ang sanitation: alisin ang lubhang apektadong bahagi at itapon nang tama.",
+              "Iwasan ang hindi kailangang pag-spray; protektahan ang mga kapaki-pakinabang na insekto kung maaari."
+            ]
+          },
+          "monitoring": {
+            "en": ["Rescan and recheck after 7–10 days to see if colonies are increasing."],
+            "tl": ["Mag-rescan at mag-recheck matapos ang 7–10 araw kung dumadami ang kolonya."]
+          },
+          "when_to_escalate": {
+            "en": ["If colonies spread to multiple branches/pods or sooty mold increases, treat as moderate."],
+            "tl": ["Kung kumalat sa maraming sanga/bunga o dumami ang sooty mold, ituring na moderate."]
+          }
+        },
+        "moderate": {
+          "what_to_do_now": {
+            "en": ["Prune and remove heavily infested parts and dispose properly.", "Improve tree vigor through good farm practices (nutrition, watering management)."],
+            "tl": ["Putulin at alisin ang lubhang apektadong bahagi at itapon nang tama.", "Palakasin ang puno sa pamamagitan ng maayos na pag-aalaga (abono, tamang pamamahala ng tubig)."]
+          },
+          "prevention": {
+            "en": [
+              "Keep regular pruning and sanitation schedules.",
+              "Monitor nearby trees to prevent spread.",
+              "If control products are needed, consult local authorities for approved options and correct use."
+            ],
+            "tl": [
+              "Panatilihin ang regular na pruning at sanitation.",
+              "Bantayan ang mga katabing puno upang maiwasan ang pagkalat.",
+              "Kung kailangan ng control products, kumonsulta sa lokal na awtoridad para sa aprubadong opsyon at tamang paggamit."
+            ]
+          },
+          "seek_help": {
+            "en": ["Consult DA/municipal agriculturist if infestation persists or spreads quickly."],
+            "tl": ["Kumonsulta sa DA/municipal agriculturist kung nagpapatuloy o mabilis kumakalat ang infestation."]
+          }
+        },
+        "severe": {
+          "what_to_do_now": {
+            "en": [
+              "Remove and dispose of heavily infested plant parts immediately to reduce spread.",
+              "Implement farm-wide monitoring and sanitation rounds."
+            ],
+            "tl": [
+              "Agad alisin at itapon ang lubhang infested na bahagi upang mabawasan ang pagkalat.",
+              "Magpatupad ng farm-wide monitoring at regular na sanitation."
+            ]
+          },
+          "prevention": {
+            "en": [
+              "Maintain strong IPM: sanitation + pruning + monitoring as routine.",
+              "Use only authority-approved interventions when advised, following label and safety rules."
+            ],
+            "tl": [
+              "Panatilihin ang matibay na IPM: gawing regular ang sanitation + pruning + monitoring.",
+              "Gumamit lamang ng aprubadong intervention kung pinayuhan, at sundin ang label at safety rules."
+            ]
+          },
+          "seek_help": {
+            "en": ["Seek on-site assessment by DA/municipal agriculturist for an appropriate, approved control plan."],
+            "tl": ["Humingi ng on-site na pagtingin mula sa DA/municipal agriculturist para sa angkop at aprubadong plano."]
+          }
+        }
+      }
+    }
+  }
+}

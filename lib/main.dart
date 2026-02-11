@@ -8,7 +8,7 @@ import 'core/ml/cacao_model_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   DioClient.init(baseUrl: "https://theorbrotect-backend.onrender.com");
-   await CacaoModelService().loadModel()
+   await CacaoModelService().loadModel();
   runApp(const MyApp());
 }
 class MyApp extends StatelessWidget {
