@@ -12,6 +12,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   dio: ^5.4.3
   flutter_secure_storage: ^9.0.0
+  shimmer: ^3.0.0
   
   camera: ^0.11.0
   permission_handler: ^11.3.1
@@ -42,3 +43,6 @@ flutter:
     - assets/models/final_cacao_disease_model1.0.tflite
     - assets/labels/labels.txt
     - assets/rules/recommendations.json
+    - assets/images/1.png
+    - assets/images/2.png
+    - assets/images/3.png
