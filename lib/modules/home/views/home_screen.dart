@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:ui';
+import 'dart:math' as math;
 import 'package:cacao_apps/modules/settings/views/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:shimmer/shimmer.dart'; 
 import '../../disease/views/disease_detail_sheet.dart';
 
 import '../widgets/weather_card.dart';
@@ -14,7 +17,8 @@ import '../../learn/views/learn_hub_screen.dart';
 import '../../history/views/history_screen.dart';
 import '../../notifications/views/notification_screen.dart';
 
-// Import the new drawer components (assuming you place them in widgets)
+import '../../introduction/widgets/loading_screen.dart'; 
+
 import '../widgets/nav_drawer_header.dart';
 import '../widgets/nav_farm_info.dart';
 import '../widgets/nav_stats_card.dart';
@@ -30,13 +34,15 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey _profileKey = GlobalKey();
   final GlobalKey _catalogKey = GlobalKey();
   final GlobalKey _scannerKey = GlobalKey();
-  // Key to control the Scaffold (opening the drawer)
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _showWeatherTip = false;
   int _currentIndex = 0;
   int _bottomNavIndex = 0;
+  int _targetIndex = 0; // NEW: Tracks which page we are moving TO
   late PageController _pageController;
+
+  bool _isLoading = false;
 
   final List<Map<String, dynamic>> _diseaseData = [
     {
@@ -119,13 +125,13 @@ class _HomeScreenState extends State<HomeScreen> {
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
         systemNavigationBarColor: Color(0xFFF5FAF3),
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        key: _scaffoldKey, // Assigned the key here
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5FAF3),
-        // Adding the Side Navigation Drawer
         drawer: Drawer(
           backgroundColor: Colors.white,
           child: Column(
@@ -136,26 +142,65 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        body: PageView(
-          controller: _pageController,
-          onPageChanged: (index) {
-            setState(() => _bottomNavIndex = index);
-          },
+        body: Stack(
           children: [
-            _buildHomeContent(), 
-            const HistoryScreen(), 
-            const LearnHubScreen(), 
-            const SettingsScreen(), 
+            PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(), // Prevent manual swipe during loading
+              onPageChanged: (index) {
+                setState(() => _bottomNavIndex = index);
+              },
+              children: [
+                _buildHomeContent(), 
+                const HistoryScreen(), 
+                const LearnHubScreen(), 
+                const SettingsScreen(), 
+              ],
+            ),
+            
+            if (_isLoading)
+              Positioned.fill(
+                child: Container(
+                  color: const Color(0xFFF5FAF3),
+                  child: Stack(
+                    children: [
+                      // Pass targetIndex so the skeleton matches the incoming page
+                      SkeletonLayout(pageIndex: _targetIndex),
+                      
+                      BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                        child: Container(
+                          color: const Color(0xFFF5FAF3).withOpacity(0.4),
+                          child: const Center(
+                            child: TheobroTectLoader(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _bottomNavIndex,
-          onTap: (index) {
-            _pageController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
+          onTap: (index) async {
+            if (index == _bottomNavIndex) return;
+
+            setState(() {
+              _targetIndex = index; // Set which skeleton to show
+              _isLoading = true;
+            });
+
+            await Future.delayed(const Duration(milliseconds: 5100));
+
+            if (mounted) {
+              _pageController.jumpToPage(index); 
+              setState(() {
+                _bottomNavIndex = index;
+                _isLoading = false;
+              });
+            }
           },
           selectedItemColor: const Color(0xFF2D6A4F),
           unselectedItemColor: Colors.grey,
@@ -199,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Your Profile',
                       description: 'Manage your farm settings and account details here.',
                       child: GestureDetector(
-                        onTap: () => _scaffoldKey.currentState?.openDrawer(), // Opens drawer
+                        onTap: () => _scaffoldKey.currentState?.openDrawer(),
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -225,21 +270,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () {
-                        print("Notification clicked!"); 
                         Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
                             builder: (context) => const NotificationScreen(),
                           ),
-                        ).catchError((error) {
-                          print("Navigation error caught: $error");
-                        });
+                        );
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: const NotificationIcon(),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: NotificationIcon(),
                       ),
                     ),
-                  ], 
+                  ],
                 ),
                 const SizedBox(height: 20),
                 WeatherCard(
@@ -288,5 +330,118 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+}
+
+class SkeletonLayout extends StatelessWidget {
+  final int pageIndex;
+  const SkeletonLayout({super.key, required this.pageIndex});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: _buildSkeletonContent(),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonContent() {
+    switch (pageIndex) {
+      case 1: // History Skeleton (List style)
+        return ListView.builder(
+          padding: const EdgeInsets.all(20),
+          itemCount: 8,
+          itemBuilder: (_, __) => Padding(
+            padding: const EdgeInsets.only(bottom: 15),
+            child: Row(
+              children: [
+                Container(width: 60, height: 60, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10))),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(width: double.infinity, height: 15, color: Colors.white),
+                      const SizedBox(height: 8),
+                      Container(width: 150, height: 12, color: Colors.white),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      case 2: // Learn Skeleton (Grid style)
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(width: 200, height: 25, color: Colors.white),
+              const SizedBox(height: 20),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2, crossAxisSpacing: 15, mainAxisSpacing: 15, childAspectRatio: 0.8
+                  ),
+                  itemCount: 4,
+                  itemBuilder: (_, __) => Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15))),
+                ),
+              ),
+            ],
+          ),
+        );
+      case 3: // Settings Skeleton (Profile + Tiles)
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              Container(width: 100, height: 100, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+              const SizedBox(height: 15),
+              Container(width: 150, height: 20, color: Colors.white),
+              const SizedBox(height: 40),
+              ...List.generate(5, (index) => Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Container(width: double.infinity, height: 50, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10))),
+              )),
+            ],
+          ),
+        );
+      default: // Home Skeleton (Dashboard style)
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(width: 50, height: 50, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                  const SizedBox(width: 15),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(width: 100, height: 12, color: Colors.white),
+                      const SizedBox(height: 8),
+                      Container(width: 160, height: 20, color: Colors.white),
+                    ],
+                  )
+                ],
+              ),
+              const SizedBox(height: 30),
+              Container(width: double.infinity, height: 140, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15))),
+              const SizedBox(height: 20),
+              Container(width: double.infinity, height: 180, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+              const SizedBox(height: 30),
+              Container(width: 150, height: 20, color: Colors.white),
+              const SizedBox(height: 15),
+              Container(width: double.infinity, height: 100, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15))),
+            ],
+          ),
+        );
+    }
   }
 }
