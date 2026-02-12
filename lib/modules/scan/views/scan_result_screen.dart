@@ -1,29 +1,59 @@
+import 'package:cacao_apps/modules/scan/controllers/scan_result_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 1. IMPORT ADDED
+import 'package:flutter/services.dart';
 import '../widgets/severity_alert_card.dart';
 import '../widgets/action_task_tile.dart';
 import '../widgets/confidence_meter.dart';
 
-class ScanResultScreen extends StatelessWidget {
+
+class ScanResultScreen extends StatefulWidget {
   final String diseaseName;
   final double confidence;
   final String severity;
+  final String? imagePath;
 
   const ScanResultScreen({
     super.key,
     this.diseaseName = "Black Pod Disease",
     this.confidence = 0.95,
     this.severity = "Severe",
+    this.imagePath,
   });
 
   @override
-  Widget build(BuildContext context) {
+  State<ScanResultScreen> createState() => _ScanResultScreenState();
+}
+
+class _ScanResultScreenState extends State<ScanResultScreen> {
+  late final ScanResultController controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller = ScanResultController(
+      diseaseName: widget.diseaseName,
+      confidence: widget.confidence,
+      severity: widget.severity,
+      imagePath: widget.imagePath,
+    );
+
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark, 
-      statusBarBrightness: Brightness.light, 
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
     ));
+  }
 
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+  
     return Scaffold(
       backgroundColor: const Color(0xFFF9FBF9),
       appBar: AppBar(
@@ -54,7 +84,7 @@ class ScanResultScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withAlpha(25),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     )
@@ -77,7 +107,7 @@ class ScanResultScreen extends StatelessWidget {
               ),
             ),
             Text(
-              diseaseName,
+              controller.diseaseName,
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
@@ -85,9 +115,9 @@ class ScanResultScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            SeverityAlertCard(severity: severity),
+            SeverityAlertCard(severity: controller.severity),
             const SizedBox(height: 32),
-            ConfidenceMeter(confidence: confidence),
+            ConfidenceMeter(confidence: controller.confidence),
             const SizedBox(height: 32),
             const Text(
               "Treatment Plan",
@@ -123,7 +153,7 @@ class ScanResultScreen extends StatelessWidget {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withAlpha(25),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -154,7 +184,7 @@ class ScanResultScreen extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2D6A4F).withOpacity(0.3),
+                      color: const Color(0xFF2D6A4F).withAlpha(25),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),

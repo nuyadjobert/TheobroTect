@@ -1,191 +1,164 @@
-import 'dart:convert';
-import 'dart:io';
-
+import 'package:cacao_apps/core/ml/cacao_model_service.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
-import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-import '../../../core/ml/cacao_model_service.dart';
-import '../models/cacao_guide.dart';
-import '../models/scan_result.dart';
 
-class ScannerController {
-  ScannerController({
-    required this.cameraController,
-    this.languageCode = "en",
-  });
+class ScannerController extends ChangeNotifier {
+  CameraController? _camera;
+  List<CameraDescription>? _cameras;
 
-  final CameraController cameraController;
-  final String languageCode;
+  bool _isPermissionGranted = false;
+  bool _isFlashOn = false;
+  bool _isAnalyzing = false;
 
-  CacaoGuide? _guide;
+CameraController? get camera => _camera;
+CameraController? get cameraController => _camera;
+  bool get isPermissionGranted => _isPermissionGranted;
+  bool get isFlashOn => _isFlashOn;
+  bool get isAnalyzing => _isAnalyzing;
 
-  /// Load guide JSON once (offline)
-  Future<void> loadGuide() async {
-    if (_guide != null) return;
-    final raw = await rootBundle.loadString('assets/data/cacao_guide.json');
-    final map = jsonDecode(raw) as Map<String, dynamic>;
-    _guide = CacaoGuide.fromJson(map);
-  }
+  bool get isReady =>
+      _isPermissionGranted && _camera != null && _camera!.value.isInitialized;
 
-  CacaoGuide get guide {
-    final g = _guide;
-    if (g == null) throw StateError("Guide not loaded. Call loadGuide() first.");
-    return g;
-  }
-
-  /// Main: capture image -> run inference -> return ScanResult
-  Future<ScanResult> captureAndPredict() async {
-    // Ensure dependencies loaded
+  Future<void> init() async {
     await CacaoModelService().loadModel();
-    await loadGuide();
-
-    // 1) Capture
-    final XFile shot = await cameraController.takePicture();
-    final file = File(shot.path);
-
-    // 2) Predict
-    final result = await _predictFile(file);
-
-    return result;
+    await _setupCamera();
   }
 
-  Future<ScanResult> _predictFile(File file) async {
-    final interpreter = CacaoModelService().interpreter;
+  Future<void> _setupCamera() async {
+    final status = await Permission.camera.request();
 
-    final inputTensor = interpreter.getInputTensor(0);
-    final outputTensor = interpreter.getOutputTensor(0);
-
-    final inputShape = inputTensor.shape;   // [1, h, w, 3]
-    final outputShape = outputTensor.shape; // [1, N]
-    final inputType = inputTensor.type;
-    final nClasses = outputShape[1];
-
-    if (guide.labelsInOrder.length != nClasses) {
-      // Defensive: label count must match output classes
-      return const ScanResult(
-        rawLabel: "unknown",
-        diseaseKey: "unknown",
-        severityKey: "unknown",
-        confidence: 0.0,
-        topK: [],
-      );
+    if (!status.isGranted) {
+      _isPermissionGranted = false;
+      notifyListeners();
+      return;
     }
 
-    final h = inputShape[1];
-    final w = inputShape[2];
+    _isPermissionGranted = true;
+    notifyListeners();
 
-    // Decode + resize
-    final bytes = await file.readAsBytes();
-    final decoded = img.decodeImage(bytes);
-    if (decoded == null) {
-      return const ScanResult(
-        rawLabel: "unknown",
-        diseaseKey: "unknown",
-        severityKey: "unknown",
-        confidence: 0.0,
-        topK: [],
-      );
+    _cameras = await availableCameras();
+    if (_cameras == null || _cameras!.isEmpty) {
+      _isPermissionGranted = false;
+      notifyListeners();
+      return;
     }
-    final resized = img.copyResize(decoded, width: w, height: h);
 
-    // Build input
-    // Assumption: float32 model trained with rescale=1/255.
-    // If your model was trained with -1..1 normalization, change normalization below.
-    final input = List.generate(
-      1,
-      (_) => List.generate(
-        h,
-        (_) => List.generate(w, (_) => List.filled(3, 0.0)),
-      ),
+    _camera = CameraController(
+      _cameras![0],
+      ResolutionPreset.high,
+      enableAudio: false,
     );
 
-   for (int y = 0; y < h; y++) {
-  for (int x = 0; x < w; x++) {
-    final p = resized.getPixel(x, y);
+    await _camera!.initialize();
+    notifyListeners();
+  }
 
-    final r = p.r;
-    final g = p.g;
-    final b = p.b;
+  Future<void> toggleFlash() async {
+    if (_camera == null) return;
 
-    if (inputType == TfLiteType.kTfLiteFloat32) {
-      input[0][y][x][0] = r / 255.0;
-      input[0][y][x][1] = g / 255.0;
-      input[0][y][x][2] = b / 255.0;
+    if (_isFlashOn) {
+      await _camera!.setFlashMode(FlashMode.off);
     } else {
-      input[0][y][x][0] = r.toDouble();
-      input[0][y][x][1] = g.toDouble();
-      input[0][y][x][2] = b.toDouble();
+      await _camera!.setFlashMode(FlashMode.torch);
     }
+
+    _isFlashOn = !_isFlashOn;
+    notifyListeners();
+  }
+Future<ScanUiResult?> captureAndAnalyze() async {
+  if (!isReady) return null;
+  if (_isAnalyzing) return null;
+
+  HapticFeedback.heavyImpact();
+
+  _isAnalyzing = true;
+  notifyListeners();
+
+  try {
+    // 1) Capture image
+    final XFile photo = await _camera!.takePicture();
+    final imagePath = photo.path;
+
+    // 2) Run TFLite inference (THIS IS THE MODEL USAGE)
+    final pred = await CacaoModelService().predict(imagePath);
+    // pred.label example: "black_pod_disease_severe"
+    // pred.confidence example: 0.91
+
+    // 3) Convert label -> diseaseName + severity
+    final parsed = _parseLabel(pred.label);
+
+    return ScanUiResult(
+      imagePath: imagePath,
+      diseaseName: _toDisplayName(parsed.diseaseKey),
+      confidence: pred.confidence,
+      severity: _capitalize(parsed.severityKey),
+    );
+  } catch (e) {
+    return null;
+  } finally {
+    _isAnalyzing = false;
+    notifyListeners();
   }
 }
 
-    // Output
-    final output = List.generate(1, (_) => List.filled(nClasses, 0.0));
-    interpreter.run(input, output);
+// --- helpers ---
 
-    final probs = output[0];
-
-    // Best + topK
-    int bestIdx = 0;
-    double best = probs[0];
-    for (int i = 1; i < probs.length; i++) {
-      if (probs[i] > best) {
-        best = probs[i];
-        bestIdx = i;
-      }
-    }
-
-    final indexed = List.generate(probs.length, (i) => MapEntry(i, probs[i]));
-    indexed.sort((a, b) => b.value.compareTo(a.value));
-    final topK = indexed.take(3).map((e) {
-      final label = guide.labelsInOrder[e.key];
-      return {label: e.value};
-    }).toList();
-
-    final rawLabel = guide.labelsInOrder[bestIdx];
-    final parsed = _parseLabel(rawLabel);
-
-    final confidence = best;
-    final threshold = guide.uncertainThreshold;
-    if (confidence < threshold) {
-      return ScanResult(
-        rawLabel: rawLabel,
-        diseaseKey: "unknown",
-        severityKey: "unknown",
-        confidence: confidence,
-        topK: topK,
-      );
-    }
-
-    return ScanResult(
-      rawLabel: rawLabel,
-      diseaseKey: parsed.$1,
-      severityKey: parsed.$2,
-      confidence: confidence,
-      topK: topK,
-    );
+_ParsedLabel _parseLabel(String label) {
+  if (label == 'healthy') {
+    return const _ParsedLabel(diseaseKey: 'healthy', severityKey: 'default');
   }
+  final idx = label.lastIndexOf('_');
+  final diseaseKey = label.substring(0, idx);     
+  final severityKey = label.substring(idx + 1);   
+  return _ParsedLabel(diseaseKey: diseaseKey, severityKey: severityKey);
+}
 
-  /// Parses your label style:
-  /// - "mealybug_severe" => ("mealybug","severe")
-  /// - "black_pod_disease_mild" => ("black_pod_disease","mild")
-  /// - "healthy" => ("healthy","default")
-  (String, String) _parseLabel(String label) {
-    if (label == "healthy") return ("healthy", "default");
-
-    final parts = label.split('_');
-    if (parts.length < 2) return ("unknown", "unknown");
-
-    final last = parts.last;
-    const severities = {"mild", "moderate", "severe"};
-    if (!severities.contains(last)) {
-      // No severity suffix
-      return (label, "default");
-    }
-
-    final diseaseKey = parts.sublist(0, parts.length - 1).join('_');
-    return (diseaseKey, last);
+String _toDisplayName(String diseaseKey) {
+  switch (diseaseKey) {
+    case 'black_pod_disease':
+      return 'Black Pod Disease';
+    case 'cacao_pod_borer':
+      return 'Cacao Pod Borer';
+    case 'mealybug':
+      return 'Mealybug';
+    case 'healthy':
+      return 'Healthy';
+    default:
+      return diseaseKey;
   }
+}
+
+String _capitalize(String s) =>
+    s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
+
+
+  @override
+  void dispose() {
+    _camera?.dispose();
+    super.dispose();
+  }
+}
+
+class _ParsedLabel {
+  final String diseaseKey;
+  final String severityKey;
+  const _ParsedLabel({required this.diseaseKey, required this.severityKey});
+}
+
+/// Simple DTO returned to UI for navigation.
+class ScanUiResult {
+  final String imagePath;
+  final String diseaseName;
+  final double confidence;
+  final String severity;
+
+  ScanUiResult({
+    required this.imagePath,
+    required this.diseaseName,
+    required this.confidence,
+    required this.severity,
+  });
 }
