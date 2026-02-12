@@ -1,13 +1,12 @@
-import 'package:flutter/foundation.dart';
+import 'package:cacao_apps/core/guide/cacao_guide_service.dart';
 import 'package:flutter/material.dart';
 
 class ScanResultController extends ChangeNotifier {
   final String diseaseName;
   final double confidence;
   final String severity;
-
-  // If you want to show the real captured image instead of asset
   final String? imagePath;
+  final CacaoGuideService _guide = CacaoGuideService();
 
   ScanResultController({
     required this.diseaseName,
@@ -15,8 +14,34 @@ class ScanResultController extends ChangeNotifier {
     required this.severity,
     this.imagePath,
   });
+    late final String diseaseKey;
+  late final String severityKey;
 
-  // Example: dynamic treatment tasks (later, load from your cacao_guide.json)
+  // UI state
+  bool _isLoading = true;
+  String? _error;
+
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  // Display fields (from JSON)
+  Map<String, String> displayName = const {"en": "Unknown", "tl": "Hindi Kilala"};
+  Map<String, String> description = const {"en": "", "tl": ""};
+
+  // Recommendation fields (from JSON)
+  List<String> whatToDoNowEn = const [];
+  List<String> whatToDoNowTl = const [];
+
+  List<String> preventionEn = const [];
+  List<String> preventionTl = const [];
+
+  List<String> whenToEscalateEn = const [];
+  List<String> whenToEscalateTl = const [];
+
+  // Optional monitoring plan
+  int? rescanAfterDays;
+  Map<String, String>? rescanMessage; // {"en": "...", "tl": "..."}
+
   List<TreatmentTask> get treatmentPlan {
     // You can later switch logic using diseaseName/severity
     if (diseaseName.toLowerCase().contains('black pod')) {
