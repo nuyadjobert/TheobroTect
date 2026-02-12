@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../services/auth_services.dart';
 import '../models/verify_otp_result.dart';
+import '../services/auth_local.dart';
 
 class VerifyAccountController extends ChangeNotifier {
   final AuthService _auth;
   final String email;
+
+  final _secureStore = AuthSecureStore();
 
   VerifyAccountController({required AuthService auth, required this.email})
     : _auth = auth;
@@ -46,6 +49,7 @@ class VerifyAccountController extends ChangeNotifier {
   bool get isNewUserRequired => _lastResult?.status == 'NEW_USER_REQUIRED';
   bool get isVerified => _lastResult?.status == 'OK';
 
+
   // =========================
   // Verify OTP
   // =========================
@@ -66,6 +70,22 @@ class VerifyAccountController extends ChangeNotifier {
       _lastResult = result;
 
       if (result.status != 'OK') {
+        final token = result.token;
+        if (token == null || token.isEmpty) {
+          // _errorMessage =
+          //     'Login succeeded but token is missing. Check backend response.';
+          _errorMessage = _mapStatusToMessage(result.status);
+
+          notifyListeners();
+          return result;
+        }
+
+        // Save token so user stays logged in
+        await _secureStore.saveToken(token);
+
+        // Optional: save user id if backend returns it
+        // await _secureStore.saveUserId(result.userId);
+      } else {
         _errorMessage = _mapStatusToMessage(result.status);
       }
 

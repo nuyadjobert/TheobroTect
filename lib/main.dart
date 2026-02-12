@@ -4,11 +4,15 @@ import 'package:showcaseview/showcaseview.dart';
 // import 'modules/introduction/views/introduction_screen.dart';
 import 'core/network/client.dart';
 import 'core/ml/cacao_model_service.dart';
+import 'core/db/app_database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   DioClient.init(baseUrl: "https://theorbrotect-backend.onrender.com");
-   await CacaoModelService().loadModel();
+
+  await AppDatabase().db;
+
+  await CacaoModelService().loadModel();
   runApp(const MyApp());
 }
 class MyApp extends StatelessWidget {
