@@ -42,9 +42,9 @@ class ScanDetailsSheet {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.05),
+                        color: statusColor.withAlpha(13),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: statusColor.withOpacity(0.1)),
+                        border: Border.all(color: statusColor.withAlpha(26)),
                       ),
                       child: Row(
                         children: [
@@ -136,7 +136,7 @@ class ScanDetailsSheet {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: color.withAlpha(26), borderRadius: BorderRadius.circular(12)),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 16),

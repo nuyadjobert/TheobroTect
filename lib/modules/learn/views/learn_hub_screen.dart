@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/guide_card.dart';
 import '../widgets/prevention_tip_card.dart';
 import '../widgets/management_sheet.dart'; 
-import '../widgets/mastery_detail_screen.dart'; // Ensure this is imported
+import '../widgets/mastery_detail_screen.dart'; 
 import '../models/guide_model.dart';      
-import '../models/mastery_data.dart';    // Ensure your lesson data is imported
 
 class LearnHubScreen extends StatelessWidget {
   const LearnHubScreen({super.key});

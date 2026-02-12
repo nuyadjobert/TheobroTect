@@ -23,7 +23,7 @@ class HistoryCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: statusColor.withOpacity(0.06),
+              color: statusColor.withAlpha(15),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -51,7 +51,7 @@ class HistoryCard extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.center,
-                          colors: [Colors.black.withOpacity(0.3), Colors.transparent],
+                          colors: [Colors.black.withAlpha(77), Colors.transparent],
                         ),
                       ),
                     ),
@@ -110,7 +110,7 @@ class HistoryCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.08),
+                            color: statusColor.withAlpha(20),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -131,7 +131,7 @@ class HistoryCard extends StatelessWidget {
                               "View Details",
                               textAlign: TextAlign.end,
                               style: TextStyle(
-                                color: statusColor.withOpacity(0.8),
+                                color: statusColor.withAlpha(204),
                                 fontWeight: FontWeight.w700,
                                 fontSize: 10,
                                 decoration: TextDecoration.underline,
@@ -158,7 +158,7 @@ class HistoryCard extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
-          BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))
+          BoxShadow(color: color.withAlpha(77), blurRadius: 8, offset: const Offset(0, 4))
         ],
       ),
       child: Text(

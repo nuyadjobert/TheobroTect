@@ -84,8 +84,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   return HistoryCard(
                     data: _historyItems[index],
                     onTap: () {
-                      // Note: Navigation to Detail Screen is disabled as requested
-                      print("Card tapped: ${_historyItems[index]['title']}");
                     },
                   );
                 },

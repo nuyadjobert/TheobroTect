@@ -15,7 +15,6 @@ class WeatherService {
     if (response.statusCode == 200) {
       return WeatherModel.fromJson(json.decode(response.body));
     } else {
-      print('Failed response: ${response.body}');
       throw Exception('Failed to load weather');
     }
   }
@@ -29,7 +28,6 @@ class WeatherService {
     if (response.statusCode == 200) {
       return WeatherModel.fromJson(json.decode(response.body));
     } else {
-      print('Failed response: ${response.body}');
       throw Exception('Failed to load weather');
     }
   }

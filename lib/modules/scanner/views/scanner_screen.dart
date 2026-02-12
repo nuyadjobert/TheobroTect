@@ -90,7 +90,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               // 2. Dark Overlay with "Cutout"
               ColorFiltered(
                 colorFilter: ColorFilter.mode(
-                  Colors.black.withAlpha(153), // 0.6 * 255 = 153
+                  Colors.black.withAlpha(153), 
                   BlendMode.srcOut,
                 ),
                 child: Stack(

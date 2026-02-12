@@ -31,7 +31,7 @@ class HistoryFilter extends StatelessWidget {
           
           // 2. Vertical Divider for visual separation
           VerticalDivider(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withAlpha(77),
             thickness: 1,
             indent: 10,
             endIndent: 10,
@@ -56,7 +56,7 @@ class HistoryFilter extends StatelessWidget {
                 ),
                 backgroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+                side: BorderSide(color: Colors.grey.withAlpha(26)),
                 elevation: isSelected ? 4 : 0,
                 shadowColor: Colors.black26,
               ),
@@ -108,7 +108,7 @@ class HistoryFilter extends StatelessWidget {
       ),
       backgroundColor: hasDate ? const Color(0xFF2D6A4F) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+      side: BorderSide(color: Colors.grey.withAlpha(26)),
     );
   }
 }

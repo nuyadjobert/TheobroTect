@@ -110,7 +110,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: _primaryGreen.withOpacity(0.15),
+                        color: _primaryGreen.withAlpha(38), 
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -137,7 +137,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withAlpha(102),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -151,7 +151,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? Colors.white
-                              : Colors.white.withOpacity(0.5),
+                              : Colors.white.withAlpha(128),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       );
@@ -198,7 +198,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                               color: _lightMint,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: _primaryGreen.withOpacity(0.2),
+                                color: _primaryGreen.withAlpha(51),
                               ),
                             ),
                             child: Row(
@@ -220,10 +220,10 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
+                        color: Colors.orange.withAlpha(26),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.orange.withOpacity(0.3),
+                          color: Colors.orange.withAlpha(77),
                         ),
                       ),
                       child: Row(
@@ -299,7 +299,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                           backgroundColor: _primaryGreen,
                           foregroundColor: Colors.white,
                           elevation: 4,
-                          shadowColor: _primaryGreen.withOpacity(0.4),
+                          shadowColor: _primaryGreen.withAlpha(102),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -359,7 +359,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
         border: Border.all(color: const Color(0xFFE0E0E0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(13),
+            color: Colors.grey.withAlpha(33),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

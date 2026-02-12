@@ -22,7 +22,7 @@ class DiseaseSlider extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 25, offset: const Offset(0, 15)),
+            BoxShadow(color: Colors.black.withAlpha(51), blurRadius: 25, offset: const Offset(0, 15)),
           ],
         ),
         child: ClipRRect(
@@ -50,7 +50,7 @@ class DiseaseSlider extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.3)],
+                    colors: [Colors.transparent, Colors.black.withAlpha(77)],
                     stops: const [0.6, 1.0],
                   ),
                 ),
@@ -61,9 +61,9 @@ class DiseaseSlider extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withAlpha(153),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    border: Border.all(color: Colors.white.withAlpha(51)),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -82,9 +82,9 @@ class DiseaseSlider extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withAlpha(179),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.15)),
+                    border: Border.all(color: Colors.white.withAlpha(38)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -123,7 +123,7 @@ class DiseaseSlider extends StatelessWidget {
                       width: currentIndex == entry.key ? 20 : 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: currentIndex == entry.key ? Colors.white : Colors.white.withOpacity(0.4),
+                        color: currentIndex == entry.key ? Colors.white : Colors.white.withAlpha(102),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );

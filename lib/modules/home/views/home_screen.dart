@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:ui';
-import 'dart:math' as math;
 import 'package:cacao_apps/modules/settings/views/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -132,13 +131,13 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5FAF3),
-        drawer: Drawer(
+        drawer:const Drawer(
           backgroundColor: Colors.white,
           child: Column(
             children: [
-              const NavDrawerHeader(),
-              const NavFarmInfo(),
-              const NavStatsCard(),
+               NavDrawerHeader(),
+               NavFarmInfo(),
+               NavStatsCard(),
             ],
           ),
         ),
@@ -170,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
                         child: Container(
-                          color: const Color(0xFFF5FAF3).withOpacity(0.4),
+                          color: const Color(0xFFF5FAF3).withAlpha(102), 
                           child: const Center(
                             child: TheobroTectLoader(),
                           ),
