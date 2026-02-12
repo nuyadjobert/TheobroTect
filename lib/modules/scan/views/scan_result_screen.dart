@@ -18,7 +18,6 @@ class ScanResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 2. SYSTEM UI OVERLAY ADDED HERE
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark, 
@@ -28,7 +27,6 @@ class ScanResultScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FBF9),
       appBar: AppBar(
-        // Force the system overlay style locally for this screen
         systemOverlayStyle: SystemUiOverlayStyle.dark, 
         backgroundColor: Colors.transparent,
         elevation: 0,
