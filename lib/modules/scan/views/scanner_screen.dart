@@ -1,7 +1,8 @@
+import 'package:cacao_apps/modules/scan/model/scan_result_model.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../scan/views/scan_result_screen.dart';
+import 'scan_result_screen.dart';
 import '../controllers/scanner_controller.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -44,20 +45,22 @@ class _ScannerScreenState extends State<ScannerScreen>
   }
 
   Future<void> _onCapture() async {
-    final result = await controller.captureAndAnalyze();
-    if (!mounted || result == null) return;
+   final results = await controller.captureAndAnalyze();
+  if (!mounted || results == null) return;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ScanResultScreen(
-          imagePath: result.imagePath,
-          diseaseName: result.diseaseName,
-          confidence: result.confidence,
-          severity: result.severity,
-        ),
-      ),
-    );
+  final result = ScanResultModel(
+    diseaseName: results.diseaseName,
+    confidence: results.confidence,
+    severity: results.severity,
+    imagePath: results.imagePath,
+  );
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ScanResultScreen(result: result),
+    ),
+  );
   }
 
   @override

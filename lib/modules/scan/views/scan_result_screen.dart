@@ -1,24 +1,15 @@
 import 'package:cacao_apps/modules/scan/controllers/scan_result_controller.dart';
+import 'package:cacao_apps/modules/scan/model/scan_result_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/severity_alert_card.dart';
 import '../widgets/action_task_tile.dart';
 import '../widgets/confidence_meter.dart';
 
-
 class ScanResultScreen extends StatefulWidget {
-  final String diseaseName;
-  final double confidence;
-  final String severity;
-  final String? imagePath;
+  final ScanResultModel result;
 
-  const ScanResultScreen({
-    super.key,
-    this.diseaseName = "Black Pod Disease",
-    this.confidence = 0.95,
-    this.severity = "Severe",
-    this.imagePath,
-  });
+  const ScanResultScreen({super.key, required this.result});
 
   @override
   State<ScanResultScreen> createState() => _ScanResultScreenState();
@@ -32,17 +23,19 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     super.initState();
 
     controller = ScanResultController(
-      diseaseName: widget.diseaseName,
-      confidence: widget.confidence,
-      severity: widget.severity,
-      imagePath: widget.imagePath,
+      diseaseName: widget.result.diseaseName,
+      confidence: widget.result.confidence,
+      severity: widget.result.severity,
+      imagePath: widget.result.imagePath,
     );
 
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
   }
 
   @override
@@ -53,15 +46,18 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-  
     return Scaffold(
       backgroundColor: const Color(0xFFF9FBF9),
       appBar: AppBar(
-        systemOverlayStyle: SystemUiOverlayStyle.dark, 
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -71,7 +67,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 120), 
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -87,12 +83,17 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                       color: Colors.black.withAlpha(25),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
-                    )
+                    ),
                   ],
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/bp1.png'),
-                    fit: BoxFit.cover,
-                  ),
+                  image: widget.result.imagePath != null
+                      ? DecorationImage(
+                          image: AssetImage(widget.result.imagePath!),
+                          fit: BoxFit.cover,
+                        )
+                      : const DecorationImage(
+                          image: AssetImage('assets/images/bp1.png'),
+                          fit: BoxFit.cover,
+                        ),
                 ),
               ),
             ),
@@ -167,10 +168,15 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: Colors.grey.shade200, width: 2),
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
                 ),
                 onPressed: () {},
-                child: const Icon(Icons.bookmark_border_rounded, color: Colors.black),
+                child: const Icon(
+                  Icons.bookmark_border_rounded,
+                  color: Colors.black,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -195,7 +201,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                   ),
                   onPressed: () {},
                   child: const Text(

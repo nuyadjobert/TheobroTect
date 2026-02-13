@@ -1,4 +1,5 @@
 import 'package:cacao_apps/core/ml/cacao_model_service.dart';
+import 'package:cacao_apps/modules/scan/model/scan_result_model.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 
 class ScannerController extends ChangeNotifier {
+  
   CameraController? _camera;
   List<CameraDescription>? _cameras;
 
@@ -68,7 +70,7 @@ CameraController? get cameraController => _camera;
     _isFlashOn = !_isFlashOn;
     notifyListeners();
   }
-Future<ScanUiResult?> captureAndAnalyze() async {
+Future<ScanResultModel?> captureAndAnalyze() async {
   if (!isReady) return null;
   if (_isAnalyzing) return null;
 
@@ -78,19 +80,13 @@ Future<ScanUiResult?> captureAndAnalyze() async {
   notifyListeners();
 
   try {
-    // 1) Capture image
     final XFile photo = await _camera!.takePicture();
     final imagePath = photo.path;
 
-    // 2) Run TFLite inference (THIS IS THE MODEL USAGE)
     final pred = await CacaoModelService().predict(imagePath);
-    // pred.label example: "black_pod_disease_severe"
-    // pred.confidence example: 0.91
-
-    // 3) Convert label -> diseaseName + severity
     final parsed = _parseLabel(pred.label);
 
-    return ScanUiResult(
+    return ScanResultModel(
       imagePath: imagePath,
       diseaseName: _toDisplayName(parsed.diseaseKey),
       confidence: pred.confidence,
@@ -146,19 +142,4 @@ class _ParsedLabel {
   final String diseaseKey;
   final String severityKey;
   const _ParsedLabel({required this.diseaseKey, required this.severityKey});
-}
-
-/// Simple DTO returned to UI for navigation.
-class ScanUiResult {
-  final String imagePath;
-  final String diseaseName;
-  final double confidence;
-  final String severity;
-
-  ScanUiResult({
-    required this.imagePath,
-    required this.diseaseName,
-    required this.confidence,
-    required this.severity,
-  });
 }
