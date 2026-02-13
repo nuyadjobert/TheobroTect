@@ -27,7 +27,7 @@ class CacaoModelService {
   Future<void> loadModel() async {
     if (_isLoaded) return;
     _interpreter = await Interpreter.fromAsset(
-      'lib/core/ml/cacao_detection.tflite',
+      'assets/models/final_cacao_disease_model1.0.tflite',
       options: InterpreterOptions()..threads = 2,
     );
 
