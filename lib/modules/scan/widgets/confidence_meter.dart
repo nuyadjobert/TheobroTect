@@ -7,7 +7,6 @@ class ConfidenceMeter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine the color theme based on confidence level
     final Color primaryColor = confidence >= 0.8 ? const Color(0xFF2D6A4F) : Colors.orange;
 
     return Column(
@@ -39,7 +38,7 @@ class ConfidenceMeter extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold, 
                 fontSize: 14,
-                color: primaryColor.withOpacity(0.6),
+                color: primaryColor.withAlpha(153), // 0.6 * 255 = 153
               ),
             ),
           ],
@@ -63,14 +62,14 @@ class ConfidenceMeter extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      primaryColor.withOpacity(0.7),
+                      primaryColor.withAlpha(153), // 0.6 * 255 = 153
                       primaryColor,
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withOpacity(0.3),
+                      color: primaryColor.withAlpha(77), // 0.3 * 255 = 77
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -85,7 +84,7 @@ class ConfidenceMeter extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.1),
+            color: primaryColor.withAlpha(26), 
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -93,14 +92,14 @@ class ConfidenceMeter extends StatelessWidget {
             children: [
               Icon(
                 confidence >= 0.8 ? Icons.verified_user_rounded : Icons.info_outline_rounded, 
-                color: primaryColor, 
+                color: primaryColor.withAlpha(255), 
                 size: 14,
               ),
               const SizedBox(width: 6),
               Text(
                 confidence >= 0.8 ? "High confidence level" : "Moderate confidence",
                 style: TextStyle(
-                  color: primaryColor, 
+                  color: primaryColor.withAlpha(255), 
                   fontSize: 11, 
                   fontWeight: FontWeight.bold,
                 ),
