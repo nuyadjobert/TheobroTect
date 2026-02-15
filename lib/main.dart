@@ -1,7 +1,7 @@
 import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart'; 
-// import 'modules/introduction/views/introduction_screen.dart';
+ import 'modules/introduction/views/introduction_screen.dart';
 import 'core/network/client.dart';
 import 'core/ml/cacao_model_service.dart';
 import 'core/db/app_database.dart';
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorSchemeSeed: Colors.green,
         ),
-        home: const HomeScreen(),
+        home: const IntroductionScreen(),
       ),
     );
   }
