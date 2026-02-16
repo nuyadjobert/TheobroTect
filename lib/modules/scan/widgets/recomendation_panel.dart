@@ -18,10 +18,23 @@ class RecommendationsPanel extends StatefulWidget {
 class _RecommendationsPanelState extends State<RecommendationsPanel> {
   String _selectedSection = "what_to_do_now";
 
-  static const _sectionMeta = <String, ({String label, IconData icon})>{
-    "what_to_do_now": (label: "What to do now", icon: Icons.bolt_rounded),
-    "prevention": (label: "Prevention", icon: Icons.shield_outlined),
-    "when_to_escalate": (label: "When to escalate", icon: Icons.warning_amber_rounded),
+  // Added colors to the meta for dynamic theme matching
+  static const _sectionMeta = <String, ({String label, IconData icon, Color color})>{
+    "what_to_do_now": (
+      label: "What to do now",
+      icon: Icons.bolt_rounded,
+      color: Color(0xFFFFB300), // Amber
+    ),
+    "prevention": (
+      label: "Prevention",
+      icon: Icons.shield_outlined,
+      color: Color(0xFF4CAF50), // Green
+    ),
+    "when_to_escalate": (
+      label: "When to escalate",
+      icon: Icons.warning_amber_rounded,
+      color: Color(0xFFE53935), // Red
+    ),
   };
 
   List<String> _itemsForSection() {
@@ -44,16 +57,40 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Recommendation #${index + 1}",
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
-            Text(text, style: Theme.of(context).textTheme.bodyLarge),
+            Row(
+              children: [
+                Icon(_sectionMeta[_selectedSection]!.icon, 
+                     color: _sectionMeta[_selectedSection]!.color),
+                const SizedBox(width: 8),
+                Text(
+                  "Recommendation #${index + 1}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1B3022),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.6,
+                color: Colors.black87,
+              ),
+            ),
           ],
         ),
       ),
@@ -62,70 +99,151 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
 
   @override
   Widget build(BuildContext context) {
-   return AnimatedBuilder(
-    animation: widget.controller,
-    builder: (context, _) {
-      final items = _itemsForSection();
+    return AnimatedBuilder(
+      animation: widget.controller,
+      builder: (context, _) {
+        final items = _itemsForSection();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: _sectionMeta.entries.map((e) {
-            final isSelected = _selectedSection == e.key;
-            return ChoiceChip(
-              selected: isSelected,
-              label: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(e.value.icon, size: 18),
-                  const SizedBox(width: 8),
-                  Text(e.value.label),
-                ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- Section Selection (Chips) ---
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _sectionMeta.entries.map((e) {
+                  final isSelected = _selectedSection == e.key;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      selected: isSelected,
+                      showCheckmark: false,
+                      pressElevation: 0,
+                      selectedColor: const Color(0xFF1B3022),
+                      backgroundColor: Colors.white,
+                      side: BorderSide(
+                        color: isSelected ? Colors.transparent : Colors.black12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      label: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              e.value.icon,
+                              size: 18,
+                              color: isSelected ? Colors.white : Colors.black54,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              e.value.label,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.black87,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      onSelected: (_) => setState(() => _selectedSection = e.key),
+                    ),
+                  );
+                }).toList(),
               ),
-              onSelected: (_) => setState(() => _selectedSection = e.key),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 16),
-        if (items.isEmpty)
-          const Text("No recommendations found.")
-        else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              final text = items[index];
-              return InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () => _showItemDetail(text, index),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.black12),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CircleAvatar(radius: 14, child: Text("${index + 1}")),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(text)),
-                      const Icon(Icons.chevron_right_rounded),
-                    ],
+            ),
+            const SizedBox(height: 24),
+            
+            // --- List of Recommendations ---
+            if (items.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Text(
+                    "No recommendations found.",
+                    style: TextStyle(color: Colors.grey, fontStyle:FontStyle.italic),
                   ),
                 ),
-              );
-            },
-          ),
-      ],
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final text = items[index];
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () => _showItemDetail(text, index),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Number Badge
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F8E9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  "${index + 1}",
+                                  style: const TextStyle(
+                                    color: Color(0xFF2D6A4F),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // Instruction Text
+                              Expanded(
+                                child: Text(
+                                  text,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Color(0xFF2E3E33),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                color: Colors.black26,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        );
+      },
     );
   }
-   );
-}
 }

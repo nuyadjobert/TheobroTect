@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io'; 
 
 class ScanDetailsSheet {
   static void show(BuildContext context, Map<String, dynamic> data) {
@@ -6,6 +7,15 @@ class ScanDetailsSheet {
     final String diseaseName = data['title'] ?? 'Cacao Leaf';
     final bool isInfected = status == 'Infected';
     final Color statusColor = isInfected ? const Color(0xFFE63946) : const Color(0xFF2D6A4F);
+    
+    final bool isLocalFile = data['isLocalFile'] ?? false;
+    final String imagePath = data['image'] ?? 'assets/placeholder.png';
+
+    // 1. Get the dynamic treatment plan from the data map
+    final String treatmentPlan = data['treatment'] ?? 
+        (isInfected 
+            ? "Remove affected leaves and consult an agricultural specialist for organic fungicide options." 
+            : "Continue regular watering and ensure the plant receives adequate sunlight.");
 
     showModalBottomSheet(
       context: context,
@@ -28,12 +38,24 @@ class ScanDetailsSheet {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. MAIN IMAGE
+                    // 1. IMAGE
                     ClipRRect(
                       borderRadius: BorderRadius.circular(24),
                       child: AspectRatio(
                         aspectRatio: 1.6,
-                        child: Image.asset(data['image'] ?? 'assets/placeholder.png', fit: BoxFit.cover),
+                        child: isLocalFile 
+                          ? Image.file(
+                              File(imagePath), 
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => 
+                                  Image.asset('assets/placeholder.png', fit: BoxFit.cover),
+                            )
+                          : Image.asset(
+                              imagePath, 
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => 
+                                  Image.asset('assets/placeholder.png', fit: BoxFit.cover),
+                            ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -71,7 +93,7 @@ class ScanDetailsSheet {
 
                     const SizedBox(height: 24),
 
-                    // 3. SCAN INFO
+                    // 3. SCAN DATE
                     Row(
                       children: [
                         const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
@@ -83,24 +105,30 @@ class ScanDetailsSheet {
 
                     const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Divider()),
 
-                    // 4. ACTION STEPS
+                    // 4. TREATMENT PLAN (REPLACED _buildStep WITH THIS)
                     Text(
                       isInfected ? "Treatment Plan" : "Maintenance Routine",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
-                    _buildStep(
-                      icon: isInfected ? Icons.content_cut : Icons.water_drop,
-                      title: isInfected ? "Prune Infected Areas" : "Proper Irrigation",
-                      subtitle: isInfected ? "Remove and safely dispose of affected foliage." : "Water at the roots, avoiding the leaves.",
-                      color: statusColor
-                    ),
-                    _buildStep(
-                      icon: isInfected ? Icons.sanitizer : Icons.shield_outlined, // FIXED: lowercase 's'
-                      title: isInfected ? "Apply Treatment" : "Regular Monitoring",
-                      subtitle: isInfected ? "Use recommended organic fungicide." : "Check for early signs of spots weekly.",
-                      color: statusColor
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50], 
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Text(
+                        treatmentPlan, // This displays your actual suggested treatment
+                        style: TextStyle(
+                          fontSize: 14, 
+                          height: 1.5, 
+                          color: Colors.grey[800],
+                          fontWeight: FontWeight.w500
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 32),
@@ -125,31 +153,6 @@ class ScanDetailsSheet {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  static Widget _buildStep({required IconData icon, required String title, required String subtitle, required Color color}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: color.withAlpha(26), borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
