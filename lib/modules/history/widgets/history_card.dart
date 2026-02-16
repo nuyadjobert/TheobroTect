@@ -1,18 +1,140 @@
 import 'package:flutter/material.dart';
+import 'package:cacao_apps/core/db/app_database.dart';
 import '../widgets/scan_details.dart'; 
 import 'dart:io'; 
 
 class HistoryCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final VoidCallback onTap;
-  final VoidCallback onDelete; // Added to handle deletion
+  final VoidCallback? onDelete; // Made optional
+  final VoidCallback? onDeleteComplete; // Callback after deletion
 
   const HistoryCard({
     super.key, 
     required this.data, 
     required this.onTap, 
-    required this.onDelete, // Required parameter
+    this.onDelete,
+    this.onDeleteComplete,
   });
+
+  // --- DELETE FUNCTION ---
+  // --- DELETE FUNCTION ---
+Future<void> _handleDelete(BuildContext context) async {
+  // If custom onDelete is provided, use it
+  if (onDelete != null) {
+    onDelete!();
+    return;
+  }
+
+  // Otherwise, use built-in delete logic
+  final bool? confirmed = await _showDeleteDialog(context);
+  
+  if (confirmed == true) {
+    try {
+      final String? id = data['id']?.toString(); // Get as String
+      final String? imagePath = data['image'];
+
+      if (id == null || id.isEmpty) {
+        _showErrorSnackbar(context, "Unable to delete: No ID found");
+        return;
+      }
+
+      final db = await AppDatabase().db;
+      
+      // 1. Delete from Database using UUID
+      final deletedRows = await db.delete(
+        'scan_history',
+        where: 'local_id = ?',
+        whereArgs: [id], // Pass the UUID string directly
+      );
+
+      if (deletedRows == 0) {
+        _showErrorSnackbar(context, "Scan not found in database");
+        return;
+      }
+
+      // 2. Delete the physical image file if it exists
+      if (imagePath != null && imagePath.isNotEmpty) {
+        final file = File(imagePath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
+
+      if (context.mounted) {
+        _showSuccessSnackbar(context);
+        
+        // Notify parent to refresh
+        if (onDeleteComplete != null) {
+          onDeleteComplete!();
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showErrorSnackbar(context, "Failed to delete scan: $e");
+      }
+    }
+  }
+}
+  // --- CONFIRMATION DIALOG ---
+  Future<bool?> _showDeleteDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            "Delete Scan?",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1B3022)),
+          ),
+          content: const Text(
+            "This action cannot be undone. Do you want to remove this scan from your history?",
+            style: TextStyle(color: Colors.black54),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text(
+                "Cancel", 
+                style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text(
+                "Delete", 
+                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // --- SNACKBAR HELPERS ---
+  void _showSuccessSnackbar(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Scan deleted successfully"),
+        backgroundColor: Color(0xFF1B3022),
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showErrorSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,12 +200,12 @@ class HistoryCard extends StatelessWidget {
                     left: 12,
                     child: _buildStatusTag(status.toUpperCase(), statusColor),
                   ),
-                  // --- DELETE BUTTON (Kept in your specified location) ---
+                  // --- DELETE BUTTON ---
                   Positioned(
                     top: 8,
                     right: 8,
                     child: GestureDetector(
-                      onTap: onDelete, // Logic now connected
+                      onTap: () => _handleDelete(context),
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
@@ -102,7 +224,7 @@ class HistoryCard extends StatelessWidget {
               ),
             ),
 
-            // TEXT CONTENT SECTION (Exactly as you provided)
+            // TEXT CONTENT SECTION
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),

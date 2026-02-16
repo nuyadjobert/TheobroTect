@@ -124,26 +124,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       childAspectRatio: 0.68,
                     ),
                     itemCount: historyData.length,
-                    itemBuilder: (context, index) {
-                      final item = historyData[index];
-                      
-                      final Map<String, dynamic> formattedData = {
-                        "title": item['disease_key'].toString().replaceAll('_', ' ').toUpperCase(),
-                        "date": item['created_at'], 
-                        "confidence": (item['confidence'] * 100).toStringAsFixed(1),
-                        "status": item['severity_key'] == 'default' ? 'Healthy' : 'Infected',
-                        "image": item['image_path'], 
-                        "isLocalFile": true, 
-                      };
+                  itemBuilder: (context, index) {
+  final item = historyData[index];
+  
+  final Map<String, dynamic> formattedData = {
+    "id": item['local_id'], // Keep as String UUID
+    "title": item['disease_key'].toString().replaceAll('_', ' ').toUpperCase(),
+    "date": item['created_at'], 
+    "confidence": (item['confidence'] * 100).toStringAsFixed(1),
+    "status": item['severity_key'] == 'default' ? 'Healthy' : 'Infected',
+    "image": item['image_path'], 
+    "isLocalFile": true, 
+  };
 
-                      return HistoryCard(
-                        data: formattedData,
-                        onTap: () {
-                          ScanDetailsSheet.show(context, formattedData);
-                        },
-                        onDelete: () => _showDeleteDialog(item['id'], item['image_path']),
-                      );
-                    },
+  return HistoryCard(
+    data: formattedData,
+    onTap: () {
+      ScanDetailsSheet.show(context, formattedData);
+    },
+    onDeleteComplete: () => setState(() {}),
+  );
+},
                   );
                 },
               ),
