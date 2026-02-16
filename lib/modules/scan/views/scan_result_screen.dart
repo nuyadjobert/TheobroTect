@@ -28,7 +28,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
       severity: widget.result.severity,
       imagePath: widget.result.imagePath,
     );
-    
+
     // Initialize data but REMOVED the .then((_) => _autoSaveScan())
     controller.init();
 
@@ -37,26 +37,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
-      ),
-    );
-  }
-
-  // Helper method for the manual save trigger
-  Future<void> _handleManualSave() async {
-    HapticFeedback.mediumImpact();
-    final deviceId = await DeviceIdService().getOrCreate();
-    final ok = await controller.saveScanRecord(
-      userId: "default_user",
-      deviceId: deviceId,
-      smsEnabled: false,
-    );
-    
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: ok ? const Color(0xFF2D6A4F) : Colors.redAccent,
-        content: Text(ok ? "Saved successfully!" : (controller.saveError ?? "Save failed")),
       ),
     );
   }
@@ -71,7 +51,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   Widget build(BuildContext context) {
     final langCode = Localizations.localeOf(context).languageCode;
     final lang = (langCode == "tl") ? "tl" : "en";
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FBF9),
       appBar: AppBar(
@@ -79,7 +59,11 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -172,20 +156,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
           children: [
             Expanded(
               flex: 2,
-<<<<<<< Updated upstream
-              child: AnimatedBuilder(
-                animation: controller,
-                builder: (context, _) {
-                  final isBookmarked = controller.isBookmarked;
-                  final isLoading = controller.isSaving;
-                  final disabled = controller.isLoading || isLoading;
-
-                  return OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: isBookmarked ? const Color(0xFF2D6A4F) : Colors.black.withAlpha(20),
-                        width: 1.5,
-=======
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
@@ -198,6 +168,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                   ],
                 ),
                 child: AnimatedBuilder(
+                  // ✅ FIXED
                   animation: controller,
                   builder: (context, _) {
                     final disabled =
@@ -215,44 +186,71 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
->>>>>>> Stashed changes
                       ),
-                      backgroundColor: isBookmarked ? const Color(0xFFE8F5E9) : Colors.white,
-                      foregroundColor: isBookmarked ? const Color(0xFF2D6A4F) : Colors.black87,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    ),
-                    onPressed: (disabled || isBookmarked)
-                        ? null
-                        : _handleManualSave, // MANUAL TRIGGER
-                    child: isLoading
-                        ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2D6A4F)))
-                        : Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(isBookmarked ? Icons.check_circle_rounded : Icons.bookmark_add_outlined, size: 24),
-                              const SizedBox(height: 2),
-                              Text(isBookmarked ? "SAVED" : "SAVE", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                  );
-                },
+                      onPressed: disabled
+                          ? null
+                          : () async {
+                              HapticFeedback.lightImpact();
+
+                              const userId = "default_user";
+                              final deviceId = await DeviceIdService()
+                                  .getOrCreate();
+
+                              final ok = await controller.saveScanRecord(
+                                userId: userId,
+                                deviceId: deviceId,
+                                smsEnabled: false,
+                              );
+
+                              if (!context.mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    ok
+                                        ? "Saved to Scan History successfully!"
+                                        : (controller.saveError ??
+                                              "Save failed"),
+                                  ),
+                                ),
+                              );
+                            },
+                      child: controller.isSaving
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              controller.isBookmarked
+                                  ? Icons.bookmark_added_rounded
+                                  : Icons.bookmark_add_outlined,
+                              size: 26,
+                            ),
+                    );
+                  },
+                ),
               ),
             ),
+
             const SizedBox(width: 12),
             Expanded(
               flex: 5,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
-                  gradient: const LinearGradient(colors: [Color(0xFF4A7C59), Color(0xFF2D6A4F)]),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4A7C59), Color(0xFF2D6A4F)],
+                  ),
                 ),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                   ),
                   onPressed: () {
                     HapticFeedback.lightImpact();
@@ -260,7 +258,11 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                   },
                   child: const Text(
                     "SCAN AGAIN",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.2),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
               ),
