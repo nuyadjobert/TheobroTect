@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import '../widgets/severity_alert_card.dart';
 import '../widgets/confidence_meter.dart';
 import 'dart:io';
-
 class ScanResultScreen extends StatefulWidget {
   final ScanResultModel result;
   const ScanResultScreen({super.key, required this.result});
@@ -15,7 +14,6 @@ class ScanResultScreen extends StatefulWidget {
   @override
   State<ScanResultScreen> createState() => _ScanResultScreenState();
 }
-
 class _ScanResultScreenState extends State<ScanResultScreen> {
   late final ScanResultController controller;
 
@@ -151,90 +149,83 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         ),
         child: Row(
           children: [
-          Expanded(
-  flex: 2,
-  child: Container(
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withAlpha(10),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
-        ),
-      ],
-    ),
-    child: AnimatedBuilder(   // ✅ FIXED
-      animation: controller,
-      builder: (context, _) {
-        final disabled =
-            controller.isLoading || controller.isSaving;
-
-        return OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(
-              color: Colors.black.withAlpha(20),
-              width: 1.5,
-            ),
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black87,
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          onPressed: disabled
-              ? null
-              : () async {
-                  HapticFeedback.lightImpact();
-
-                  const userId = "default_user";
-                  final deviceId =
-                      await DeviceIdService().getOrCreate();
-
-                  final ok =
-                      await controller.saveScanRecord(
-                    userId: userId,
-                    deviceId: deviceId,
-                    smsEnabled: false,
-                  );
-
-                  if (!context.mounted) return;
-
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        ok
-                            ? "Saved to Scan History successfully!"
-                            : (controller.saveError ??
-                                "Save failed"),
-                      ),
+            Expanded(
+              flex: 2,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(10),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
                     ),
-                  );
-                },
-          child: controller.isSaving
-              ? const SizedBox(
-                  height: 22,
-                  width: 22,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2),
-                )
-              : Icon(
-                  controller.isBookmarked
-                      ? Icons.bookmark_added_rounded
-                      : Icons.bookmark_add_outlined,
-                  size: 26,
+                  ],
                 ),
-        );
-      },
-    ),
-  ),
-),
+                child: AnimatedBuilder(
+                  animation: controller,
+                  builder: (context, _) {
+                    final disabled =
+                        controller.isLoading || controller.isSaving;
+                    return OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: Colors.black.withAlpha(20),
+                          width: 1.5,
+                        ),
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      onPressed: disabled
+                          ? null
+                          : () async {
+                              HapticFeedback.lightImpact();
 
+                              const userId = "default_user";
+                              final deviceId = await DeviceIdService()
+                                  .getOrCreate();
 
-            
-            
+                              final ok = await controller.saveScanRecord(
+                                userId: userId,
+                                deviceId: deviceId,
+                                smsEnabled: false,
+                              );
+
+                              if (!context.mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    ok
+                                        ? "Saved to Scan History successfully!"
+                                        : (controller.saveError ??
+                                              "Save failed"),
+                                  ),
+                                ),
+                              );
+                            },
+                      child: controller.isSaving
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              controller.isBookmarked
+                                  ? Icons.bookmark_added_rounded
+                                  : Icons.bookmark_add_outlined,
+                              size: 26,
+                            ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
             const SizedBox(width: 12),
             Expanded(
               flex: 5,
