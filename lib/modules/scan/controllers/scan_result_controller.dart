@@ -254,8 +254,7 @@ class ScanResultController extends ChangeNotifier {
         ? now.add(Duration(days: rescanAfterDays!)).toIso8601String()
         : null;
 
-    final modelLabel =
-        (severityKey == 'default') ? diseaseKey : '${diseaseKey}_$severityKey';
+    final modelLabel = (severityKey == 'default') ? diseaseKey : '${diseaseKey}_$severityKey';
 
     await db.insert(
       'scan_history',
@@ -291,6 +290,17 @@ class ScanResultController extends ChangeNotifier {
     return false;
   }
 }
+
+// Future<List<Map<String, dynamic>>> getAllScanHistory() async {
+//   final db = await AppDatabase().db;
+
+//   final result = await db.query(
+//     'scan_history',
+//     orderBy: 'created_at DESC',
+//   );
+
+//   return result;
+// }
 
 }
 

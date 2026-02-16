@@ -172,6 +172,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
           children: [
             Expanded(
               flex: 2,
+<<<<<<< Updated upstream
               child: AnimatedBuilder(
                 animation: controller,
                 builder: (context, _) {
@@ -184,6 +185,37 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                       side: BorderSide(
                         color: isBookmarked ? const Color(0xFF2D6A4F) : Colors.black.withAlpha(20),
                         width: 1.5,
+=======
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(10),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: AnimatedBuilder(
+                  animation: controller,
+                  builder: (context, _) {
+                    final disabled =
+                        controller.isLoading || controller.isSaving;
+
+                    return OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: Colors.black.withAlpha(20),
+                          width: 1.5,
+                        ),
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+>>>>>>> Stashed changes
                       ),
                       backgroundColor: isBookmarked ? const Color(0xFFE8F5E9) : Colors.white,
                       foregroundColor: isBookmarked ? const Color(0xFF2D6A4F) : Colors.black87,
