@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/severity_alert_card.dart';
 import '../widgets/confidence_meter.dart';
+import 'dart:io';
+
 class ScanResultScreen extends StatefulWidget {
   final ScanResultModel result;
   const ScanResultScreen({super.key, required this.result});
@@ -86,7 +88,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                   ],
                   image: widget.result.imagePath != null
                       ? DecorationImage(
-                          image: AssetImage(widget.result.imagePath!),
+                          image: FileImage(File(widget.result.imagePath!)),
                           fit: BoxFit.cover,
                         )
                       : const DecorationImage(

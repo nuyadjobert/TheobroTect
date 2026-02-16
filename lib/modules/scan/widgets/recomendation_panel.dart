@@ -62,7 +62,10 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final items = _itemsForSection();
+   return AnimatedBuilder(
+    animation: widget.controller,
+    builder: (context, _) {
+      final items = _itemsForSection();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,4 +126,6 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
       ],
     );
   }
+   );
+}
 }
