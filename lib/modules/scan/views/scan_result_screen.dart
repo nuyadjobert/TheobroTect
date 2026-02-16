@@ -1,14 +1,12 @@
 import 'package:cacao_apps/modules/scan/controllers/scan_result_controller.dart';
 import 'package:cacao_apps/modules/scan/model/scan_result_model.dart';
+import 'package:cacao_apps/modules/scan/widgets/recomendation_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/severity_alert_card.dart';
-import '../widgets/action_task_tile.dart';
 import '../widgets/confidence_meter.dart';
-
 class ScanResultScreen extends StatefulWidget {
   final ScanResultModel result;
-
   const ScanResultScreen({super.key, required this.result});
 
   @override
@@ -21,14 +19,13 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   @override
   void initState() {
     super.initState();
-
     controller = ScanResultController(
       diseaseName: widget.result.diseaseName,
       confidence: widget.result.confidence,
       severity: widget.result.severity,
       imagePath: widget.result.imagePath,
     );
-
+ controller.init();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -46,6 +43,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final langCode = Localizations.localeOf(context).languageCode;
+    final lang = (langCode == "tl") ? "tl" : "en";
     return Scaffold(
       backgroundColor: const Color(0xFFF9FBF9),
       appBar: AppBar(
@@ -129,21 +128,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const ActionTaskTile(
-              icon: Icons.delete_outline_rounded,
-              title: "Remove & Bury",
-              desc: "Dig a deep pit and bury infected pods to stop the spread.",
-            ),
-            const ActionTaskTile(
-              icon: Icons.science_outlined,
-              title: "Apply Fungicide",
-              desc: "Use copper-based spray on surrounding pods immediately.",
-            ),
-            const ActionTaskTile(
-              icon: Icons.sanitizer_outlined,
-              title: "Sterilize Tools",
-              desc: "Clean pruning shears with alcohol after every single cut.",
-            ),
+
+            RecommendationsPanel(controller: controller, lang: lang),
           ],
         ),
       ),
