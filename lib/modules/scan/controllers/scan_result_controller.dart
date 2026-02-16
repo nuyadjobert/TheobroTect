@@ -1,10 +1,13 @@
+import 'package:cacao_apps/core/db/app_database.dart';
 import 'package:cacao_apps/core/guide/cacao_guide_service.dart';
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
 class ScanResultController extends ChangeNotifier {
-  final String diseaseName;   // from scanner UI
+  final String diseaseName; // from scanner UI
   final double confidence;
-  final String severity;      // "Mild/Moderate/Severe"
+  final String severity; // "Mild/Moderate/Severe"
   final String? imagePath;
 
   final CacaoGuideService _guide = CacaoGuideService();
@@ -34,7 +37,10 @@ class ScanResultController extends ChangeNotifier {
   // -------------------------
   // Loaded from JSON
   // -------------------------
-  Map<String, String> displayName = const {"en": "Unknown", "tl": "Hindi Kilala"};
+  Map<String, String> displayName = const {
+    "en": "Unknown",
+    "tl": "Hindi Kilala",
+  };
   Map<String, String> description = const {"en": "", "tl": ""};
 
   List<String> whatToDoNowEn = const [];
@@ -136,18 +142,20 @@ class ScanResultController extends ChangeNotifier {
       // 4) build TreatmentPlan tiles from JSON (What to do now)
       _treatmentPlan = whatToDoNowEn.isNotEmpty
           ? whatToDoNowEn
-              .map((t) => TreatmentTask(
+                .map(
+                  (t) => TreatmentTask(
                     icon: Icons.check_circle_outline,
                     title: "Action",
                     desc: t,
-                  ))
-              .toList(growable: false)
+                  ),
+                )
+                .toList(growable: false)
           : const [
               TreatmentTask(
                 icon: Icons.visibility_outlined,
                 title: "Monitor",
                 desc: "Observe the pod and rescan after a few days.",
-              )
+              ),
             ];
 
       _isLoading = false;
@@ -199,6 +207,91 @@ class ScanResultController extends ChangeNotifier {
     }
     return const [];
   }
+
+  //local database
+  bool _isSaving = false;
+  String? _saveError;
+
+  bool get isSaving => _isSaving;
+  String? get saveError => _saveError;
+
+ Future<bool> saveScanRecord({
+  required String userId,
+  required String deviceId,
+  bool smsEnabled = false,
+}) async {
+  if (_isSaving) return false;
+
+  if (_isLoading) {
+    _saveError = "Still loading scan data. Please try again.";
+    notifyListeners();
+    return false;
+  }
+
+  _isSaving = true;
+  _saveError = null;
+  notifyListeners();
+
+  try {
+    final db = await AppDatabase().db;
+
+    // ✅ ensure user exists (fix FK failure)
+    await db.insert(
+      'users',
+      {
+        'user_id': userId,
+        'email': null,
+        'name': null,
+        'created_at': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+
+    final now = DateTime.now();
+    final localId = const Uuid().v4();
+
+    final nextScanAt = (rescanAfterDays != null)
+        ? now.add(Duration(days: rescanAfterDays!)).toIso8601String()
+        : null;
+
+    final modelLabel =
+        (severityKey == 'default') ? diseaseKey : '${diseaseKey}_$severityKey';
+
+    await db.insert(
+      'scan_history',
+      {
+        'local_id': localId,
+        'user_id': userId,
+        'device_id': deviceId,
+        'created_at': now.toIso8601String(),
+        'image_path': imagePath,
+        'model_label': modelLabel,
+        'disease_key': diseaseKey,
+        'severity_key': severityKey,
+        'confidence': confidence,
+        'next_scan_at': nextScanAt,
+        'notif_local_id': null,
+        'sms_enabled': smsEnabled ? 1 : 0,
+        'sync_state': 'pending',
+        'backend_id': null,
+        'sync_attempts': 0,
+        'last_sync_at': null,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    _isBookmarked = true;
+    _isSaving = false;
+    notifyListeners();
+    return true;
+  } catch (e) {
+    _saveError = e.toString();
+    _isSaving = false;
+    notifyListeners();
+    return false;
+  }
+}
+
 }
 
 class TreatmentTask {

@@ -1,3 +1,4 @@
+import 'package:cacao_apps/core/services/device_id_sevices.dart';
 import 'package:cacao_apps/modules/scan/controllers/scan_result_controller.dart';
 import 'package:cacao_apps/modules/scan/model/scan_result_model.dart';
 import 'package:cacao_apps/modules/scan/widgets/recomendation_panel.dart';
@@ -27,7 +28,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
       severity: widget.result.severity,
       imagePath: widget.result.imagePath,
     );
- controller.init();
+    controller.init();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -150,23 +151,90 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         ),
         child: Row(
           children: [
-            Expanded(
-              flex: 2,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.grey.shade200, width: 2),
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                ),
-                onPressed: () {},
-                child: const Icon(
-                  Icons.bookmark_border_rounded,
-                  color: Colors.black,
-                ),
-              ),
+          Expanded(
+  flex: 2,
+  child: Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withAlpha(10),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    ),
+    child: AnimatedBuilder(   // ✅ FIXED
+      animation: controller,
+      builder: (context, _) {
+        final disabled =
+            controller.isLoading || controller.isSaving;
+
+        return OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(
+              color: Colors.black.withAlpha(20),
+              width: 1.5,
             ),
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black87,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+          onPressed: disabled
+              ? null
+              : () async {
+                  HapticFeedback.lightImpact();
+
+                  const userId = "default_user";
+                  final deviceId =
+                      await DeviceIdService().getOrCreate();
+
+                  final ok =
+                      await controller.saveScanRecord(
+                    userId: userId,
+                    deviceId: deviceId,
+                    smsEnabled: false,
+                  );
+
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ok
+                            ? "Saved to Scan History successfully!"
+                            : (controller.saveError ??
+                                "Save failed"),
+                      ),
+                    ),
+                  );
+                },
+          child: controller.isSaving
+              ? const SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2),
+                )
+              : Icon(
+                  controller.isBookmarked
+                      ? Icons.bookmark_added_rounded
+                      : Icons.bookmark_add_outlined,
+                  size: 26,
+                ),
+        );
+      },
+    ),
+  ),
+),
+
+
+            
+            
             const SizedBox(width: 12),
             Expanded(
               flex: 5,
