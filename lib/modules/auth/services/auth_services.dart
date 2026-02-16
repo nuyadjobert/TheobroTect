@@ -9,7 +9,7 @@ class AuthService {
 
   Future<RequestOtpResult> requestOtp(String email) async {
     try {
-      final res = await _dio.post('/auth/request-otp', data: {'email': email});
+      final res = await _dio.post('api/auth/request-otp', data: {'email': email});
 
       return RequestOtpResult.fromJson(res.data);
     } on DioException catch (e) {
@@ -23,7 +23,7 @@ class AuthService {
   }) async {
     try {
       final res = await _dio.post(
-        '/auth/verify-otp',
+        'api/auth/verify-otp',
         data: {'email': email, 'otp': otp},
       );
 
@@ -36,7 +36,7 @@ class AuthService {
   Future<RegistrationResponse> register(RegistrationRequest request) async {
     try {
       final res = await _dio.post(
-        '/users/register',
+        'api/users/register',
         data: request.toJson(),
         options: Options(headers: const {"Content-Type": "application/json"}),
       );

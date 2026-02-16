@@ -38,26 +38,38 @@ class AppDatabase {
     ''');
 
     await database.execute('''
-      CREATE TABLE IF NOT EXISTS scan_history (
-        local_id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        device_id TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        image_path TEXT,
-        model_label TEXT NOT NULL,
-        disease_key TEXT NOT NULL,
-        severity_key TEXT NOT NULL,
-        confidence REAL NOT NULL,
-        next_scan_at TEXT,
-        notif_local_id INTEGER,
-        sms_enabled INTEGER DEFAULT 0,
-        sync_state TEXT DEFAULT 'pending',
-        backend_id TEXT,
-        sync_attempts INTEGER DEFAULT 0,
-        last_sync_at TEXT,
-        FOREIGN KEY (user_id) REFERENCES users(user_id)
-      );
-    ''');
+     CREATE TABLE IF NOT EXISTS scan_history (
+ 
+          local_id TEXT PRIMARY KEY,            
+
+          user_id TEXT NOT NULL,
+
+          scanned_at TEXT NOT NULL,             
+          image_path TEXT,                      
+          disease_key TEXT NOT NULL,            
+          severity_key TEXT NOT NULL,           
+          confidence REAL NOT NULL,             
+
+          location_lat REAL,
+          location_lng REAL,
+          location_accuracy REAL,
+          location_label TEXT,  
+
+          next_scan_at TEXT,                     
+          notif_local_id INTEGER,                
+          sms_enabled INTEGER DEFAULT 0,         
+
+
+          sync_state TEXT DEFAULT 'pending',    
+          backend_id TEXT,                       
+          sync_attempts INTEGER DEFAULT 0,
+          last_sync_at TEXT,
+
+          created_at TEXT NOT NULL,              
+          updated_at TEXT,                      
+
+  FOREIGN KEY (user_id) REFERENCES users(user_id)
+); ''');
 
     await database.execute('''
       CREATE TABLE IF NOT EXISTS outbox (
@@ -72,7 +84,11 @@ class AppDatabase {
       );
     ''');
 
-    await database.execute('CREATE INDEX IF NOT EXISTS idx_scan_user ON scan_history(user_id);');
-    await database.execute('CREATE INDEX IF NOT EXISTS idx_outbox_status ON outbox(status);');
+    await database.execute(
+      'CREATE INDEX IF NOT EXISTS idx_scan_user ON scan_history(user_id);',
+    );
+    await database.execute(
+      'CREATE INDEX IF NOT EXISTS idx_outbox_status ON outbox(status);',
+    );
   }
 }
