@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 class ScanResultController extends ChangeNotifier {
   final String diseaseName;
   final double confidence;
-  final String severity; 
+  final String severity;
   final String? imagePath;
 
   final CacaoGuideService _guide = CacaoGuideService();
@@ -32,7 +32,7 @@ class ScanResultController extends ChangeNotifier {
   // Keys derived from UI inputs
   // -------------------------
   late final String diseaseKey;
-  late final String severityKey; 
+  late final String severityKey;
 
   // -------------------------
   // Loaded from JSON
@@ -254,7 +254,13 @@ class ScanResultController extends ChangeNotifier {
         'last_error': null,
         'updated_at': null,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
+      final rows = await db.query(
+        'scan_history',
+        where: 'local_id = ?',
+        whereArgs: [localId],
+      );
 
+      debugPrint('Saved scan row: $rows');
       _isBookmarked = true;
       _isSaving = false;
       notifyListeners();

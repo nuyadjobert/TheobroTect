@@ -15,9 +15,7 @@ void main() async {
 
   await AppDatabase().db;
   await CacaoModelService().loadModel();
-
   await syncTrigger.start();
-
   runApp(const MyApp());
 }
 
