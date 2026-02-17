@@ -1,4 +1,5 @@
 import 'package:cacao_apps/modules/home/views/home_screen.dart';
+import 'package:cacao_apps/modules/introduction/views/introduction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Added for orientation locking
 import 'package:showcaseview/showcaseview.dart';
@@ -23,7 +24,6 @@ void main() async {
   await db.insert('users', {
     'user_id': 'TEST_001',
     'email': 'test@example.com',
-    'name': null,
     'created_at': DateTime.now().toIso8601String(),
   }, conflictAlgorithm: ConflictAlgorithm.replace);
 

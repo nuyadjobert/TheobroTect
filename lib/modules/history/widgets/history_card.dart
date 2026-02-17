@@ -1,81 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:cacao_apps/core/db/app_database.dart';
 import '../widgets/scan_details.dart'; 
+import '../controllers/scan_result_controller.dart'; // Added import
 import 'dart:io'; 
 
 class HistoryCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final VoidCallback onTap;
-  final VoidCallback? onDelete; // Made optional
-  final VoidCallback? onDeleteComplete; // Callback after deletion
+  final ScanResultController controller; // Added controller field
+  final VoidCallback? onDelete; 
+  final VoidCallback? onDeleteComplete; 
 
   const HistoryCard({
     super.key, 
     required this.data, 
     required this.onTap, 
+    required this.controller, // Added to constructor
     this.onDelete,
     this.onDeleteComplete,
   });
 
   // --- DELETE FUNCTION ---
-  // --- DELETE FUNCTION ---
-Future<void> _handleDelete(BuildContext context) async {
-  // If custom onDelete is provided, use it
-  if (onDelete != null) {
-    onDelete!();
-    return;
-  }
+  Future<void> _handleDelete(BuildContext context) async {
+    if (onDelete != null) {
+      onDelete!();
+      return;
+    }
 
-  // Otherwise, use built-in delete logic
-  final bool? confirmed = await _showDeleteDialog(context);
-  
-  if (confirmed == true) {
-    try {
-      final String? id = data['id']?.toString(); // Get as String
-      final String? imagePath = data['image'];
+    final bool? confirmed = await _showDeleteDialog(context);
+    
+    if (confirmed == true) {
+      try {
+        final String? id = data['id']?.toString(); 
+        final String? imagePath = data['image'];
 
-      if (id == null || id.isEmpty) {
-        _showErrorSnackbar(context, "Unable to delete: No ID found");
-        return;
-      }
-
-      final db = await AppDatabase().db;
-      
-      // 1. Delete from Database using UUID
-      final deletedRows = await db.delete(
-        'scan_history',
-        where: 'local_id = ?',
-        whereArgs: [id], // Pass the UUID string directly
-      );
-
-      if (deletedRows == 0) {
-        _showErrorSnackbar(context, "Scan not found in database");
-        return;
-      }
-
-      // 2. Delete the physical image file if it exists
-      if (imagePath != null && imagePath.isNotEmpty) {
-        final file = File(imagePath);
-        if (await file.exists()) {
-          await file.delete();
+        if (id == null || id.isEmpty) {
+          _showErrorSnackbar(context, "Unable to delete: No ID found");
+          return;
         }
-      }
 
-      if (context.mounted) {
-        _showSuccessSnackbar(context);
+        final db = await AppDatabase().db;
         
-        // Notify parent to refresh
-        if (onDeleteComplete != null) {
-          onDeleteComplete!();
+        final deletedRows = await db.delete(
+          'scan_history',
+          where: 'local_id = ?',
+          whereArgs: [id], 
+        );
+
+        if (deletedRows == 0) {
+          _showErrorSnackbar(context, "Scan not found in database");
+          return;
         }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        _showErrorSnackbar(context, "Failed to delete scan: $e");
+
+        if (imagePath != null && imagePath.isNotEmpty) {
+          final file = File(imagePath);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        }
+
+        if (context.mounted) {
+          _showSuccessSnackbar(context);
+          
+          if (onDeleteComplete != null) {
+            onDeleteComplete!();
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          _showErrorSnackbar(context, "Failed to delete scan: $e");
+        }
       }
     }
   }
-}
+
   // --- CONFIRMATION DIALOG ---
   Future<bool?> _showDeleteDialog(BuildContext context) {
     return showDialog<bool>(
@@ -163,7 +161,6 @@ Future<void> _handleDelete(BuildContext context) async {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // IMAGE SECTION
             AspectRatio(
               aspectRatio: 1.3,
               child: Stack(
@@ -194,13 +191,11 @@ Future<void> _handleDelete(BuildContext context) async {
                       ),
                     ),
                   ),
-                  // STATUS TAG
                   Positioned(
                     top: 12,
                     left: 12,
                     child: _buildStatusTag(status.toUpperCase(), statusColor),
                   ),
-                  // --- DELETE BUTTON ---
                   Positioned(
                     top: 8,
                     right: 8,
@@ -224,7 +219,6 @@ Future<void> _handleDelete(BuildContext context) async {
               ),
             ),
 
-            // TEXT CONTENT SECTION
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -286,7 +280,10 @@ Future<void> _handleDelete(BuildContext context) async {
                         ),
                         Flexible(
                           child: GestureDetector(
-                            onTap: () => ScanDetailsSheet.show(context, data),
+                            onTap: () {
+                              // Corrected: Pass data and the controller
+                              ScanDetailsSheet.show(context, data, controller);
+                            },
                             behavior: HitTestBehavior.opaque,
                             child: Text(
                               "Details",

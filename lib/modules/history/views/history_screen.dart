@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/history_card.dart';
 import '../widgets/history_filter.dart';
 import '../widgets/scan_details.dart';
+import '../controllers/scan_result_controller.dart'; // Added import for the controller
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -14,6 +15,8 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final HistoryController _controller = HistoryController();
   final TextEditingController _searchController = TextEditingController();
+  // Initialize the result controller needed for the details sheet
+  final ScanResultController _scanResultController = ScanResultController();
 
   // --- CONFIRMATION DIALOG LOGIC ---
   void _showDeleteDialog(int id, String? imagePath) {
@@ -124,27 +127,52 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       childAspectRatio: 0.68,
                     ),
                     itemCount: historyData.length,
-                  itemBuilder: (context, index) {
-  final item = historyData[index];
-  
-  final Map<String, dynamic> formattedData = {
-    "id": item['local_id'], // Keep as String UUID
-    "title": item['disease_key'].toString().replaceAll('_', ' ').toUpperCase(),
-    "date": item['created_at'], 
-    "confidence": (item['confidence'] * 100).toStringAsFixed(1),
-    "status": item['severity_key'] == 'default' ? 'Healthy' : 'Infected',
-    "image": item['image_path'], 
-    "isLocalFile": true, 
-  };
+                    itemBuilder: (context, index) {
+                      final item = historyData[index];
+                      
+                      final Map<String, dynamic> formattedData = {
+                        "id": item['local_id'], 
+                        "title": item['disease_key'].toString().replaceAll('_', ' ').toUpperCase(),
+                        "date": item['created_at'], 
+                        "confidence": (item['confidence'] * 100).toStringAsFixed(1),
+                        "status": item['severity_key'] == 'default' ? 'Healthy' : 'Infected',
+                        "image": item['image_path'], 
+                        "isLocalFile": true,
+                        // Ensure recommendation strings are passed into formattedData if available in database
+                        "what_to_do_now_en": item['what_to_do_now_en'],
+                        "prevention_en": item['prevention_en'],
+                        "when_to_escalate_en": item['when_to_escalate_en'],
+                        "what_to_do_now_tl": item['what_to_do_now_tl'],
+                        "prevention_tl": item['prevention_tl'],
+                        "when_to_escalate_tl": item['when_to_escalate_tl'],
+                      };
 
-  return HistoryCard(
-    data: formattedData,
-    onTap: () {
-      ScanDetailsSheet.show(context, formattedData);
-    },
-    onDeleteComplete: () => setState(() {}),
-  );
-},
+                     return HistoryCard(
+  data: formattedData,
+  controller: _scanResultController, // Add this line here
+  onTap: () {
+    // Update controller with this item's data before showing sheet
+    _scanResultController.updateResults(
+      title: formattedData['title'],
+      status: formattedData['status'] == 'Infected',
+      date: formattedData['date'],
+      recommendationsEn: {
+        'now': List<String>.from(formattedData['what_to_do_now_en'] ?? []),
+        'prevention': List<String>.from(formattedData['prevention_en'] ?? []),
+        'escalate': List<String>.from(formattedData['when_to_escalate_en'] ?? []),
+      },
+      recommendationsTl: {
+        'now': List<String>.from(formattedData['what_to_do_now_tl'] ?? []),
+        'prevention': List<String>.from(formattedData['prevention_tl'] ?? []),
+        'escalate': List<String>.from(formattedData['when_to_escalate_tl'] ?? []),
+      },
+    );
+    // Pass the controller as the 3rd argument
+    ScanDetailsSheet.show(context, formattedData, _scanResultController);
+  },
+  onDeleteComplete: () => setState(() {}),
+);
+                    },
                   );
                 },
               ),
