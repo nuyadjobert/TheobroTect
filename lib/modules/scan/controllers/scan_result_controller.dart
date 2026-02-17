@@ -1,5 +1,6 @@
 import 'package:cacao_apps/core/db/app_database.dart';
 import 'package:cacao_apps/core/guide/cacao_guide_service.dart';
+import 'package:cacao_apps/core/location/location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
@@ -198,6 +199,8 @@ class ScanResultController extends ChangeNotifier {
     return const [];
   }
 
+  final LocationService _locationService = LocationService();
+
   bool _isSaving = false;
   String? _saveError;
 
@@ -230,6 +233,7 @@ class ScanResultController extends ChangeNotifier {
 
       final now = DateTime.now();
       final localId = const Uuid().v4();
+      final loc = await _locationService.getLocationSnapshot();
 
       final nextScanAt = (rescanAfterDays != null)
           ? now.add(Duration(days: rescanAfterDays!)).toIso8601String()
@@ -244,6 +248,9 @@ class ScanResultController extends ChangeNotifier {
         'disease_key': diseaseKey,
         'severity_key': severityKey,
         'confidence': confidence,
+        'location_lat': loc?['location_lat'],
+        'location_lng': loc?['location_lng'],
+        'location_accuracy': loc?['location_accuracy'],
         'next_scan_at': nextScanAt,
         'notif_local_id': null,
         'sms_enabled': smsEnabled ? 1 : 0,

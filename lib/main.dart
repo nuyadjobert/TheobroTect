@@ -2,6 +2,7 @@ import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Added for orientation locking
 import 'package:showcaseview/showcaseview.dart';
+import 'package:sqflite/sqflite.dart';
 import 'core/network/client.dart';
 import 'core/ml/cacao_model_service.dart';
 import 'core/db/app_database.dart';
@@ -17,6 +18,14 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  final db = await AppDatabase().db;
+
+  await db.insert('users', {
+    'user_id': 'TEST_001',
+    'email': 'test@example.com',
+    'name': null,
+    'created_at': DateTime.now().toIso8601String(),
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
 
   DioClient.init(baseUrl: "https://theorbrotect-backend.onrender.com");
 
@@ -34,10 +43,7 @@ class MyApp extends StatelessWidget {
     return ShowCaseWidget(
       builder: (context) => MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorSchemeSeed: Colors.green,
-        ),
+        theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
         home: const HomeScreen(),
       ),
     );

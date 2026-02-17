@@ -33,7 +33,6 @@ class AppDatabase {
       CREATE TABLE IF NOT EXISTS users (
         user_id TEXT PRIMARY KEY,
         email TEXT NOT NULL,
-        name TEXT NULL,
         created_at TEXT NOT NULL
       );
     ''');

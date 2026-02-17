@@ -80,16 +80,10 @@ class VerifyAccountController extends ChangeNotifier {
 
         await _secureStore.saveToken(token);
 
-        // final userId = result.userId;
-        // final emailFromBackend =
-        //     result.email ?? email;
-
-        final userId = (result.userId == null || result.userId!.isEmpty)
-            ? 'TEST_USER_001' // 👈 temporary default
-            : result.userId!;
-
-        final emailFromBackend = result.email ?? email;
-
+        final userId = result.userId;
+        final emailFromBackend =
+            result.email ?? email;
+            
         if (userId == null || userId.isEmpty) {
           _errorMessage =
               'Login succeeded but userId is missing. Check backend response.';
