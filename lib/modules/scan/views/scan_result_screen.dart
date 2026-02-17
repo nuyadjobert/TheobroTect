@@ -152,8 +152,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         ),
         child: Row(
           children: [
+            // UPDATED SAVE BUTTON: Now includes a clear label for better accessibility
             Expanded(
-              flex: 2,
+              flex: 3, // Increased flex slightly to accommodate text
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
@@ -174,11 +175,15 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                     return OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                          color: Colors.black.withAlpha(20),
+                          color: controller.isBookmarked 
+                              ? const Color(0xFF2D6A4F) 
+                              : Colors.black.withAlpha(20),
                           width: 1.5,
                         ),
                         backgroundColor: Colors.white,
-                        foregroundColor: Colors.black87,
+                        foregroundColor: controller.isBookmarked 
+                            ? const Color(0xFF2D6A4F) 
+                            : Colors.black87,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
@@ -197,11 +202,12 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
+                                  behavior: SnackBarBehavior.floating,
                                   content: Text(
                                     ok
                                         ? "Saved to Scan History successfully!"
                                         : (controller.saveError ??
-                                              "Save failed"),
+                                            "Save failed"),
                                   ),
                                 ),
                               );
@@ -210,13 +216,30 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                           ? const SizedBox(
                               height: 22,
                               width: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF2D6A4F),
+                              ),
                             )
-                          : Icon(
-                              controller.isBookmarked
-                                  ? Icons.bookmark_added_rounded
-                                  : Icons.bookmark_add_outlined,
-                              size: 26,
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  controller.isBookmarked
+                                      ? Icons.bookmark_added_rounded
+                                      : Icons.bookmark_add_outlined,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  controller.isBookmarked ? "SAVED" : "SAVE",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
                             ),
                     );
                   },
@@ -225,8 +248,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             ),
 
             const SizedBox(width: 12),
+            
             Expanded(
-              flex: 5,
+              flex: 4,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),

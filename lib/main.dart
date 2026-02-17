@@ -1,5 +1,6 @@
 import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Added for orientation locking
 import 'package:showcaseview/showcaseview.dart';
 import 'core/network/client.dart';
 import 'core/ml/cacao_model_service.dart';
@@ -10,6 +11,12 @@ final SyncTrigger syncTrigger = SyncTrigger();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // This locks the app to Portrait mode only
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   DioClient.init(baseUrl: "https://theorbrotect-backend.onrender.com");
 
