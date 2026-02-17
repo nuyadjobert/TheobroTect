@@ -1,21 +1,17 @@
 import 'package:cacao_apps/core/db/app_database.dart';
-import 'package:cacao_apps/modules/auth/services/auth_local.dart';
 import 'package:dio/dio.dart';
 
 class ScanSyncService {
   final Dio dio;
   final AppDatabase db;
-  final AuthSecureStore secureStore;
 
   ScanSyncService({
     required this.dio,
     required this.db,
-    required this.secureStore,
   });
 
   Future<void> syncPendingScans() async {
-    final token = await secureStore.readToken();
-    if (token == null || token.isEmpty) return;
+ 
 
     final pending = await db.getPendingScans(limit: 50);
     if (pending.isEmpty) return;
@@ -25,6 +21,7 @@ class ScanSyncService {
       if (localId.isEmpty) continue;
 
       final payload = {
+        'user_id': row['user_id'],
         'local_id': row['local_id'],
         'disease_key': row['disease_key'],
         'severity_key': row['severity_key'],
@@ -37,7 +34,6 @@ class ScanSyncService {
         final res = await dio.post(
           '/api/scans/sync',
           data: payload,
-          options: Options(headers: {'Authorization': 'Bearer $token'}),
         );
 
         final data = res.data as Map<String, dynamic>;

@@ -3,7 +3,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../../core/network/client.dart';
 import '../../core/db/app_database.dart';
-import '../../modules/auth/services/auth_local.dart';
 import 'package:cacao_apps/modules/scan/services/scan_sync_service.dart';
 
 class SyncTrigger {
@@ -16,7 +15,6 @@ class SyncTrigger {
     _scanSync = ScanSyncService(
       dio: DioClient.dio,
       db: AppDatabase(),
-      secureStore: AuthSecureStore(),
     );
   }
 
