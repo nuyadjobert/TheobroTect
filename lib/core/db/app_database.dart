@@ -1,3 +1,4 @@
+import 'package:cacao_apps/core/model/user.model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -31,8 +32,8 @@ class AppDatabase {
     await database.execute('''
       CREATE TABLE IF NOT EXISTS users (
         user_id TEXT PRIMARY KEY,
-        email TEXT,
-        name TEXT,
+        email TEXT NOT NULL,
+        name TEXT NULL,
         created_at TEXT NOT NULL
       );
     ''');
@@ -59,11 +60,11 @@ class AppDatabase {
           notif_local_id INTEGER,                
           sms_enabled INTEGER DEFAULT 0,         
 
-
           sync_state TEXT DEFAULT 'pending',    
           backend_id TEXT,                       
           sync_attempts INTEGER DEFAULT 0,
           last_sync_at TEXT,
+          last_error TEXT,
 
           created_at TEXT NOT NULL,              
           updated_at TEXT,                      
@@ -91,4 +92,75 @@ class AppDatabase {
       'CREATE INDEX IF NOT EXISTS idx_outbox_status ON outbox(status);',
     );
   }
+
+  Future<void> upsertUser(LocalUser user) async {
+    final database = await db;
+    await database.insert(
+      'users',
+      user.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<LocalUser?> getCurrentUser() async {
+    final database = await db;
+    final rows = await database.query('users', limit: 1);
+    if (rows.isEmpty) return null;
+    return LocalUser.fromMap(rows.first);
+  }
+
+  Future<void> clearUsers() async {
+    final database = await db;
+    await database.delete('users');
+  }
+
+  Future<List<Map<String, Object?>>> getPendingScans({int limit = 20}) async {
+  final database = await db;
+  return database.query(
+    'scan_history',
+    where: "sync_state IN ('pending','error')",
+    orderBy: 'scanned_at ASC',
+    limit: limit,
+  );
+}
+
+Future<void> markScanSynced({
+  required String localId,
+  required String backendId,
+}) async {
+  final database = await db;
+  final now = DateTime.now().toIso8601String();
+
+  await database.update(
+    'scan_history',
+    {
+      'sync_state': 'synced',
+      'backend_id': backendId,
+      'last_sync_at': now,
+      'updated_at': now,
+      'sync_attempts': 0,
+      'last_error': null, 
+    },
+    where: 'local_id = ?',
+    whereArgs: [localId],
+  );
+}
+
+Future<void> markScanSyncFailed({
+  required String localId,
+  required String errorMessage,
+}) async {
+  final database = await db;
+  final now = DateTime.now().toIso8601String();
+
+  await database.rawUpdate('''
+    UPDATE scan_history
+    SET sync_state = 'error',
+        sync_attempts = COALESCE(sync_attempts, 0) + 1,
+        last_sync_at = ?,
+        updated_at = ?
+    WHERE local_id = ?
+  ''', [now, now, localId]);
+}
+
 }

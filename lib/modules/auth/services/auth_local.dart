@@ -7,17 +7,14 @@ class AuthSecureStore {
   static const _refreshTokenKey = 'refresh_token';
   static const _userIdKey = 'user_id';
 
-  /// Save JWT token
   Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
   }
 
-  /// Read JWT token
   Future<String?> readToken() async {
     return await _storage.read(key: _tokenKey);
   }
 
-  /// Save user id (optional but useful)
   Future<void> saveUserId(String userId) async {
     await _storage.write(key: _userIdKey, value: userId);
   }
@@ -26,7 +23,6 @@ class AuthSecureStore {
     return await _storage.read(key: _userIdKey);
   }
 
-  /// Clear everything on logout
   Future<void> clearAll() async {
     await _storage.deleteAll();
   }

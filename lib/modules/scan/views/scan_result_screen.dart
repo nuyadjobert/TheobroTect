@@ -1,4 +1,3 @@
-import 'package:cacao_apps/core/services/device_id_sevices.dart';
 import 'package:cacao_apps/modules/scan/controllers/scan_result_controller.dart';
 import 'package:cacao_apps/modules/scan/model/scan_result_model.dart';
 import 'package:cacao_apps/modules/scan/widgets/recomendation_panel.dart';
@@ -168,7 +167,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                   ],
                 ),
                 child: AnimatedBuilder(
-                  // ✅ FIXED
                   animation: controller,
                   builder: (context, _) {
                     final disabled =
@@ -192,13 +190,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                           : () async {
                               HapticFeedback.lightImpact();
 
-                              const userId = "default_user";
-                              final deviceId = await DeviceIdService()
-                                  .getOrCreate();
-
                               final ok = await controller.saveScanRecord(
-                                userId: userId,
-                                deviceId: deviceId,
                                 smsEnabled: false,
                               );
 

@@ -5,9 +5,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 class ScanResultController extends ChangeNotifier {
-  final String diseaseName; // from scanner UI
+  final String diseaseName;
   final double confidence;
-  final String severity; // "Mild/Moderate/Severe"
+  final String severity; 
   final String? imagePath;
 
   final CacaoGuideService _guide = CacaoGuideService();
@@ -32,7 +32,7 @@ class ScanResultController extends ChangeNotifier {
   // Keys derived from UI inputs
   // -------------------------
   late final String diseaseKey;
-  late final String severityKey; // mild/moderate/severe/default
+  late final String severityKey; 
 
   // -------------------------
   // Loaded from JSON
@@ -84,11 +84,9 @@ class ScanResultController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1) derive keys
       diseaseKey = _diseaseKeyFromName(diseaseName);
       severityKey = _severityKeyFromText(severity);
 
-      // 2) load disease node
       final disease = await _guide.getDisease(diseaseKey);
       if (disease == null) {
         throw Exception('Disease not found in guide: $diseaseKey');
@@ -97,7 +95,6 @@ class ScanResultController extends ChangeNotifier {
       displayName = _mapLang(disease['display_name']);
       description = _mapLang(disease['description']);
 
-      // 3) load recommendation node
       final rec = await _guide.getRecommendation(
         diseaseKey: diseaseKey,
         severityKey: severityKey,
@@ -107,7 +104,6 @@ class ScanResultController extends ChangeNotifier {
         throw Exception('Recommendation not found: $diseaseKey / $severityKey');
       }
 
-      // pull lists
       whatToDoNowEn = _listLang(rec['what_to_do_now'], 'en');
       whatToDoNowTl = _listLang(rec['what_to_do_now'], 'tl');
 
@@ -117,11 +113,9 @@ class ScanResultController extends ChangeNotifier {
       whenToEscalateEn = _listLang(rec['when_to_escalate'], 'en');
       whenToEscalateTl = _listLang(rec['when_to_escalate'], 'tl');
 
-      // seek_help is optional (exists only for some severities)
       seekHelpEn = _listLang(rec['seek_help'], 'en');
       seekHelpTl = _listLang(rec['seek_help'], 'tl');
 
-      // monitoring_plan can exist at this severity level (mild/moderate/severe)
       final mp = rec['monitoring_plan'];
       if (mp is Map<String, dynamic>) {
         final d = mp['rescan_after_days'];
@@ -139,7 +133,6 @@ class ScanResultController extends ChangeNotifier {
         rescanMessage = null;
       }
 
-      // 4) build TreatmentPlan tiles from JSON (What to do now)
       _treatmentPlan = whatToDoNowEn.isNotEmpty
           ? whatToDoNowEn
                 .map(
@@ -170,9 +163,6 @@ class ScanResultController extends ChangeNotifier {
   // -------------------------
   // Helpers
   // -------------------------
-
-  // IMPORTANT: this is the only remaining "mapping" logic.
-  // Better later: pass diseaseKey/severityKey directly from model label.
   String _diseaseKeyFromName(String name) {
     final n = name.trim().toLowerCase();
     if (n.contains('black pod')) return 'black_pod_disease';
@@ -187,7 +177,7 @@ class ScanResultController extends ChangeNotifier {
     if (s.contains('mild')) return 'mild';
     if (s.contains('moderate')) return 'moderate';
     if (s.contains('severe')) return 'severe';
-    return 'default'; // for healthy
+    return 'default';
   }
 
   Map<String, String> _mapLang(dynamic node) {
@@ -208,63 +198,49 @@ class ScanResultController extends ChangeNotifier {
     return const [];
   }
 
-  //local database
   bool _isSaving = false;
   String? _saveError;
 
   bool get isSaving => _isSaving;
   String? get saveError => _saveError;
+  Future<bool> saveScanRecord({bool smsEnabled = false}) async {
+    if (_isSaving) return false;
 
- Future<bool> saveScanRecord({
-  required String userId,
-  required String deviceId,
-  bool smsEnabled = false,
-}) async {
-  if (_isSaving) return false;
+    if (_isLoading) {
+      _saveError = "Still loading scan data. Please try again.";
+      notifyListeners();
+      return false;
+    }
 
-  if (_isLoading) {
-    _saveError = "Still loading scan data. Please try again.";
+    _isSaving = true;
+    _saveError = null;
     notifyListeners();
-    return false;
-  }
 
-  _isSaving = true;
-  _saveError = null;
-  notifyListeners();
+    try {
+      final u = await AppDatabase().getCurrentUser();
+      if (u == null) {
+        _saveError = "No logged-in user found. Please login again.";
+        _isSaving = false;
+        notifyListeners();
+        return false;
+      }
+      final userId = u.userId;
 
-  try {
-    final db = await AppDatabase().db;
+      final db = await AppDatabase().db;
 
-    // ✅ ensure user exists (fix FK failure)
-    await db.insert(
-      'users',
-      {
-        'user_id': userId,
-        'email': null,
-        'name': null,
-        'created_at': DateTime.now().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+      final now = DateTime.now();
+      final localId = const Uuid().v4();
 
-    final now = DateTime.now();
-    final localId = const Uuid().v4();
+      final nextScanAt = (rescanAfterDays != null)
+          ? now.add(Duration(days: rescanAfterDays!)).toIso8601String()
+          : null;
 
-    final nextScanAt = (rescanAfterDays != null)
-        ? now.add(Duration(days: rescanAfterDays!)).toIso8601String()
-        : null;
-
-    final modelLabel = (severityKey == 'default') ? diseaseKey : '${diseaseKey}_$severityKey';
-
-    await db.insert(
-      'scan_history',
-      {
+      await db.insert('scan_history', {
         'local_id': localId,
         'user_id': userId,
-        'device_id': deviceId,
+        'scanned_at': now.toIso8601String(),
         'created_at': now.toIso8601String(),
         'image_path': imagePath,
-        'model_label': modelLabel,
         'disease_key': diseaseKey,
         'severity_key': severityKey,
         'confidence': confidence,
@@ -275,33 +251,21 @@ class ScanResultController extends ChangeNotifier {
         'backend_id': null,
         'sync_attempts': 0,
         'last_sync_at': null,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+        'last_error': null,
+        'updated_at': null,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
-    _isBookmarked = true;
-    _isSaving = false;
-    notifyListeners();
-    return true;
-  } catch (e) {
-    _saveError = e.toString();
-    _isSaving = false;
-    notifyListeners();
-    return false;
+      _isBookmarked = true;
+      _isSaving = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _saveError = e.toString();
+      _isSaving = false;
+      notifyListeners();
+      return false;
+    }
   }
-}
-
-// Future<List<Map<String, dynamic>>> getAllScanHistory() async {
-//   final db = await AppDatabase().db;
-
-//   final result = await db.query(
-//     'scan_history',
-//     orderBy: 'created_at DESC',
-//   );
-
-//   return result;
-// }
-
 }
 
 class TreatmentTask {
