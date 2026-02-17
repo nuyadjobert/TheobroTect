@@ -23,7 +23,6 @@ void main() async {
   await db.insert('users', {
     'user_id': 'TEST_001',
     'email': 'test@example.com',
-    'name': null,
     'created_at': DateTime.now().toIso8601String(),
   }, conflictAlgorithm: ConflictAlgorithm.replace);
 
