@@ -52,7 +52,7 @@ Widget build(BuildContext context) {
                       startAngle: -1.5708,
                       endAngle: 4.7124,
                       stops: [_animation.value, _animation.value],
-                      colors: [Colors.white, Colors.transparent],
+                      colors: [ Colors.white, Colors.transparent],
                     ).createShader(rect);
                   },
                   child: child,
@@ -66,9 +66,8 @@ Widget build(BuildContext context) {
             ),
           ),
 
-          // 2. THE BRAND NAME (3.png) - UPDATED: Bigger and Left-Aligned
           Positioned(
-            left: -70, // Moves the text to the left
+            left: -70,
             child: AnimatedBuilder(
               animation: _animation,
               builder: (context, child) {
@@ -80,15 +79,13 @@ Widget build(BuildContext context) {
               },
               child: Image.asset(
                 'assets/images/3.png',
-                width: 460, // INCREASED size from 500 to 580
+                width: 460, 
                 fit: BoxFit.contain,
               ),
             ),
           ),
-
-          // 3. THE SMALL LEAF (2.png)
           Positioned(
-            top: 150, // Adjusted top slightly to maintain balance with larger text
+            top: 150, 
             child: ScaleTransition(
               scale: _animation, 
               child: Image.asset(

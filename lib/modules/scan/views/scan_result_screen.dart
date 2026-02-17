@@ -28,7 +28,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
       imagePath: widget.result.imagePath,
     );
 
-    // Initialize data but REMOVED the .then((_) => _autoSaveScan())
     controller.init();
 
     SystemChrome.setSystemUIOverlayStyle(

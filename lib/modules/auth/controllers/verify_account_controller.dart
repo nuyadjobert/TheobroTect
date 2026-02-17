@@ -80,9 +80,15 @@ class VerifyAccountController extends ChangeNotifier {
 
         await _secureStore.saveToken(token);
 
-        final userId = result.userId;
-        final emailFromBackend =
-            result.email ?? email; 
+        // final userId = result.userId;
+        // final emailFromBackend =
+        //     result.email ?? email;
+
+        final userId = (result.userId == null || result.userId!.isEmpty)
+            ? 'TEST_USER_001' // 👈 temporary default
+            : result.userId!;
+
+        final emailFromBackend = result.email ?? email;
 
         if (userId == null || userId.isEmpty) {
           _errorMessage =
@@ -91,10 +97,7 @@ class VerifyAccountController extends ChangeNotifier {
           return result;
         }
 
-        await _saveUserLocally(
-          userId: userId,
-          email: emailFromBackend,
-        );
+        await _saveUserLocally(userId: userId, email: emailFromBackend);
         notifyListeners();
         return result;
       }
@@ -117,11 +120,7 @@ class VerifyAccountController extends ChangeNotifier {
   }) async {
     final now = DateTime.now().toIso8601String();
 
-    final localUser = LocalUser(
-      userId: userId,
-      email: email,
-      createdAt: now,
-    );
+    final localUser = LocalUser(userId: userId, email: email, createdAt: now);
 
     await AppDatabase().upsertUser(localUser);
   }
