@@ -206,6 +206,7 @@ class ScanResultController extends ChangeNotifier {
 
   bool get isSaving => _isSaving;
   String? get saveError => _saveError;
+
   Future<bool> saveScanRecord({bool smsEnabled = false}) async {
     if (_isSaving) return false;
 
@@ -232,7 +233,11 @@ class ScanResultController extends ChangeNotifier {
       final db = await AppDatabase().db;
 
       final now = DateTime.now();
-      final localId = const Uuid().v4();
+      const uuid =  Uuid();
+
+      final localId = uuid.v4(); 
+      final idempotencyKey = uuid.v4(); 
+
       final loc = await _locationService.getLocationSnapshot();
 
       final nextScanAt = (rescanAfterDays != null)
@@ -241,26 +246,34 @@ class ScanResultController extends ChangeNotifier {
 
       await db.insert('scan_history', {
         'local_id': localId,
+        'idempotency_key': idempotencyKey, 
+
         'user_id': userId,
         'scanned_at': now.toIso8601String(),
         'created_at': now.toIso8601String(),
+
         'image_path': imagePath,
         'disease_key': diseaseKey,
         'severity_key': severityKey,
         'confidence': confidence,
+
         'location_lat': loc?['location_lat'],
         'location_lng': loc?['location_lng'],
         'location_accuracy': loc?['location_accuracy'],
+
         'next_scan_at': nextScanAt,
         'notif_local_id': null,
         'sms_enabled': smsEnabled ? 1 : 0,
+
         'sync_state': 'pending',
         'backend_id': null,
         'sync_attempts': 0,
         'last_sync_at': null,
         'last_error': null,
+        'next_retry_at': null, 
         'updated_at': null,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
+
       final rows = await db.query(
         'scan_history',
         where: 'local_id = ?',
@@ -268,6 +281,7 @@ class ScanResultController extends ChangeNotifier {
       );
 
       debugPrint('Saved scan row: $rows');
+
       _isBookmarked = true;
       _isSaving = false;
       notifyListeners();

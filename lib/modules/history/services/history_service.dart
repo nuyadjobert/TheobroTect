@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:cacao_apps/core/db/app_database.dart';
-import '../models/scan_history_model.dart';
 
 class HistoryService {
   Future<List<Map<String, dynamic>>> getHistory() async {

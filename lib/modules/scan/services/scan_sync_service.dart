@@ -5,21 +5,15 @@ class ScanSyncService {
   final Dio dio;
   final AppDatabase db;
 
-  ScanSyncService({
-    required this.dio,
-    required this.db,
-  });
+  ScanSyncService({required this.dio, required this.db});
 
   Future<void> syncPendingScans() async {
- 
-
     final pending = await db.getPendingScans(limit: 50);
     if (pending.isEmpty) return;
 
     for (final row in pending) {
       final localId = (row['local_id'] ?? '').toString();
       if (localId.isEmpty) continue;
-
       final payload = {
         'user_id': row['user_id'],
         'local_id': row['local_id'],
@@ -31,9 +25,13 @@ class ScanSyncService {
       };
 
       try {
+        final idempotencyKey = (row['idempotency_key'] ?? row['local_id'])
+            .toString();
+
         final res = await dio.post(
           '/api/scans/sync',
           data: payload,
+          options: Options(headers: {'Idempotency-Key': idempotencyKey}),
         );
 
         final data = res.data as Map<String, dynamic>;

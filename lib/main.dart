@@ -1,7 +1,7 @@
 import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:cacao_apps/modules/introduction/views/introduction_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for orientation locking
+import 'package:flutter/services.dart'; 
 import 'package:showcaseview/showcaseview.dart';
 import 'package:sqflite/sqflite.dart';
 import 'core/network/client.dart';
@@ -9,16 +9,14 @@ import 'core/ml/cacao_model_service.dart';
 import 'core/db/app_database.dart';
 import 'core/sync/sync_trigger.dart';
 
-final SyncTrigger syncTrigger = SyncTrigger();
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // This locks the app to Portrait mode only
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  final SyncTrigger syncTrigger = SyncTrigger();
   final db = await AppDatabase().db;
 
   await db.insert('users', {
