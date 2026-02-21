@@ -17,8 +17,13 @@ class ScanSyncService {
       final payload = {
         'local_id': row['local_id'],
         'disease_key': row['disease_key'],
+        'image_url': row['image_path'],
         'severity_key': row['severity_key'],
         'confidence': row['confidence'],
+        'location_lat': row['location_lat'],
+        'location_lng': row['location_lng'],
+        'location_accuracy': row['location_accuracy'],
+        'location_label': row['location_label'],
         'scanned_at': row['scanned_at'],
         'next_scan_at': row['next_scan_at'],
       };

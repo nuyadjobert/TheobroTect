@@ -9,11 +9,13 @@ class AuthService {
 
   Future<RequestOtpResult> requestOtp(String email) async {
     try {
-      final res = await _dio.post('api/auth/request-otp', data: {'email': email});
-
-      return RequestOtpResult.fromJson(res.data);
+      final res = await _dio.post(
+        '/api/auth/request-otp',
+        data: {'email': email},
+      );
+      return RequestOtpResult.fromJson(_asMap(res.data));
     } on DioException catch (e) {
-      throw Exception(_readServerStatus(e) ?? 'Network/Server error');
+      throw Exception(_readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error');
     }
   }
 
@@ -23,26 +25,25 @@ class AuthService {
   }) async {
     try {
       final res = await _dio.post(
-        'api/auth/verify-otp',
+        '/api/auth/verify-otp',
         data: {'email': email, 'otp': otp},
       );
-
-      return VerifyOtpResult.fromJson(res.data);
+      return VerifyOtpResult.fromJson(_asMap(res.data));
     } on DioException catch (e) {
-      throw Exception(_readServerStatus(e) ?? 'Network/Server error');
+      throw Exception(_readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error');
     }
   }
 
   Future<RegistrationResponse> register(RegistrationRequest request) async {
     try {
       final res = await _dio.post(
-        'api/users/register',
+        '/api/users/register',
         data: request.toJson(),
         options: Options(headers: const {"Content-Type": "application/json"}),
       );
       return RegistrationResponse.fromJson(_asMap(res.data));
     } on DioException catch (e) {
-      throw Exception(_readServerStatus(e) ?? 'Network/Server error');
+      throw Exception(_readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error');
     }
   }
 
@@ -50,10 +51,18 @@ class AuthService {
     final data = e.response?.data;
     if (data is Map && data['status'] != null) return data['status'].toString();
     return null;
+    // Examples: MISSING_TOKEN, INVALID_OTP, OTP_EXPIRED, etc.
   }
+
+  String? _readMessage(DioException e) {
+    final data = e.response?.data;
+    if (data is Map && data['message'] != null) return data['message'].toString();
+    return e.message;
+  }
+
   Map<String, dynamic> _asMap(dynamic data) {
     if (data is Map<String, dynamic>) return data;
     if (data is Map) return Map<String, dynamic>.from(data);
-    throw Exception('Unexpected response format');
+    throw Exception('Unexpected response format: ${data.runtimeType}');
   }
 }

@@ -22,8 +22,9 @@ void main() async {
   final appDb = AppDatabase();
   final db = await appDb.db;
   final tokenStorage = TokenStorage();
+  await tokenStorage.save('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVmNjc5MzUzLTI2OGQtNDcyNy1hMDI4LTk4MDBkZDEyNTlhMyIsImlhdCI6MTc3MTY4MTIwMCwiZXhwIjoxNzcyMjg2MDAwfQ.DMD6d4BKDgWfJuL9xEO84Xp5o6h_rotv4xTHYbcGDD8');
   await db.insert('users', {
-    'user_id': 'TEST_001',
+    'user_id': 'ef679353-268d-4727-a028-9800dd1259a3',
     'email': 'test@example.com',
     'created_at': DateTime.now().toIso8601String(),
   }, conflictAlgorithm: ConflictAlgorithm.replace);
