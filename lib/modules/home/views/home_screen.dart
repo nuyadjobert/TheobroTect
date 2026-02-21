@@ -36,9 +36,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _showWeatherTip = false;
-  int _currentIndex = 0;
+  // Note: _currentIndex is now handled internally by the new DiseaseSlider
   int _bottomNavIndex = 0;
-  int _targetIndex = 0; // NEW: Tracks which page we are moving TO
+  int _targetIndex = 0; 
   late PageController _pageController;
 
   bool _isLoading = false;
@@ -86,13 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
-    Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (mounted) {
-        setState(() {
-          _currentIndex = (_currentIndex + 1) % _diseaseData.length;
-        });
-      }
-    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ShowCaseWidget.of(context).startShowCase([
@@ -131,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5FAF3),
-        drawer:const Drawer(
+        drawer: const Drawer(
           backgroundColor: Colors.white,
           child: Column(
             children: [
@@ -145,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             PageView(
               controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(), // Prevent manual swipe during loading
+              physics: const NeverScrollableScrollPhysics(), 
               onPageChanged: (index) {
                 setState(() => _bottomNavIndex = index);
               },
@@ -163,9 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: const Color(0xFFF5FAF3),
                   child: Stack(
                     children: [
-                      // Pass targetIndex so the skeleton matches the incoming page
                       SkeletonLayout(pageIndex: _targetIndex),
-                      
                       BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
                         child: Container(
@@ -187,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (index == _bottomNavIndex) return;
 
             setState(() {
-              _targetIndex = index; // Set which skeleton to show
+              _targetIndex = index; 
               _isLoading = true;
             });
 
@@ -288,14 +279,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () => setState(() => _showWeatherTip = !_showWeatherTip),
                 ),
                 const SizedBox(height: 15),
+                // --- UPDATED DISEASE SLIDER ---
                 Showcase(
                   key: _catalogKey,
                   title: 'Disease Catalog',
                   description: 'Tap or swipe to see symptoms of common cacao diseases.',
                   child: DiseaseSlider(
                     diseaseData: _diseaseData,
-                    currentIndex: _currentIndex,
-                    onTap: () => _showDiseaseDetails(_diseaseData[_currentIndex]),
+                    onDiseaseTap: (index) {
+                      _showDiseaseDetails(_diseaseData[index]);
+                    },
                   ),
                 ),
               ],
@@ -332,6 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// --- SkeletonLayout and other helper classes remain exactly as you provided ---
 class SkeletonLayout extends StatelessWidget {
   final int pageIndex;
   const SkeletonLayout({super.key, required this.pageIndex});
@@ -349,7 +343,7 @@ class SkeletonLayout extends StatelessWidget {
 
   Widget _buildSkeletonContent() {
     switch (pageIndex) {
-      case 1: // History Skeleton (List style)
+      case 1: // History Skeleton
         return ListView.builder(
           padding: const EdgeInsets.all(20),
           itemCount: 8,
@@ -373,7 +367,7 @@ class SkeletonLayout extends StatelessWidget {
             ),
           ),
         );
-      case 2: // Learn Skeleton (Grid style)
+      case 2: // Learn Skeleton
         return Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -393,7 +387,7 @@ class SkeletonLayout extends StatelessWidget {
             ],
           ),
         );
-      case 3: // Settings Skeleton (Profile + Tiles)
+      case 3: // Settings Skeleton
         return Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -410,7 +404,7 @@ class SkeletonLayout extends StatelessWidget {
             ],
           ),
         );
-      default: // Home Skeleton (Dashboard style)
+      default: // Home Skeleton
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(

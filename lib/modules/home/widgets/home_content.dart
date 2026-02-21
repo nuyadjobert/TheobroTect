@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart';
-
 import '../widgets/weather_card.dart';
 import '../widgets/disease_slider.dart';
 import '../widgets/inspection_card.dart';
@@ -15,7 +14,6 @@ class HomeContent extends StatelessWidget {
   final bool showWeatherTip;
   final VoidCallback onWeatherTipToggle;
   final List<Map<String, dynamic>> diseaseData;
-  final int currentIndex;
   final Function(Map<String, dynamic>) onDiseaseDetailsTap;
 
   const HomeContent({
@@ -27,7 +25,6 @@ class HomeContent extends StatelessWidget {
     required this.showWeatherTip,
     required this.onWeatherTipToggle,
     required this.diseaseData,
-    required this.currentIndex,
     required this.onDiseaseDetailsTap,
   });
 
@@ -42,6 +39,7 @@ class HomeContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Top Profile Row
                 Row(
                   children: [
                     Showcase(
@@ -70,18 +68,9 @@ class HomeContent extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Good Morning,",
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                        ),
-                        const Text(
-                          "Farmer John!",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
+                        Text("Good Morning,", style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                        const Text("Farmer John!", 
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
                       ],
                     ),
                     const Spacer(),
@@ -89,9 +78,7 @@ class HomeContent extends StatelessWidget {
                       behavior: HitTestBehavior.opaque,
                       onTap: () {
                         Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute(
-                            builder: (context) => const NotificationScreen(),
-                          ),
+                          MaterialPageRoute(builder: (context) => const NotificationScreen()),
                         );
                       },
                       child: const Padding(
@@ -102,24 +89,29 @@ class HomeContent extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
+                // Weather Section
                 WeatherCard(
                   showWeatherTip: showWeatherTip,
                   onTap: onWeatherTipToggle,
                 ),
                 const SizedBox(height: 15),
+                // NEW SLIDER SECTION
                 Showcase(
                   key: catalogKey,
                   title: 'Disease Catalog',
                   description: 'Tap or swipe to see symptoms of common cacao diseases.',
                   child: DiseaseSlider(
                     diseaseData: diseaseData,
-                    currentIndex: currentIndex,
-                    onTap: () => onDiseaseDetailsTap(diseaseData[currentIndex]),
+                    onDiseaseTap: (index) {
+                      // Pass the selected data back to the parent
+                      onDiseaseDetailsTap(diseaseData[index]);
+                    },
                   ),
                 ),
               ],
             ),
           ),
+          // Scrollable Bottom Part
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -128,10 +120,7 @@ class HomeContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 15),
-                  const Text(
-                    "Quick Inspection",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text("Quick Inspection", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 15),
                   Showcase(
                     key: scannerKey,
@@ -140,10 +129,7 @@ class HomeContent extends StatelessWidget {
                     child: const InspectionCard(),
                   ),
                   const SizedBox(height: 25),
-                  const Text(
-                    "Recent Activity",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text("Recent Activity", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   const TotalScannedCard(),
                   const SizedBox(height: 40),
@@ -159,17 +145,17 @@ class HomeContent extends StatelessWidget {
 
 class TotalScannedCard extends StatelessWidget {
   const TotalScannedCard({super.key});
-
   @override
   Widget build(BuildContext context) {
-    // This is a placeholder - replace with your actual TotalScannedCard widget
     return Container(
       padding: const EdgeInsets.all(20),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 10)],
       ),
-      child: const Text('Total Scanned Card Placeholder'),
+      child: const Text('Recent Activity details will appear here.'),
     );
   }
 }
