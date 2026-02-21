@@ -1,30 +1,24 @@
 import 'package:cacao_apps/core/db/app_database.dart';
 import 'package:cacao_apps/core/model/user.model.dart';
+import 'package:cacao_apps/core/storage/token_storage.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_services.dart';
 import '../models/verify_otp_result.dart';
-import '../services/auth_local.dart';
 
 class VerifyAccountController extends ChangeNotifier {
   final AuthService _auth;
   final String email;
 
-  final _secureStore = AuthSecureStore();
+  final _secureStore = TokenStorage();
 
   VerifyAccountController({required AuthService auth, required this.email})
     : _auth = auth;
 
-  // =========================
-  // OTP text controllers
-  // =========================
   final List<TextEditingController> otpControllers = List.generate(
     6,
     (_) => TextEditingController(),
   );
 
-  // =========================
-  // State
-  // =========================
   bool _isLoading = false;
   String? _errorMessage;
   VerifyOtpResult? _lastResult;
@@ -43,17 +37,11 @@ class VerifyAccountController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // =========================
-  // OTP helpers
-  // =========================
   String get otp => otpControllers.map((c) => c.text).join().trim();
   bool get isOtpValid => otp.length == 6;
   bool get isNewUserRequired => _lastResult?.status == 'NEW_USER_REQUIRED';
   bool get isVerified => _lastResult?.status == 'OK';
 
-  // =========================
-  // Verify OTP
-  // =========================
   Future<VerifyOtpResult?> verify() async {
     clearError();
     _lastResult = null;
@@ -78,12 +66,11 @@ class VerifyAccountController extends ChangeNotifier {
           return result;
         }
 
-        await _secureStore.saveToken(token);
+        await _secureStore.save(token);
 
         final userId = result.userId;
-        final emailFromBackend =
-            result.email ?? email;
-            
+        final emailFromBackend = result.email ?? email;
+
         if (userId == null || userId.isEmpty) {
           _errorMessage =
               'Login succeeded but userId is missing. Check backend response.';
@@ -119,9 +106,7 @@ class VerifyAccountController extends ChangeNotifier {
     await AppDatabase().upsertUser(localUser);
   }
 
-  // =========================
   // Status mapping
-  // =========================
   String _mapStatusToMessage(String status) {
     switch (status) {
       case 'INVALID_OTP':
@@ -141,9 +126,6 @@ class VerifyAccountController extends ChangeNotifier {
     }
   }
 
-  // =========================
-  // Dispose
-  // =========================
   @override
   void dispose() {
     for (final c in otpControllers) {

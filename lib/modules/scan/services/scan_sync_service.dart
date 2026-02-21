@@ -15,7 +15,6 @@ class ScanSyncService {
       final localId = (row['local_id'] ?? '').toString();
       if (localId.isEmpty) continue;
       final payload = {
-        'user_id': row['user_id'],
         'local_id': row['local_id'],
         'disease_key': row['disease_key'],
         'severity_key': row['severity_key'],
