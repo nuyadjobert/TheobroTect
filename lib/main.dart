@@ -18,7 +18,6 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  final syncTrigger = SyncTrigger();
 
   final appDb = AppDatabase();
   final db = await appDb.db;
@@ -34,6 +33,7 @@ void main() async {
     getToken: () => tokenStorage.get(),
   );
 
+final syncTrigger = SyncTrigger();
   await CacaoModelService().loadModel();
   await syncTrigger.start();
 
