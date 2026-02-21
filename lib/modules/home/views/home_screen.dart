@@ -15,7 +15,7 @@ import '../widgets/notification_icon.dart';
 import '../../learn/views/learn_hub_screen.dart';
 import '../../history/views/history_screen.dart';
 import '../../notifications/views/notification_screen.dart';
-
+import '../../scan/views/scanner_screen.dart';
 import '../../introduction/widgets/loading_screen.dart'; 
 
 import '../widgets/nav_drawer_header.dart';
@@ -36,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _showWeatherTip = false;
-  // Note: _currentIndex is now handled internally by the new DiseaseSlider
   int _bottomNavIndex = 0;
   int _targetIndex = 0; 
   late PageController _pageController;
@@ -111,6 +110,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _handleNavigation(int index) async {
+    if (index == _bottomNavIndex) return;
+    setState(() {
+      _targetIndex = index; 
+      _isLoading = true;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 5100));
+
+    if (mounted) {
+      _pageController.jumpToPage(index); 
+      setState(() {
+        _bottomNavIndex = index;
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -118,12 +135,13 @@ class _HomeScreenState extends State<HomeScreen> {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: Color(0xFFF5FAF3),
+        systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
         key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5FAF3),
+        extendBody: true, // Crucial for the notched look
         drawer: const Drawer(
           backgroundColor: Colors.white,
           child: Column(
@@ -172,47 +190,83 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
           ],
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _bottomNavIndex,
-          onTap: (index) async {
-            if (index == _bottomNavIndex) return;
 
-            setState(() {
-              _targetIndex = index; 
-              _isLoading = true;
-            });
-
-            await Future.delayed(const Duration(milliseconds: 5100));
-
-            if (mounted) {
-              _pageController.jumpToPage(index); 
-              setState(() {
-                _bottomNavIndex = index;
-                _isLoading = false;
-              });
-            }
-          },
-          selectedItemColor: const Color(0xFF2D6A4F),
-          unselectedItemColor: Colors.grey,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.eco_outlined),
-              activeIcon: Icon(Icons.eco_rounded),
-              label: 'Home',
+        // --- THE NOTCHED BOTTOM BAR ---
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(top: 30), 
+          child: SizedBox(
+            height: 54,
+            width: 54,
+            child: FloatingActionButton(
+              onPressed: () {
+                // --- ADD NAVIGATION HERE ---
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    // Replace 'ScanningScreen()' with the actual name of your scan view class
+                    builder: (context) =>  ScannerScreen(), 
+                  ),
+                );
+              },
+              backgroundColor: const Color(0xFF2D6A4F),
+              elevation: 5,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 24),
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: 'History'),
-            BottomNavigationBarItem(icon: Icon(Icons.menu_book_rounded), label: 'Learn'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.tune_rounded),
-              activeIcon: Icon(Icons.settings_input_component_rounded),
-              label: 'Settings',
-            ),
-          ],
+          ),
         ),
+        // Keep this as centerDocked so it stays in the middle of the bar
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        
+        bottomNavigationBar: BottomAppBar(
+          color: Colors.white,
+          shape: const CircularNotchedRectangle(), // Creates the "space" in the middle
+          notchMargin: 8.0, // Controls how much gap is around the scan button
+          elevation: 20,
+          child: SizedBox(
+            height: 60,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(0, Icons.eco_outlined, Icons.eco_rounded, "Home"),
+                _buildNavItem(1, Icons.history_rounded, Icons.history_rounded, "History"),
+                
+                // Flexible spacer to keep the gap for the scan button
+                const SizedBox(width: 40),
+
+                _buildNavItem(2, Icons.menu_book_rounded, Icons.menu_book_rounded, "Learn"),
+                _buildNavItem(3, Icons.tune_rounded, Icons.settings_input_component_rounded, "Settings"),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
+    bool isActive = _bottomNavIndex == index;
+    return GestureDetector(
+      onTap: () => _handleNavigation(index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isActive ? activeIcon : icon,
+            color: isActive ? const Color(0xFF2D6A4F) : Colors.grey[400],
+            size: 24,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              color: isActive ? const Color(0xFF2D6A4F) : Colors.grey[500],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -279,7 +333,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () => setState(() => _showWeatherTip = !_showWeatherTip),
                 ),
                 const SizedBox(height: 15),
-                // --- UPDATED DISEASE SLIDER ---
                 Showcase(
                   key: _catalogKey,
                   title: 'Disease Catalog',
@@ -314,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Text("Recent Activity", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   const TotalScannedCard(),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 100), // Space to avoid being covered by the bar
                 ],
               ),
             ),
@@ -325,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// --- SkeletonLayout and other helper classes remain exactly as you provided ---
+// SKELETON LAYOUT CLASSES PRESERVED EXACTLY AS PROVIDED
 class SkeletonLayout extends StatelessWidget {
   final int pageIndex;
   const SkeletonLayout({super.key, required this.pageIndex});
