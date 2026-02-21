@@ -28,11 +28,8 @@ class AppDatabase {
     );
   }
 
-Future<void> _createTables(Database database) async {
-  // -------------------------
-  // USERS TABLE
-  // -------------------------
-  await database.execute('''
+  Future<void> _createTables(Database database) async {
+    await database.execute('''
     CREATE TABLE IF NOT EXISTS users (
       user_id TEXT PRIMARY KEY,
       email TEXT NOT NULL,
@@ -40,10 +37,7 @@ Future<void> _createTables(Database database) async {
     );
   ''');
 
-  // -------------------------
-  // SCAN HISTORY (Offline-first + Sync Queue)
-  // -------------------------
-  await database.execute('''
+    await database.execute('''
     CREATE TABLE IF NOT EXISTS scan_history (
 
       -- Identity
@@ -89,36 +83,31 @@ Future<void> _createTables(Database database) async {
     );
   ''');
 
-  // -------------------------
-  // INDEXES (Performance)
-  // -------------------------
-
-  await database.execute('''
+    await database.execute('''
     CREATE INDEX IF NOT EXISTS idx_scan_user
     ON scan_history(user_id);
   ''');
 
-  await database.execute('''
+    await database.execute('''
     CREATE INDEX IF NOT EXISTS idx_scan_sync
     ON scan_history(sync_state, next_retry_at);
   ''');
 
-  await database.execute('''
+    await database.execute('''
     CREATE INDEX IF NOT EXISTS idx_scan_scanned_at
     ON scan_history(scanned_at);
   ''');
 
-  await database.execute('''
+    await database.execute('''
     CREATE INDEX IF NOT EXISTS idx_scan_backend
     ON scan_history(backend_id);
   ''');
 
-  await database.execute('''
+    await database.execute('''
     CREATE UNIQUE INDEX IF NOT EXISTS idx_scan_idempotency_key
     ON scan_history(idempotency_key);
   ''');
-}
-
+  }
 
   Future<void> upsertUser(LocalUser user) async {
     final database = await db;

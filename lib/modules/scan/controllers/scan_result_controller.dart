@@ -2,8 +2,8 @@ import 'package:cacao_apps/core/db/app_database.dart';
 import 'package:cacao_apps/core/guide/cacao_guide_service.dart';
 import 'package:cacao_apps/core/location/location_service.dart';
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:uuid/uuid.dart';
+
+import '../services/scan_repository.dart';
 
 class ScanResultController extends ChangeNotifier {
   final String diseaseName;
@@ -12,6 +12,7 @@ class ScanResultController extends ChangeNotifier {
   final String? imagePath;
 
   final CacaoGuideService _guide = CacaoGuideService();
+  final ScanRepository _scanRepo = ScanRepository();
 
   ScanResultController({
     required this.diseaseName,
@@ -228,59 +229,53 @@ class ScanResultController extends ChangeNotifier {
         notifyListeners();
         return false;
       }
+
       final userId = u.userId;
 
-      final db = await AppDatabase().db;
-
       final now = DateTime.now();
-      const uuid =  Uuid();
-
-      final localId = uuid.v4(); 
-      final idempotencyKey = uuid.v4(); 
-
       final loc = await _locationService.getLocationSnapshot();
 
       final nextScanAt = (rescanAfterDays != null)
-          ? now.add(Duration(days: rescanAfterDays!)).toIso8601String()
+          ? now.add(Duration(days: rescanAfterDays!))
           : null;
 
-      await db.insert('scan_history', {
-        'local_id': localId,
-        'idempotency_key': idempotencyKey, 
+      final localId = await _scanRepo.insertScan(
+        userId: userId,
+        diseaseKey: diseaseKey,
+        severityKey: severityKey,
+        confidence: confidence,
+        imagePath: imagePath,
 
-        'user_id': userId,
-        'scanned_at': now.toIso8601String(),
-        'created_at': now.toIso8601String(),
+        scannedAt: now,
+        createdAt: now,
+        nextScanAt: nextScanAt,
 
-        'image_path': imagePath,
-        'disease_key': diseaseKey,
-        'severity_key': severityKey,
-        'confidence': confidence,
+        locationLat: (loc?['location_lat'] is num)
+            ? (loc!['location_lat'] as num).toDouble()
+            : null,
+        locationLng: (loc?['location_lng'] is num)
+            ? (loc!['location_lng'] as num).toDouble()
+            : null,
+        locationAccuracy: (loc?['location_accuracy'] is num)
+            ? (loc!['location_accuracy'] as num).toDouble()
+            : null,
+        locationLabel: loc?['location_label']?.toString(),
 
-        'location_lat': loc?['location_lat'],
-        'location_lng': loc?['location_lng'],
-        'location_accuracy': loc?['location_accuracy'],
+        notifLocalId: null,
+        smsEnabled: smsEnabled,
 
-        'next_scan_at': nextScanAt,
-        'notif_local_id': null,
-        'sms_enabled': smsEnabled ? 1 : 0,
-
-        'sync_state': 'pending',
-        'backend_id': null,
-        'sync_attempts': 0,
-        'last_sync_at': null,
-        'last_error': null,
-        'next_retry_at': null, 
-        'updated_at': null,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-
-      final rows = await db.query(
-        'scan_history',
-        where: 'local_id = ?',
-        whereArgs: [localId],
+        // sync defaults
+        syncState: 'pending',
+        backendId: null,
+        syncAttempts: 0,
+        lastSyncAt: null,
+        lastError: null,
+        nextRetryAt: null,
+        updatedAt: null,
       );
 
-      debugPrint('Saved scan row: $rows');
+      final saved = await _scanRepo.getScanByLocalId(localId);
+      debugPrint('Saved scan row: $saved');
 
       _isBookmarked = true;
       _isSaving = false;
