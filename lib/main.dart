@@ -1,4 +1,3 @@
-// Keep all your imports exactly the same
 import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,11 +10,8 @@ import 'core/db/app_database.dart';
 import 'core/sync/sync_trigger.dart';
 import 'core/storage/token_storage.dart';
 
-// Import your new widget
-import 'modules/home/widgets/movable_feedback_menu.dart';
 
 void main() async {
-  // ... (Keep all your main() code exactly as it is)
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -53,15 +49,6 @@ class MyApp extends StatelessWidget {
       builder: (context) => MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
-        // Use the builder to wrap every screen with the movable menu
-        builder: (context, child) {
-          return Stack(
-            children: [
-              if (child != null) child,
-              const MovableFeedbackMenu(),
-            ],
-          );
-        },
         home: const HomeScreen(),
       ),
     );
