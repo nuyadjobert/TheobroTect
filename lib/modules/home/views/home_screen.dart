@@ -117,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoading = true;
     });
 
-    await Future.delayed(const Duration(milliseconds: 5100));
+    await Future.delayed(const Duration(milliseconds: 2000));
 
     if (mounted) {
       _pageController.jumpToPage(index); 
