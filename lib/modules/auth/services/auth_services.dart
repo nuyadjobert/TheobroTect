@@ -61,7 +61,6 @@ class AuthService {
     final data = e.response?.data;
     if (data is Map && data['status'] != null) return data['status'].toString();
     return null;
-    // Examples: MISSING_TOKEN, INVALID_OTP, OTP_EXPIRED, etc.
   }
 
   String? _readMessage(DioException e) {
