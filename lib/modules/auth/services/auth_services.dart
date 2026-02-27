@@ -12,10 +12,16 @@ class AuthService {
       final res = await _dio.post(
         '/api/auth/request-otp',
         data: {'email': email},
+        options: Options(headers: const {"Content-Type": "application/json"}),
       );
       return RequestOtpResult.fromJson(_asMap(res.data));
     } on DioException catch (e) {
-      throw Exception(_readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error');
+      final sc = e.response?.statusCode;
+      final data = e.response?.data;
+      print('requestOtp failed status=$sc data=$data error=${e.message}');
+      throw Exception(
+        _readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error',
+      );
     }
   }
 
@@ -30,7 +36,9 @@ class AuthService {
       );
       return VerifyOtpResult.fromJson(_asMap(res.data));
     } on DioException catch (e) {
-      throw Exception(_readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error');
+      throw Exception(
+        _readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error',
+      );
     }
   }
 
@@ -43,7 +51,9 @@ class AuthService {
       );
       return RegistrationResponse.fromJson(_asMap(res.data));
     } on DioException catch (e) {
-      throw Exception(_readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error');
+      throw Exception(
+        _readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error',
+      );
     }
   }
 
@@ -56,7 +66,8 @@ class AuthService {
 
   String? _readMessage(DioException e) {
     final data = e.response?.data;
-    if (data is Map && data['message'] != null) return data['message'].toString();
+    if (data is Map && data['message'] != null)
+      return data['message'].toString();
     return e.message;
   }
 
