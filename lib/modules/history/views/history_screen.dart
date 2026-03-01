@@ -21,7 +21,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     severity: "default",
   );
 
-  // --- CONFIRMATION DIALOG LOGIC ---
   void _showDeleteDialog(int id, String? imagePath) {
     showDialog(
       context: context,
