@@ -45,7 +45,7 @@ class AuthService {
   Future<RegistrationResponse> register(RegistrationRequest request) async {
     try {
       final res = await _dio.post(
-        '/api/users/register',
+        '/api/auth/register',
         data: request.toJson(),
         options: Options(headers: const {"Content-Type": "application/json"}),
       );
