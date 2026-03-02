@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
     controller.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -53,46 +54,51 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 60),
+                // LOGO SECTION USING STACK
                 Center(
-                  child: Column(
+                  child: Stack(
+                    alignment: Alignment.topCenter,
+                    clipBehavior: Clip.none, // Allows the logo to "float"
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withAlpha(
-                            (0.4 * 255).toInt(),
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.energy_savings_leaf_rounded,
-                          size: 56,
-                          color: colorScheme.primary,
+                      // This is the actual large logo
+                      Positioned(
+                        top: -40, // Adjust this to move the logo up or down
+                        right: -110,
+                        child: Image.asset(
+                          'assets/images/app_logo.png',
+                          width: 350, // Your requested large size
+                          height: 350,
+                          fit: BoxFit.contain,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            fontSize: 32,
-                            letterSpacing: -1,
-                            color: colorScheme.onSurface,
-                          ),
-                          children: [
-                            const TextSpan(
-                              text: "Theobro",
-                              style: TextStyle(fontWeight: FontWeight.w300),
-                            ),
-                            TextSpan(
-                              text: "Tect",
+                      // This Column controls the "Actual" space taken and the branding text
+                      Column(
+                        children: [
+                          // We only "reserve" 180px of height, even though the logo is 330px
+                          const SizedBox(height: 180), 
+                          RichText(
+                            text: TextSpan(
                               style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                color: colorScheme.primary,
+                                fontSize: 32,
+                                letterSpacing: -1,
+                                color: colorScheme.onSurface,
                               ),
+                              children: [
+                                const TextSpan(
+                                  text: "Theobro",
+                                  style: TextStyle(fontWeight: FontWeight.w300),
+                                ),
+                                TextSpan(
+                                  text: "Tect",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -100,6 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 40),
 
+                // 2. Welcome Text
                 Text(
                   "Welcome Back",
                   style: theme.textTheme.headlineMedium?.copyWith(
@@ -114,7 +121,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 48),
+                
+                const SizedBox(height: 32),
+                
+                // 3. Email Input
                 Text(
                   "Email Address",
                   style: theme.textTheme.labelLarge?.copyWith(
@@ -125,12 +135,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextField(
                   controller: controller.emailController,
                   onChanged: (v) {
-    
                     if (model.emailError != null) {
                       setState(() => model.emailError = null);
                     }
                   },
-
                   decoration: InputDecoration(
                     hintText: "farmer@gmail.com",
                     errorText: model.emailError,
@@ -155,24 +163,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
+
+                const SizedBox(height: 32),
+
+                // 4. Action Button
                 SizedBox(
                   width: double.infinity,
-                  height: 64,
+                  height: 60,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryGreen.withAlpha(
-                        (0.8 * 255).toInt(),
-                      ),
-                      foregroundColor: colorScheme.onPrimary,
+                      backgroundColor: primaryGreen,
+                      foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onPressed:
-                        
-() => controller.onContinue(context, () => setState(() {})),
+                    onPressed: () => controller.onContinue(context, () => setState(() {})),
                     child: const Text(
                       "Continue",
                       style: TextStyle(
@@ -182,7 +189,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 24),
               ],
             ),

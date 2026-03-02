@@ -58,26 +58,45 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.energy_savings_leaf_rounded,
-                      color: colorScheme.primary,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "TheobroTect",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: colorScheme.onSurface,
-                        letterSpacing: -0.5,
+                // --- LOGO & BRAND SECTION ---
+                // Using a Stack so the Logo doesn't push the Text to the right
+                SizedBox(
+                  height: 90, 
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    clipBehavior: Clip.none,
+                    children: [
+                      // This Row defines the text position
+                      Row(
+                        children: [
+                          const SizedBox(width: 65), // This controls the text's left-margin
+                          Text(
+                            "TheobroTect",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: colorScheme.onSurface,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      // This floats the logo independently
+                      Positioned(
+                        left: -40, // Moves the logo left/right without affecting text
+                        child: Image.asset(
+                          'assets/images/app_logo.png',
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 60),
+                
+                const SizedBox(height: 50),
+                
                 Text(
                   "Verify Identity",
                   style: theme.textTheme.displaySmall?.copyWith(
@@ -94,8 +113,10 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                     height: 1.5,
                   ),
                 ),
+                
                 const SizedBox(height: 48),
 
+                // --- OTP INPUT SECTION ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(
@@ -106,6 +127,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
 
                 const SizedBox(height: 48),
 
+                // --- RESEND SECTION ---
                 Center(
                   child: Column(
                     children: [
@@ -118,7 +140,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {}, // Add resend logic here
                         style: TextButton.styleFrom(
                           foregroundColor: colorScheme.primary,
                         ),
@@ -133,6 +155,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
 
                 const SizedBox(height: 32),
 
+                // --- VERIFY BUTTON ---
                 SizedBox(
                   width: double.infinity,
                   height: 64,
@@ -153,6 +176,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                         : () async {
                             await controller.verify();
                             if (!mounted) return;
+                            
                             if (controller.isNewUserRequired) {
                               Navigator.of(context).pushReplacement(
                                 MaterialPageRoute(
@@ -173,20 +197,17 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                             }
 
                             if (controller.isVerified) {
-                              Navigator.of(
-                                context,
-                              ).pushReplacementNamed('/dashboard');
+                              Navigator.of(context)
+                                  .pushReplacementNamed('/dashboard');
                               return;
                             }
 
                             final msg = controller.errorMessage;
                             if (msg != null && msg.isNotEmpty) {
-                              ScaffoldMessenger.of(
-                                context,
-                              ).showSnackBar(SnackBar(content: Text(msg)));
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(content: Text(msg)));
                             }
                           },
-
                     child: controller.isLoading
                         ? SizedBox(
                             width: 22,
@@ -211,6 +232,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
 
                 const SizedBox(height: 24),
 
+                // --- BACK BUTTON ---
                 Center(
                   child: TextButton.icon(
                     onPressed: () => Navigator.pop(context),
