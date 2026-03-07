@@ -39,4 +39,109 @@ class CacaoGuideService {
 
     return recs[key] as Map<String, dynamic>?;
   }
+
+   Map<String, String> parseModelLabel(String label) {
+    const severities = {'mild', 'moderate', 'severe'};
+
+    if (label == 'healthy') {
+      return {
+        'diseaseKey': 'healthy',
+        'severityKey': 'default',
+      };
+    }
+
+    final parts = label.split('_');
+    if (parts.isEmpty) {
+      throw FormatException('Invalid label: $label');
+    }
+
+    final lastPart = parts.last;
+
+    if (!severities.contains(lastPart)) {
+      return {
+        'diseaseKey': label,
+        'severityKey': 'default',
+      };
+    }
+
+    return {
+      'diseaseKey': parts.sublist(0, parts.length - 1).join('_'),
+      'severityKey': lastPart,
+    };
+  }
+
+  Future<Map<String, dynamic>?> getMonitoringPlan({
+    required String diseaseKey,
+    required String severityKey,
+  }) async {
+    if (diseaseKey == 'healthy') {
+      final disease = await getDisease(diseaseKey);
+      final monitoringPlan = disease?['monitoring_plan'];
+      if (monitoringPlan == null) return null;
+      return Map<String, dynamic>.from(monitoringPlan as Map);
+    }
+
+    final recommendation = await getRecommendation(
+      diseaseKey: diseaseKey,
+      severityKey: severityKey,
+    );
+
+    final monitoringPlan = recommendation?['monitoring_plan'];
+    if (monitoringPlan == null) return null;
+
+    return Map<String, dynamic>.from(monitoringPlan as Map);
+  }
+
+  Future<int> getRescanAfterDays({
+    required String diseaseKey,
+    required String severityKey,
+  }) async {
+    final monitoringPlan = await getMonitoringPlan(
+      diseaseKey: diseaseKey,
+      severityKey: severityKey,
+    );
+
+    return (monitoringPlan?['rescan_after_days'] as num?)?.toInt() ?? 14;
+  }
+
+  Future<int> getPreferredTimeHour({
+    required String diseaseKey,
+    required String severityKey,
+  }) async {
+    final monitoringPlan = await getMonitoringPlan(
+      diseaseKey: diseaseKey,
+      severityKey: severityKey,
+    );
+
+    return (monitoringPlan?['preferred_time_hour'] as num?)?.toInt() ?? 9;
+  }
+
+  Future<String> getReminderMessage({
+    required String diseaseKey,
+    required String severityKey,
+    String languageCode = 'en',
+  }) async {
+    final monitoringPlan = await getMonitoringPlan(
+      diseaseKey: diseaseKey,
+      severityKey: severityKey,
+    );
+
+    final message = monitoringPlan?['message'] as Map<String, dynamic>?;
+
+    return message?[languageCode] as String? ??
+        message?['en'] as String? ??
+        'Time to scan again.';
+  }
+
+  Future<String> getDisplayName({
+    required String diseaseKey,
+    String languageCode = 'en',
+  }) async {
+    final disease = await getDisease(diseaseKey);
+    final displayName = disease?['display_name'] as Map<String, dynamic>?;
+
+    return displayName?[languageCode] as String? ??
+        displayName?['en'] as String? ??
+        diseaseKey;
+  }
 }

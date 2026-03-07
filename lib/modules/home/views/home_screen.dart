@@ -21,6 +21,7 @@ import '../../introduction/widgets/loading_screen.dart';
 import '../widgets/nav_drawer_header.dart';
 import '../widgets/nav_farm_info.dart';
 import '../widgets/nav_stats_card.dart';
+import '../Controller/home_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey _catalogKey = GlobalKey();
   final GlobalKey _scannerKey = GlobalKey();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+    final HomeController _controller = HomeController();
 
   bool _showWeatherTip = false;
   int _bottomNavIndex = 0;
@@ -85,6 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
+      _controller.startBackgroundServices();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ShowCaseWidget.of(context).startShowCase([

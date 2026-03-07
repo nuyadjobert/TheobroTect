@@ -16,9 +16,6 @@ class AuthService {
       );
       return RequestOtpResult.fromJson(_asMap(res.data));
     } on DioException catch (e) {
-      final sc = e.response?.statusCode;
-      final data = e.response?.data;
-      print('requestOtp failed status=$sc data=$data error=${e.message}');
       throw Exception(
         _readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error',
       );

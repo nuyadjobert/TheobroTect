@@ -154,8 +154,8 @@
             ]
           },
           "monitoring_plan": {
-            "rescan_after_days": 7,
-            "preferred_time_hour": 9,
+            "rescan_after_days": 1,
+            "preferred_time_hour": 4,
             "message": {
               "en": "Rescan after 7 days to check if black pod symptoms are improving.",
               "tl": "Mag-rescan pagkatapos ng 7 araw para makita kung gumagaling ang sintomas ng black pod."

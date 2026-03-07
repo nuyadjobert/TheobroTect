@@ -1,13 +1,15 @@
+import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:cacao_apps/modules/introduction/views/introduction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 import 'core/network/client.dart';
-import 'core/ml/cacao_model_service.dart';
-import 'core/sync/sync_trigger.dart';
 import 'core/storage/token_storage.dart';
+import 'core/services/notification_service.dart';
+import 'modules/notifications/views/notification_screen.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,16 +19,14 @@ void main() async {
   ]);
 
   final tokenStorage = TokenStorage();
-  
   DioClient.init(
     baseUrl: "https://theobrotect.org",
     getToken: () => tokenStorage.get(),
   );
 
-  final syncTrigger = SyncTrigger();
-  await CacaoModelService().loadModel();
-  await syncTrigger.start();
+  await NotificationService.instance.init();
 
+  ShowcaseView.register();
   runApp(const MyApp());
 }
 
@@ -35,12 +35,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShowCaseWidget(
-      builder: (context) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
-        home: const IntroductionScreen(),
-      ),
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
+      home: const HomeScreen(),
+      routes: {'/notification': (_) => const NotificationScreen()},
     );
   }
 }
