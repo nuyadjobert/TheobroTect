@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey _catalogKey = GlobalKey();
   final GlobalKey _scannerKey = GlobalKey();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-    final HomeController _controller = HomeController();
+  final HomeController _controller = HomeController();
 
   bool _showWeatherTip = false;
   int _bottomNavIndex = 0;
@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
-      _controller.startBackgroundServices();
+    _controller.startBackgroundServices();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ShowCaseWidget.of(context).startShowCase([
@@ -113,21 +113,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // UPDATED: Now waits for actual data fetching from the controller
   void _handleNavigation(int index) async {
     if (index == _bottomNavIndex) return;
+
     setState(() {
       _targetIndex = index; 
       _isLoading = true;
     });
 
-    await Future.delayed(const Duration(milliseconds: 2000));
-
-    if (mounted) {
-      _pageController.jumpToPage(index); 
-      setState(() {
-        _bottomNavIndex = index;
-        _isLoading = false;
-      });
+    try {
+      // Calls the controller to fetch real data (e.g., DB or API)
+      // This will take as long as the controller logic requires
+      await _controller.fetchData(index);
+    } catch (e) {
+      debugPrint("Navigation Error: $e");
+    } finally {
+      if (mounted) {
+        _pageController.jumpToPage(index); 
+        setState(() {
+          _bottomNavIndex = index;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -144,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5FAF3),
-        extendBody: true, // Crucial for the notched look
+        extendBody: true,
         drawer: const Drawer(
           backgroundColor: Colors.white,
           child: Column(
@@ -194,7 +202,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
 
-        // --- THE NOTCHED BOTTOM BAR ---
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(top: 30), 
           child: SizedBox(
@@ -202,11 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 54,
             child: FloatingActionButton(
               onPressed: () {
-                // --- ADD NAVIGATION HERE ---
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    // Replace 'ScanningScreen()' with the actual name of your scan view class
                     builder: (context) =>  ScannerScreen(), 
                   ),
                 );
@@ -218,13 +223,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        // Keep this as centerDocked so it stays in the middle of the bar
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         
         bottomNavigationBar: BottomAppBar(
           color: Colors.white,
-          shape: const CircularNotchedRectangle(), // Creates the "space" in the middle
-          notchMargin: 8.0, // Controls how much gap is around the scan button
+          shape: const CircularNotchedRectangle(),
+          notchMargin: 8.0,
           elevation: 20,
           child: SizedBox(
             height: 60,
@@ -233,10 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildNavItem(0, Icons.eco_outlined, Icons.eco_rounded, "Home"),
                 _buildNavItem(1, Icons.history_rounded, Icons.history_rounded, "History"),
-                
-                // Flexible spacer to keep the gap for the scan button
                 const SizedBox(width: 40),
-
                 _buildNavItem(2, Icons.menu_book_rounded, Icons.menu_book_rounded, "Learn"),
                 _buildNavItem(3, Icons.tune_rounded, Icons.settings_input_component_rounded, "Settings"),
               ],
@@ -370,7 +371,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Text("Recent Activity", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   const TotalScannedCard(),
-                  const SizedBox(height: 100), // Space to avoid being covered by the bar
+                  const SizedBox(height: 100), 
                 ],
               ),
             ),
@@ -381,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// SKELETON LAYOUT CLASSES PRESERVED EXACTLY AS PROVIDED
+// SKELETON LAYOUT CLASSES
 class SkeletonLayout extends StatelessWidget {
   final int pageIndex;
   const SkeletonLayout({super.key, required this.pageIndex});

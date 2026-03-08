@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Added for date formatting
 import 'package:cacao_apps/core/db/app_database.dart';
 import '../widgets/scan_details.dart'; 
-import '../controllers/scan_result_controller.dart'; // Added import
+import '../controllers/scan_result_controller.dart'; 
 import 'dart:io'; 
 
 class HistoryCard extends StatelessWidget {
   final Map<String, dynamic> data;
   final VoidCallback onTap;
-  final ScanResultController controller; // Added controller field
+  final ScanResultController controller; 
   final VoidCallback? onDelete; 
   final VoidCallback? onDeleteComplete; 
 
@@ -15,10 +16,21 @@ class HistoryCard extends StatelessWidget {
     super.key, 
     required this.data, 
     required this.onTap, 
-    required this.controller, // Added to constructor
+    required this.controller, 
     this.onDelete,
     this.onDeleteComplete,
   });
+
+  // Helper function to format the date
+  String _formatDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return 'No date';
+    try {
+      DateTime dateTime = DateTime.parse(dateStr);
+      return DateFormat('MMM d, yyyy • h:mm a').format(dateTime);
+    } catch (e) {
+      return dateStr;
+    }
+  }
 
   // --- DELETE FUNCTION ---
   Future<void> _handleDelete(BuildContext context) async {
@@ -251,7 +263,7 @@ class HistoryCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            data['date'] ?? 'No date',
+                            _formatDate(data['date']), // Formatted date
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(color: Colors.grey[500], fontSize: 9, fontWeight: FontWeight.w500),
@@ -281,7 +293,6 @@ class HistoryCard extends StatelessWidget {
                         Flexible(
                           child: GestureDetector(
                             onTap: () {
-                              // Corrected: Pass data and the controller
                               ScanDetailsSheet.show(context, data, controller);
                             },
                             behavior: HitTestBehavior.opaque,
