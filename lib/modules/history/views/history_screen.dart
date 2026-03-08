@@ -21,6 +21,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
     severity: "default",
   );
 
+  @override
+  void initState() {
+    super.initState();
+    // Rebuild the UI when the user types in the search bar
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
+
   void _showDeleteDialog(int id, String? imagePath) {
     showDialog(
       context: context,
@@ -136,11 +145,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     );
                   }
 
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  // --- START FILTERING LOGIC ---
+                  final rawData = snapshot.data ?? [];
+                  final filteredData = rawData.where((item) {
+                    final title = item['disease_key'].toString().toLowerCase();
+                    final searchText = _searchController.text.toLowerCase();
+                    bool matchesSearch = title.contains(searchText);
+
+                    bool matchesFilter = true;
+                    if (_controller.activeFilter == "Healthy") {
+                      matchesFilter = item['severity_key'] == 'default' || item['disease_key'] == 'healthy';
+                    } else if (_controller.activeFilter == "Infected") {
+                      matchesFilter = item['severity_key'] != 'default' && item['disease_key'] != 'healthy';
+                    } else if (_controller.activeFilter == "Treated") {
+                      // Adjust 'is_treated' to match your actual database column name
+                      matchesFilter = item['is_treated'] == 1 || item['status'] == 'treated';
+                    }
+
+                    return matchesSearch && matchesFilter;
+                  }).toList();
+
+                  if (filteredData.isEmpty) {
                     return _buildEmptyState();
                   }
-
-                  final historyData = snapshot.data!;
+                  // --- END FILTERING LOGIC ---
 
                   return GridView.builder(
                     padding: const EdgeInsets.symmetric(
@@ -155,9 +183,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           mainAxisSpacing: 15,
                           childAspectRatio: 0.68,
                         ),
-                    itemCount: historyData.length,
+                    itemCount: filteredData.length,
                     itemBuilder: (context, index) {
-                      final item = historyData[index];
+                      final item = filteredData[index];
+
+                      // Logic to determine display status
+                      String displayStatus;
+                      if (item['is_treated'] == 1 || item['status'] == 'treated') {
+                        displayStatus = 'Treated';
+                      } else if (item['severity_key'] == 'default' || item['disease_key'] == 'healthy') {
+                        displayStatus = 'Healthy';
+                      } else {
+                        displayStatus = 'Infected';
+                      }
 
                       final Map<String, dynamic> formattedData = {
                         "id": item['local_id'],
@@ -168,9 +206,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         "date": item['created_at'],
                         "confidence": (item['confidence'] * 100)
                             .toStringAsFixed(1),
-                        "status": item['severity_key'] == 'default'
-                            ? 'Healthy'
-                            : 'Infected',
+                        "status": displayStatus,
                         "image": item['image_path'],
                         "isLocalFile": true,
                         "what_to_do_now_en": item['what_to_do_now_en'],
@@ -191,7 +227,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 item['severity_key']?.toString() ?? 'default',
                           );
 
-                          await _scanResultController.initGuide();
+                          _scanResultController.loadFromHistory(item);
+
                           ScanDetailsSheet.show(
                             context,
                             formattedData,
@@ -213,13 +250,33 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.history_outlined, size: 64, color: Colors.grey[300]),
-          const SizedBox(height: 16),
-          Text("No scans found", style: TextStyle(color: Colors.grey[400])),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center, // Centers the text horizontally
+          children: [
+            Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            const Text(
+              "No cacao pods found",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF1B3022),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _controller.activeFilter == "All Scans" 
+                  ? "Try scanning some cacao pods first!" 
+                  : "No items match the '${_controller.activeFilter}' filter.", // Fixed "Instance of"
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[500]),
+            ),
+          ],
+        ),
       ),
     );
   }

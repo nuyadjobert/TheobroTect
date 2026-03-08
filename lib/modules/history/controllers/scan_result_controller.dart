@@ -11,8 +11,8 @@ class ScanResultController extends ChangeNotifier {
 
   // mutable UI state (this is what your UI should read)
   late String _diseaseName = diseaseName;
-  late  String _severity = severity;
-  late  double _confidence = confidence;
+  late String _severity = severity;
+  late double _confidence = confidence;
 
   String get currentDiseaseName => _diseaseName;
   String get currentSeverity => _severity;
@@ -28,7 +28,7 @@ class ScanResultController extends ChangeNotifier {
   bool get isLoadingGuide => _isLoadingGuide;
   String? get guideError => _guideError;
 
-  // guide display (optional but useful)
+  // guide display
   Map<String, String> displayName = const {"en": "Unknown", "tl": "Hindi Kilala"};
   Map<String, String> description = const {"en": "", "tl": ""};
 
@@ -46,7 +46,40 @@ class ScanResultController extends ChangeNotifier {
     required this.severity,
   });
 
-    /// Update the inputs used by initGuide() without changing existing method params.
+  // ---------------------------------------------------------
+  // NEW: Load from History Map (Instant Hydration)
+  // This bridges the gap for the red error in your ScanDetailsSheet
+  // ---------------------------------------------------------
+  void loadFromHistory(Map<String, dynamic> data) {
+    _isLoadingGuide = false;
+    _guideError = null;
+
+    // Split the newline-separated strings from the DB back into Lists for the UI
+    whatToDoNowEn = _splitStoredString(data['what_to_do_now_en']);
+    whatToDoNowTl = _splitStoredString(data['what_to_do_now_tl']);
+    
+    preventionEn = _splitStoredString(data['prevention_en']);
+    preventionTl = _splitStoredString(data['prevention_tl']);
+    
+    whenToEscalateEn = _splitStoredString(data['when_to_escalate_en']);
+    whenToEscalateTl = _splitStoredString(data['when_to_escalate_tl']);
+
+    // Map the display names based on history data
+    displayName = {
+      "en": data['title'] ?? (data['status'] == 'Infected' ? "Detected Infection" : "Healthy Leaf"),
+      "tl": data['title_tl'] ?? (data['status'] == 'Infected' ? "May Impeksyon" : "Malusog na Dahon"),
+    };
+
+    notifyListeners();
+  }
+
+  // Helper to handle the newline characters (\n) from your SQLite database
+  List<String> _splitStoredString(dynamic val) {
+    if (val == null || val.toString().isEmpty) return const [];
+    return val.toString().split('\n').where((s) => s.trim().isNotEmpty).toList();
+  }
+
+  /// Update the inputs used by initGuide() without changing existing method params.
   void setInputs({
     required String diseaseName,
     required String severity,
@@ -148,7 +181,7 @@ class ScanResultController extends ChangeNotifier {
   }
 
   // -------------------------
-  // Helpers (same logic as your working module)
+  // Helpers
   // -------------------------
   String _diseaseKeyFromName(String name) {
     final n = name.trim().toLowerCase();
