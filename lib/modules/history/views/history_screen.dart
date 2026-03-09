@@ -221,20 +221,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         data: formattedData,
                         controller: _scanResultController,
                         onTap: () async {
-                          _scanResultController.setInputs(
-                            diseaseName: formattedData['title'],
-                            severity:
-                                item['severity_key']?.toString() ?? 'default',
-                          );
+  _scanResultController.setInputs(
+    diseaseName: formattedData['title'],
+    severity: item['severity_key']?.toString() ?? 'default',
+  );
 
-                          _scanResultController.loadFromHistory(item);
+  // Check if guide data exists in DB
+  final hasGuideData = item['what_to_do_now_en'] != null &&
+      item['what_to_do_now_en'].toString().trim().isNotEmpty;
 
-                          ScanDetailsSheet.show(
-                            context,
-                            formattedData,
-                            _scanResultController,
-                          );
-                        },
+  if (hasGuideData) {
+    // ✅ New scans: load instantly from DB
+    _scanResultController.loadFromHistory(item);
+  } else {
+    // ⚡ Old scans: fetch from JSON guide as fallback
+    await _scanResultController.initGuide();
+  }
+
+  if (!mounted) return;
+  ScanDetailsSheet.show(
+    context,
+    formattedData,
+    _scanResultController,
+  );
+},
                         onDeleteComplete: () => setState(() {}),
                       );
                     },

@@ -176,22 +176,34 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
   // --- HELPER WIDGETS ---
 
   Widget _buildImageFrame(String path, bool isLocal) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10))],
+  return Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(28),
+      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10))],
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: AspectRatio(
+        aspectRatio: 1.6,
+        child: path.isEmpty
+            ? Container(
+                color: Colors.grey[200],
+                child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 48),
+              )
+            : isLocal
+                ? Image.file(
+                    File(path),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 48),
+                    ),
+                  )
+                : Image.asset(path, fit: BoxFit.cover),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: AspectRatio(
-          aspectRatio: 1.6,
-          child: isLocal 
-              ? Image.file(File(path), fit: BoxFit.cover) 
-              : Image.asset(path, fit: BoxFit.cover),
-        ),
-      ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildStatusBadge(bool isInfected) {
     return Container(
