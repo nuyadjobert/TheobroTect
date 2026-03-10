@@ -30,7 +30,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
   }
 
-  void _showDeleteDialog(int id, String? imagePath) {
+  void _showDeleteDialog(String localId, String? imagePath) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -63,7 +63,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             TextButton(
               onPressed: () async {
-                final success = await _controller.deleteScan(id, imagePath);
+                final success = await _controller.deleteScan(localId, imagePath);
 
                 if (mounted && success) {
                   Navigator.pop(context);

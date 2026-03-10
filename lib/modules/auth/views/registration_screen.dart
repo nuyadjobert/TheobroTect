@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../controllers/registration_controller.dart';
 import '../models/registration_model.dart';
+import '../../home/views/home_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final RegistrationController controller;
@@ -192,18 +193,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ? null
                         : () async {
                             await controller.submitRegistration(
-                              email: model
-                                  .email, 
+                              email: model.email,
                             );
 
                             if (!mounted) return;
                             setState(() {});
+
                             if (controller.isRegistrationSuccessful) {
-                              Navigator.of(
-                                context,
-                              ).pushReplacementNamed('/dashboard');
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (_) => const HomeScreen(),
+                                ),
+                                (route) => false,
+                              );
                               return;
                             }
+
                             final msg = controller.errorMessage;
                             if (msg != null && msg.isNotEmpty) {
                               ScaffoldMessenger.of(
@@ -224,7 +229,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           )
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children:  [
+                            children: [
                               Text(
                                 "Register",
                                 style: TextStyle(

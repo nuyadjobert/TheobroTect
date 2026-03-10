@@ -95,16 +95,22 @@ class VerifyAccountController extends ChangeNotifier {
     }
   }
 
-  Future<void> _saveUserLocally({
-    required String userId,
-    required String email,
-  }) async {
-    final now = DateTime.now().toIso8601String();
+Future<void> _saveUserLocally({
+  required String userId,
+  required String email,
+}) async {
+  final now = DateTime.now().toIso8601String();
 
-    final localUser = LocalUser(userId: userId, email: email, createdAt: now);
+  final localUser = LocalUser(
+    userId: userId,
+    email: email,
+    createdAt: now,
+  );
 
-    await AppDatabase().upsertUser(localUser);
-  }
+  final db = AppDatabase();
+  await db.clearUsers();
+  await db.upsertUser(localUser);
+}
 
   // Status mapping
   String _mapStatusToMessage(String status) {
@@ -115,8 +121,6 @@ class VerifyAccountController extends ChangeNotifier {
         return 'Code expired. Please request a new one.';
       case 'NO_ACTIVE_OTP':
         return 'No active code. Request a new OTP.';
-      case 'PENDING_APPROVAL':
-        return 'Your account is pending approval.';
       case 'ACCOUNT_DELETED':
         return 'This account was deleted.';
       case 'NEW_USER_REQUIRED':

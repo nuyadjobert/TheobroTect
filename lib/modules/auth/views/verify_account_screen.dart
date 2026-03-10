@@ -1,3 +1,4 @@
+import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../controllers/verify_account_controller.dart';
@@ -197,8 +198,12 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                             }
 
                             if (controller.isVerified) {
-                              Navigator.of(context)
-                                  .pushReplacementNamed('/dashboard');
+                                Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (_) => const HomeScreen(),
+                                ),
+                                (route) => false,
+                              );
                               return;
                             }
 

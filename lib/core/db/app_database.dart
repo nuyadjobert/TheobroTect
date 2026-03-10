@@ -1,6 +1,7 @@
 import 'package:cacao_apps/core/model/user.model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart';
 
 class AppDatabase {
   static final AppDatabase _instance = AppDatabase._internal();
@@ -18,7 +19,7 @@ class AppDatabase {
   Future<Database> _open() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'cacao_app.db');
-
+debugPrint('DB FILE: $path');
     return openDatabase(
       path,
       version: 1,
@@ -181,4 +182,31 @@ class AppDatabase {
       [now, now, localId],
     );
   }
+
+  Future<void> debugPrintDatabase() async {
+  final database = await AppDatabase().db;
+
+  final users = await database.query('users');
+  final scans = await database.query('scan_history');
+
+  debugPrint('USERS: $users');
+  debugPrint('SCAN HISTORY: $scans');
+}
+
+Future<void> debugPrintCurrentUserAndHistory() async {
+  final database = await AppDatabase().db;
+
+  final users = await database.query('users');
+  debugPrint('ALL USERS: $users');
+
+  if (users.isNotEmpty) {
+    final currentUserId = users.first['user_id'];
+    final rows = await database.query(
+      'scan_history',
+      where: 'user_id = ?',
+      whereArgs: [currentUserId],
+    );
+    debugPrint('HISTORY FOR CURRENT USER: $rows');
+  }
+}
 }
