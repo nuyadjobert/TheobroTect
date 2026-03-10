@@ -30,7 +30,6 @@ void main() async {
   runApp(const MyApp());
 }
 
-devo
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
