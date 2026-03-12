@@ -27,7 +27,7 @@ class CacaoModelService {
   Future<void> loadModel() async {
     if (_isLoaded) return;
     _interpreter = await Interpreter.fromAsset(
-      'assets/models/final_cacao_disease_model1.0.tflite',
+      'assets/models/final_cacao_disease_model1.1.tflite',
       options: InterpreterOptions()..threads = 2,
     );
 
@@ -36,20 +36,13 @@ class CacaoModelService {
     // (Optional) debug: check shapes/types
     final inT = _interpreter!.getInputTensor(0);
     final outT = _interpreter!.getOutputTensor(0);
-    // ignore: avoid_print
-    print('✅ input: shape=${inT.shape} type=${inT.type}');
-    // ignore: avoid_print
-    print('✅ output: shape=${outT.shape} type=${outT.type}');
   }
 
-  /// Run inference on an image file.
-  /// Assumes float32 model with input [1, H, W, 3] normalized 0..1
   Future<ModelPrediction> predict(String imagePath) async {
     if (!_isLoaded || _interpreter == null) {
       throw StateError('Model not loaded. Call loadModel() first.');
     }
 
-    // Read image
     final bytes = await File(imagePath).readAsBytes();
     final decoded = img.decodeImage(bytes);
     if (decoded == null) {

@@ -51,6 +51,7 @@ flutter:
   assets:
     - assets/images/
     - assets/models/final_cacao_disease_model1.0.tflite
+    - assets/models/final_cacao_disease_model1.1.tflite
     - assets/data/cacao_guide.json
     - assets/images/1.png
     - assets/images/2.png
