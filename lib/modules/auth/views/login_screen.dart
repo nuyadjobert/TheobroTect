@@ -14,6 +14,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Using the consistent Forest Green palette
+  static const Color forestGreen = Color(0xFF1B5E20);
+  static const Color lightForest = Color(0xFFE8F5E9);
+  static const Color surfaceColor = Color(0xFFFBFDFB);
+
   late final LoginController controller;
   late final LoginModel model;
 
@@ -35,9 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    const Color primaryGreen = Color(0xFF2E7D32);
-    const Color surfaceColor = Color(0xFFFBFDFB);
-
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -47,6 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: Scaffold(
         backgroundColor: colorScheme.surface,
+        // FIX: Prevents yellow/black pixel overflow when keyboard appears
+        resizeToAvoidBottomInset: true, 
         body: SafeArea(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -92,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   text: "Tect",
                                   style: TextStyle(
                                     fontWeight: FontWeight.w900,
-                                    color: colorScheme.primary,
+                                    color: forestGreen, // Updated to forestGreen
                                   ),
                                 ),
                               ],
@@ -111,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   "Welcome Back",
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
+                    color: forestGreen, // Updated to forestGreen
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -125,13 +129,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 
                 // 3. Email Input
-                Text(
-                  "Email Address",
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                const Padding(
+                  padding: EdgeInsets.only(left: 4, bottom: 8),
+                  child: Text(
+                    "Email Address",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: forestGreen),
                   ),
                 ),
-                const SizedBox(height: 8),
                 TextField(
                   controller: controller.emailController,
                   onChanged: (v) {
@@ -142,22 +146,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     hintText: "farmer@gmail.com",
                     errorText: model.emailError,
-                    prefixIcon: Icon(
+                    prefixIcon: const Icon(
                       Icons.alternate_email_rounded,
-                      color: colorScheme.primary,
+                      color: forestGreen, // Updated to forestGreen
                     ),
                     filled: true,
-                    fillColor: colorScheme.surfaceContainerHighest.withAlpha(
-                      (0.3 * 255).toInt(),
-                    ),
+                    fillColor: lightForest.withOpacity(0.3), // Matches Registration Screen
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(
-                        color: colorScheme.primary,
+                      borderSide: const BorderSide(
+                        color: forestGreen,
                         width: 2,
                       ),
                     ),
@@ -172,21 +174,59 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 60,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryGreen,
+                      backgroundColor: forestGreen, // Updated to forestGreen
                       foregroundColor: Colors.white,
-                      elevation: 0,
+                      elevation: 2,
+                      shadowColor: forestGreen.withOpacity(0.4),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onPressed: () => controller.onContinue(context, () => setState(() {})),
-                    child: const Text(
-                      "Continue",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    onPressed: model.isLoading 
+                      ? null 
+                      : () async {
+                          // Call the controller logic
+                          await controller.onContinue(context, () => setState(() {}));
+
+                          // Only show the message if validation passed and it's not empty
+                          if (model.emailError == null && controller.emailController.text.isNotEmpty) {
+                            if (!mounted) return;
+                            
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(Icons.mark_email_read_rounded, color: Colors.white),
+                                    const SizedBox(width: 12),
+                                    Text("OTP sent to ${controller.emailController.text}"),
+                                  ],
+                                ),
+                                backgroundColor: forestGreen, // Updated to forestGreen
+                                behavior: SnackBarBehavior.floating, // FIX: Floating avoids yellow pixel overflow
+                                margin: const EdgeInsets.all(20), // Padding for floating snackbar
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                    child: model.isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Text(
+                            "Continue",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 24),
