@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/registration_model.dart';
 import '../services/auth_services.dart';
 
@@ -7,16 +9,10 @@ class RegistrationController extends ChangeNotifier {
 
   RegistrationController(this._auth);
 
-  // =========================
-  // Text field controllers
-  // =========================
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
 
-  // =========================
-  // State
-  // =========================
   bool _isLoading = false;
   String? _errorMessage;
   RegistrationResponse? _lastResponse;
@@ -35,9 +31,11 @@ class RegistrationController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // =========================
-  // Build request from fields
-  // =========================
+  Future<void> _saveNameLocally(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_full_name', name);
+  }
+
   RegistrationRequest buildRequest({
     required String email,
   }) {
@@ -49,9 +47,6 @@ class RegistrationController extends ChangeNotifier {
     );
   }
 
-  // =========================
-  // Submit registration
-  // =========================
   Future<RegistrationResponse?> submitRegistration({
     required String email,
   }) async {
@@ -73,6 +68,7 @@ class RegistrationController extends ChangeNotifier {
 
       switch (resp.status) {
         case RegistrationStatus.pendingApproval:
+          await _saveNameLocally(req.fullName);
           break;
         case RegistrationStatus.alreadyRegistered:
           _errorMessage = "This email is already registered.";
@@ -98,9 +94,9 @@ class RegistrationController extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
   bool get isRegistrationSuccessful =>
     _lastResponse?.status == RegistrationStatus.pendingApproval;
-
 
   @override
   void dispose() {

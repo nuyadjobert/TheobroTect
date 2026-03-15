@@ -87,7 +87,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
-    _controller.startBackgroundServices();
+    _controller.startBackgroundServices().then((_) {
+       if (mounted) setState(() {}); 
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ShowCaseWidget.of(context).startShowCase([
@@ -113,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // UPDATED: Now waits for actual data fetching from the controller
   void _handleNavigation(int index) async {
     if (index == _bottomNavIndex) return;
 
@@ -123,8 +124,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      // Calls the controller to fetch real data (e.g., DB or API)
-      // This will take as long as the controller logic requires
       await _controller.fetchData(index);
     } catch (e) {
       debugPrint("Navigation Error: $e");
@@ -310,8 +309,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Good Morning,", style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                        const Text("Farmer John!", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                        Text(
+                          _controller.getGreeting(), 
+                          style: TextStyle(fontSize: 14, color: Colors.grey[600])
+                        ),
+                        Text(
+                          "${_controller.userName ?? 'Farmer'}!", 
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)
+                        ),
                       ],
                     ),
                     const Spacer(),
@@ -382,7 +387,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// SKELETON LAYOUT CLASSES
 class SkeletonLayout extends StatelessWidget {
   final int pageIndex;
   const SkeletonLayout({super.key, required this.pageIndex});
