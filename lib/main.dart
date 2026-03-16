@@ -35,7 +35,7 @@ void main() async {
 
   await NotificationService.instance.init();
 
-  // Initialize model and controller
+  // ayaw sani kuhaa kay initialization ra ni siya, dili siya mag require ug user input
 model = RegistrationRequest(
   email: "",
   fullName: "",
