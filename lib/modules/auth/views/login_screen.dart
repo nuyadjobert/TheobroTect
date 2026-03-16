@@ -17,18 +17,18 @@ class _LoginScreenState extends State<LoginScreen> {
   late final LoginController controller;
   late final LoginModel model;
 
-bool _isLoading = false;
+  bool _isLoading = false;
 
-// 2. Add the handler method
-Future<void> _handleContinue() async {
-  if (_isLoading) return;
-  setState(() => _isLoading = true);
-  try {
-    await controller.onContinue(context, () => setState(() {}));
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
+  // 2. Add the handler method
+  Future<void> _handleContinue() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    try {
+      await controller.onContinue(context, () => setState(() {}));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
-}
 
   @override
   void initState() {
@@ -70,7 +70,7 @@ Future<void> _handleContinue() async {
                 Center(
                   child: Stack(
                     alignment: Alignment.topCenter,
-                    clipBehavior: Clip.none, 
+                    clipBehavior: Clip.none,
                     children: [
                       const SizedBox(height: 30),
                       Center(
@@ -175,71 +175,71 @@ Future<void> _handleContinue() async {
                 ),
 
                 const SizedBox(height: 32),
-        SizedBox(
-  width: double.infinity,
-  height: 60,
-  child: ElevatedButton(
-    style: ElevatedButton.styleFrom(
-      backgroundColor: _isLoading
-          ? primaryGreen.withAlpha(180)
-          : primaryGreen,
-      foregroundColor: Colors.white,
-      elevation: _isLoading ? 0 : 4,
-      shadowColor: primaryGreen.withAlpha(100),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
-    onPressed: _isLoading ? null : _handleContinue,
-    child: AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: ScaleTransition(scale: animation, child: child),
-      ),
-      child: _isLoading
-          ? const Row(
-              key: ValueKey('loading'),
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
                 SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                    strokeCap: StrokeCap.round,
+                  width: double.infinity,
+                  height: 60,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _isLoading
+                          ? primaryGreen.withAlpha(180)
+                          : primaryGreen,
+                      foregroundColor: Colors.white,
+                      elevation: _isLoading ? 0 : 4,
+                      shadowColor: primaryGreen.withAlpha(100),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: _isLoading ? null : _handleContinue,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(scale: animation, child: child),
+                      ),
+                      child: _isLoading
+                          ? const Row(
+                              key: ValueKey('loading'),
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                    strokeCap: StrokeCap.round,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  "Please wait...",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Row(
+                              key: ValueKey('idle'),
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Continue",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_rounded, size: 20),
+                              ],
+                            ),
+                    ),
                   ),
                 ),
-                SizedBox(width: 12),
-                Text(
-                  "Please wait...",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            )
-          : const Row(
-              key: ValueKey('idle'),
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Continue",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward_rounded, size: 20),
-              ],
-            ),
-    ),
-  ),
-),
                 const SizedBox(height: 24),
               ],
             ),

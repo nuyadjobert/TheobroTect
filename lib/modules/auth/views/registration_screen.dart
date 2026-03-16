@@ -77,20 +77,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
                 const SizedBox(height: 30),
                 Center(
-                child: Container(
-                  alignment: Alignment.center,
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    alignment: Alignment.center,
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Image.asset(
+                      "assets/images/theobrotect.png",
+                      width: 78,
+                      height: 78,
+                    ),
                   ),
-                  child: Image.asset(
-                    "assets/images/theobrotect.png",
-                    width: 78,
-                    height: 78,
-                  ),
-                ),
                 ),
                 const SizedBox(height: 20),
                 Center(
@@ -186,9 +186,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   height: 56,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryGreen,
+                      backgroundColor: controller.isLoading
+                          ? primaryGreen.withAlpha(180)
+                          : primaryGreen,
                       foregroundColor: Colors.white,
-                      elevation: 0,
+                      elevation: controller.isLoading ? 0 : 4,
+                      shadowColor: primaryGreen.withAlpha(100),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -221,31 +224,53 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ).showSnackBar(SnackBar(content: Text(msg)));
                             }
                           },
-                    child: controller.isLoading
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Register",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(scale: animation, child: child),
+                      ),
+                      child: controller.isLoading
+                          ? const Row(
+                              key: ValueKey('loading'),
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                    strokeCap: StrokeCap.round,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward_ios, size: 16),
-                            ],
-                          ),
+                                SizedBox(width: 12),
+                                Text(
+                                  "Please wait...",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Row(
+                              key: ValueKey('idle'),
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Register",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_ios, size: 16),
+                              ],
+                            ),
+                    ),
                   ),
                 ),
 

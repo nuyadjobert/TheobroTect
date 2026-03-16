@@ -61,8 +61,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
 
-      // home: const IntroductionScreen(),
-      home: VerifyAccountScreen(email:  ""),
+      home: const IntroductionScreen(),
+      // home: VerifyAccountScreen(email:  ""),
+      // home: const HomeScreen(),
 
       // home: RegistrationScreen(
       //   controller: controller,
