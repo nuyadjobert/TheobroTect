@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,7 +51,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
       ),
       child: Scaffold(
         backgroundColor: colorScheme.surface,
-        resizeToAvoidBottomInset: true, 
+        resizeToAvoidBottomInset: true,
         body: SafeArea(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -63,33 +62,31 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-Center(
-  child: Row(
-    mainAxisSize: MainAxisSize.min, // Shrinks the Row to only fit its content
-    children: [
-      // The Icon
-      Transform.translate(
-        offset: const Offset(15, 0), // Moves icon 15px closer/into the text
-        child: Image.asset(
-          'assets/images/theobrotect.png',
-          width: 60, // Adjusted size to fit better inline
-          height: 60,
-          fit: BoxFit.contain,
-        ),
-      ),
-      // The Text
-      const Text(
-        "TheobroTect",
-        style: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w900,
-          color: forestGreen,
-          letterSpacing: -0.5,
-        ),
-      ),
-    ],
-  ),
-),
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Transform.translate(
+                        offset: const Offset(15, 0),
+                        child: Image.asset(
+                          'assets/images/theobrotect.png',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const Text(
+                        "TheobroTect",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: forestGreen,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 50),
 
@@ -115,7 +112,6 @@ Center(
 
                 const SizedBox(height: 48),
 
-                // --- OTP INPUT SECTION ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(
@@ -125,8 +121,6 @@ Center(
                 ),
 
                 const SizedBox(height: 48),
-
-                // --- RESEND SECTION ---
                 Center(
                   child: Column(
                     children: [
@@ -173,17 +167,15 @@ Center(
                 ),
 
                 const SizedBox(height: 32),
-
-                // --- VERIFY BUTTON ---
                 SizedBox(
                   width: double.infinity,
                   height: 64,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: forestGreen, // Applied forestGreen
+                      backgroundColor: forestGreen, 
                       foregroundColor: Colors.white,
                       elevation: 4,
-                      shadowColor: forestGreen.withAlpha(102), // 0.4 * 255
+                      shadowColor: forestGreen.withAlpha(102), 
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -196,7 +188,6 @@ Center(
 
                             if (controller.isVerified ||
                                 controller.isNewUserRequired) {
-                              // UPDATED SNACKBAR: Forest Green & Floating
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Row(
@@ -210,7 +201,7 @@ Center(
                                     ],
                                   ),
                                   backgroundColor:
-                                      forestGreen, // Set to forestGreen
+                                      forestGreen, 
                                   behavior: SnackBarBehavior.floating,
                                   margin: const EdgeInsets.all(20),
                                   shape: RoundedRectangleBorder(
@@ -280,7 +271,6 @@ Center(
 
                 const SizedBox(height: 24),
 
-                // --- BACK BUTTON ---
                 Center(
                   child: TextButton.icon(
                     onPressed: () => Navigator.pop(context),
@@ -311,17 +301,18 @@ Center(
       width: 48,
       height: 64,
       decoration: BoxDecoration(
-        color: lightForest.withOpacity(0.3), // Matches login/register theme
+        color: lightForest.withAlpha(77), 
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: forestGreen.withOpacity(0.1), width: 1),
+        border: Border.all(color: forestGreen.withAlpha(25), width: 1),
       ),
       child: TextField(
         controller: controller.otpControllers[index],
         autofocus: index == 0,
         onChanged: (value) {
           if (value.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
-          if (value.isEmpty && index > 0)
-            FocusScope.of(context).previousFocus();
+          if (value.isEmpty && index > 0){
+             FocusScope.of(context).previousFocus();
+          }
         },
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
