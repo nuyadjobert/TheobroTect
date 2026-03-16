@@ -1,3 +1,6 @@
+import 'package:cacao_apps/modules/auth/services/auth_services.dart';
+import 'package:cacao_apps/modules/auth/views/login_screen.dart';
+import 'package:cacao_apps/modules/auth/views/registration_screen.dart';
 import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:cacao_apps/modules/introduction/views/introduction_screen.dart';
 import 'package:flutter/material.dart';
@@ -8,11 +11,17 @@ import 'core/network/client.dart';
 import 'core/storage/token_storage.dart';
 import 'core/services/notification_service.dart';
 import 'modules/notifications/views/notification_screen.dart';
+import 'modules/auth/controllers/registration_controller.dart';
+import 'modules/auth/models/registration_model.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+late final RegistrationController controller;
+late final RegistrationRequest model;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -26,10 +35,20 @@ void main() async {
 
   await NotificationService.instance.init();
 
+  // Initialize model and controller
+model = RegistrationRequest(
+  email: "",
+  fullName: "",
+  address: "",
+  contactNumber: "",
+);
+final authService = AuthService(DioClient.dio);
+
+controller = RegistrationController(authService);
+
   ShowcaseView.register();
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

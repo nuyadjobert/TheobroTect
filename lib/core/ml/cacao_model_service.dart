@@ -33,9 +33,6 @@ class CacaoModelService {
 
     _isLoaded = true;
 
-    // (Optional) debug: check shapes/types
-    final inT = _interpreter!.getInputTensor(0);
-    final outT = _interpreter!.getOutputTensor(0);
   }
 
   Future<ModelPrediction> predict(String imagePath) async {
@@ -49,7 +46,6 @@ class CacaoModelService {
       throw Exception('Failed to decode image.');
     }
 
-    // Detect input size from model tensor shape: [1, H, W, 3]
     final inputTensor = _interpreter!.getInputTensor(0);
     final shape = inputTensor.shape;
     final h = shape[1];
@@ -69,7 +65,6 @@ class CacaoModelService {
       ),
     );
 
-    // Output tensor [1][numLabels]
     final numLabels = labelsInOrder.length;
     final output = List.generate(1, (_) => List.filled(numLabels, 0.0));
 
