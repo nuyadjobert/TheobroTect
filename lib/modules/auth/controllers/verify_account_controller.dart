@@ -4,11 +4,12 @@ import 'package:cacao_apps/core/storage/token_storage.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_services.dart';
 import '../models/verify_otp_result.dart';
+import 'dart:async';
+
 
 class VerifyAccountController extends ChangeNotifier {
   final AuthService _auth;
   final String email;
-
   final _secureStore = TokenStorage();
 
   VerifyAccountController({required AuthService auth, required this.email})
@@ -36,6 +37,36 @@ class VerifyAccountController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
+ Timer? _timer;
+  int _secondsLeft = 0;
+
+  int get secondsLeft => _secondsLeft;
+
+  String get timerText {
+    int minutes = _secondsLeft ~/ 60;
+    int seconds = _secondsLeft % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void startTimer(int seconds) {
+    _timer?.cancel();
+    _secondsLeft = seconds;
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsLeft <= 0) {
+        timer.cancel();
+        notifyListeners();
+      } else {
+        _secondsLeft--;
+        notifyListeners();
+      }
+    });
+  }
+
+  void disposeTimer() {
+    _timer?.cancel();
+  }
+
 
   String get otp => otpControllers.map((c) => c.text).join().trim();
   bool get isOtpValid => otp.length == 6;
@@ -94,6 +125,18 @@ class VerifyAccountController extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  Future<void> requestOtp() async {
+  try {
+    final result = await _auth.requestOtp(email);
+
+    startTimer(result.expiresInSeconds ?? 200);
+
+  } catch (e) {
+    _errorMessage = e.toString();
+    notifyListeners();
+  }
+}
 
 Future<void> _saveUserLocally({
   required String userId,

@@ -19,36 +19,10 @@ class VerifyAccountScreen extends StatefulWidget {
 }
 
 class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
-  // Forest Green Palette Consistency
   static const Color forestGreen = Color(0xFF1B5E20);
   static const Color lightForest = Color(0xFFE8F5E9);
 
   late final VerifyAccountController controller;
-  
-  Timer? _timer;
-  int _start = 200; 
-
-  void startTimer() {
-    _timer?.cancel();
-    _start = 200;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_start == 0) {
-        setState(() {
-          timer.cancel();
-        });
-      } else {
-        setState(() {
-          _start--;
-        });
-      }
-    });
-  }
-
-  String get timerText {
-    int minutes = _start ~/ 60;
-    int seconds = _start % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
 
   @override
   void initState() {
@@ -57,12 +31,11 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
       auth: AuthService(DioClient.dio),
       email: widget.email,
     );
-    startTimer(); 
+    controller.requestOtp();
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); 
     controller.dispose();
     super.dispose();
   }
@@ -79,7 +52,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
       ),
       child: Scaffold(
         backgroundColor: colorScheme.surface,
-        resizeToAvoidBottomInset: true, // Prevents yellow overflow line
+        resizeToAvoidBottomInset: true, 
         body: SafeArea(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -90,48 +63,45 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- LOGO & BRAND SECTION ---
-                SizedBox(
-                  height: 90, 
-                  child: Stack(
-                    alignment: Alignment.centerLeft,
-                    clipBehavior: Clip.none,
-                    children: [
-                      Row(
-                        children: const [
-                          SizedBox(width: 65),
-                          Text(
-                            "TheobroTect",
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              color: forestGreen, // Applied forestGreen
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Positioned(
-                        left: -40,
-                        child: Image.asset(
-                          'assets/images/app_logo.png',
-                          width: 150,
-                          height: 150,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
+Center(
+  child: Row(
+    mainAxisSize: MainAxisSize.min, // Shrinks the Row to only fit its content
+    children: [
+      // The Icon
+      Transform.translate(
+        offset: const Offset(15, 0), // Moves icon 15px closer/into the text
+        child: Image.asset(
+          'assets/images/theobrotect.png',
+          width: 60, // Adjusted size to fit better inline
+          height: 60,
+          fit: BoxFit.contain,
+        ),
+      ),
+      // The Text
+      const Text(
+        "TheobroTect",
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w900,
+          color: forestGreen,
+          letterSpacing: -0.5,
+        ),
+      ),
+    ],
+  ),
+),
+
                 const SizedBox(height: 50),
-                
-                Text(
-                  "Verify Identity",
-                  style: theme.textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: forestGreen, // Applied forestGreen
-                    letterSpacing: -1,
+
+                Center(
+                  child: Text(
+                    "Verify Identity",
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: forestGreen,
+                      letterSpacing: -1,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -142,7 +112,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                     height: 1.5,
                   ),
                 ),
-                
+
                 const SizedBox(height: 48),
 
                 // --- OTP INPUT SECTION ---
@@ -160,26 +130,43 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                 Center(
                   child: Column(
                     children: [
-                      Text(
-                        "RESEND CODE IN $timerText", 
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: _start > 0 ? colorScheme.outline : forestGreen,
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      AnimatedBuilder(
+                        animation: controller,
+                        builder: (_, __) {
+                          return Text(
+                            "RESEND CODE IN ${controller.timerText}",
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: controller.secondsLeft > 0
+                                  ? colorScheme.outline
+                                  : forestGreen,
+                              letterSpacing: 1.2,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
                       ),
-                      TextButton(
-                        onPressed: _start == 0 ? () {
-                          startTimer();
-                          // controller.resendOtp(); // Logic here
-                        } : null, 
-                        style: TextButton.styleFrom(
-                          foregroundColor: forestGreen,
-                        ),
-                        child: Text(
-                          _start == 0 ? "Resend New Code" : "Didn't get a code?",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                      AnimatedBuilder(
+                        animation: controller,
+                        builder: (_, _) {
+                          return TextButton(
+                            onPressed: controller.secondsLeft == 0
+                                ? () {
+                                    controller.startTimer(200);
+                                  }
+                                : null,
+                            style: TextButton.styleFrom(
+                              foregroundColor: forestGreen,
+                            ),
+                            child: Text(
+                              controller.secondsLeft == 0
+                                  ? "Resend New Code"
+                                  : "Didn't get a code?",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -196,77 +183,88 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                       backgroundColor: forestGreen, // Applied forestGreen
                       foregroundColor: Colors.white,
                       elevation: 4,
-                      shadowColor: forestGreen.withOpacity(0.4),
+                      shadowColor: forestGreen.withAlpha(102), // 0.4 * 255
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     onPressed: controller.isLoading
-                      ? null
-                      : () async {
-                          await controller.verify();
-                          if (!mounted) return;
+                        ? null
+                        : () async {
+                            await controller.verify();
+                            if (!mounted) return;
 
-                          if (controller.isVerified || controller.isNewUserRequired) {
-                            // UPDATED SNACKBAR: Forest Green & Floating
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Row(
-                                  children: const [
-                                    Icon(Icons.verified_user_rounded, color: Colors.white),
-                                    SizedBox(width: 12),
-                                    Text("Verification Successful!"),
-                                  ],
-                                ),
-                                backgroundColor: forestGreen, // Set to forestGreen
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.all(20),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            );
-                          }
-
-                          if (controller.isNewUserRequired) {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (_) => RegistrationScreen(
-                                  controller: RegistrationController(AuthService(DioClient.dio)),
-                                  model: RegistrationRequest(
-                                    email: controller.email,
-                                    fullName: '',
-                                    address: '',
-                                    contactNumber: '',
-                                  ),
-                                ),
-                              ),
-                            );
-                          } else if (controller.isVerified) {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(builder: (_) => const HomeScreen()),
-                              (route) => false,
-                            );
-                          } else {
-                            final msg = controller.errorMessage;
-                            if (msg != null && msg.isNotEmpty) {
+                            if (controller.isVerified ||
+                                controller.isNewUserRequired) {
+                              // UPDATED SNACKBAR: Forest Green & Floating
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(msg),
-                                  backgroundColor: Colors.redAccent,
+                                  content: Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.verified_user_rounded,
+                                        color: Colors.white,
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text("Verification Successful!"),
+                                    ],
+                                  ),
+                                  backgroundColor:
+                                      forestGreen, // Set to forestGreen
                                   behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.all(20),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
                               );
                             }
-                          }
-                        },
+
+                            if (controller.isNewUserRequired) {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (_) => RegistrationScreen(
+                                    controller: RegistrationController(
+                                      AuthService(DioClient.dio),
+                                    ),
+                                    model: RegistrationRequest(
+                                      email: controller.email,
+                                      fullName: '',
+                                      address: '',
+                                      contactNumber: '',
+                                    ),
+                                  ),
+                                ),
+                              );
+                            } else if (controller.isVerified) {
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (_) => const HomeScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            } else {
+                              final msg = controller.errorMessage;
+                              if (msg != null && msg.isNotEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(msg),
+                                    backgroundColor: Colors.redAccent,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            }
+                          },
                     child: controller.isLoading
                         ? const SizedBox(
                             width: 22,
                             height: 22,
                             child: CircularProgressIndicator(
                               strokeWidth: 3,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Text(
@@ -304,24 +302,26 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
     );
   }
 
-  Widget _buildOtpField(BuildContext context, int index, ColorScheme colorScheme) {
+  Widget _buildOtpField(
+    BuildContext context,
+    int index,
+    ColorScheme colorScheme,
+  ) {
     return Container(
       width: 48,
       height: 64,
       decoration: BoxDecoration(
         color: lightForest.withOpacity(0.3), // Matches login/register theme
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: forestGreen.withOpacity(0.1),
-          width: 1,
-        ),
+        border: Border.all(color: forestGreen.withOpacity(0.1), width: 1),
       ),
       child: TextField(
         controller: controller.otpControllers[index],
         autofocus: index == 0,
         onChanged: (value) {
           if (value.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
-          if (value.isEmpty && index > 0) FocusScope.of(context).previousFocus();
+          if (value.isEmpty && index > 0)
+            FocusScope.of(context).previousFocus();
         },
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,

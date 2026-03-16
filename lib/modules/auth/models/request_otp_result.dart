@@ -12,6 +12,7 @@ class RequestOtpResult {
   factory RequestOtpResult.fromJson(Map<String, dynamic> json) {
     return RequestOtpResult(
       status: json['status'] ?? '',
+      expiresInSeconds: json['expires_in_seconds'],
       retryAfterSeconds: json['retry_after_seconds'],
     );
   }
