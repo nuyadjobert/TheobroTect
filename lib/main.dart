@@ -59,8 +59,17 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
+
       home: const IntroductionScreen(),
-      routes: {'/notification': (_) => const NotificationScreen()},
+
+      // home: RegistrationScreen(
+      //   controller: controller,
+      //   model: model,
+      // ),
+
+      routes: {
+        '/notification': (_) => const NotificationScreen(),
+      },
     );
   }
 }
