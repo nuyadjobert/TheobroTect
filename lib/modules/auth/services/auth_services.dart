@@ -10,7 +10,7 @@ class AuthService {
   Future<RequestOtpResult> requestOtp(String email) async {
     try {
       final res = await _dio.post(
-        '/api/auth/request-otp',
+        '/api/theobrotect/auth/request-otp',
         data: {'email': email},
         options: Options(headers: const {"Content-Type": "application/json"}),
       );
@@ -28,7 +28,7 @@ class AuthService {
   }) async {
     try {
       final res = await _dio.post(
-        '/api/auth/verify-otp',
+        '/api/theobrotect/auth/verify-otp',
         data: {'email': email, 'otp': otp},
       );
       return VerifyOtpResult.fromJson(_asMap(res.data));
@@ -42,7 +42,7 @@ class AuthService {
   Future<RegistrationResponse> register(RegistrationRequest request) async {
     try {
       final res = await _dio.post(
-        '/api/auth/register',
+        '/api/theobrotect/auth/register',
         data: request.toJson(),
         options: Options(headers: const {"Content-Type": "application/json"}),
       );

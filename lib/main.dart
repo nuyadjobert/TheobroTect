@@ -14,6 +14,7 @@ import 'core/services/notification_service.dart';
 import 'modules/notifications/views/notification_screen.dart';
 import 'modules/auth/controllers/registration_controller.dart';
 import 'modules/auth/models/registration_model.dart';
+import 'core/config/app_config.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -30,13 +31,12 @@ void main() async {
 
   final tokenStorage = TokenStorage();
   DioClient.init(
-    baseUrl: "https://theobrotect.org",
+    baseUrl: AppConfig.baseUrl,
     getToken: () => tokenStorage.get(),
   );
 
   await NotificationService.instance.init();
 
-  // ayaw sani kuhaa kay initialization ra ni siya, dili siya mag require ug user input
 model = RegistrationRequest(
   email: "",
   fullName: "",
