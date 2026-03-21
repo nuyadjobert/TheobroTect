@@ -52,7 +52,9 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         resizeToAvoidBottomInset: true,
-        body: SafeArea(
+       body: ListenableBuilder( // Use ListenableBuilder to react to controller changes
+          listenable: controller,
+          builder: (context, _) => SafeArea(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(
@@ -167,20 +169,22 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                 ),
 
                 const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  height: 64,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: forestGreen, 
-                      foregroundColor: Colors.white,
-                      elevation: 4,
-                      shadowColor: forestGreen.withAlpha(102), 
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 64,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: controller.isLoading 
+                            ? forestGreen.withOpacity(0.7) 
+                            : forestGreen,
+                        foregroundColor: Colors.white,
+                        elevation: controller.isLoading ? 0 : 4,
+                        shadowColor: forestGreen.withOpacity(0.4),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                    ),
-                    onPressed: controller.isLoading
+                          onPressed: controller.isLoading
                         ? null
                         : () async {
                             await controller.verify();
@@ -247,27 +251,43 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                               }
                             }
                           },
-                    child: controller.isLoading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: controller.isLoading
+                            ? Row(
+                                key: const ValueKey('loading'),
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  ),
+                                  SizedBox(width: 16),
+                                  Text(
+                                    "VERIFYING...",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : const Text(
+                                "VERIFY",
+                                key: ValueKey('idle'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2,
+                                ),
                               ),
-                            ),
-                          )
-                        : const Text(
-                            "VERIFY",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
-                          ),
                   ),
-                ),
+                ),),
 
                 const SizedBox(height: 24),
 
@@ -289,7 +309,9 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
           ),
         ),
       ),
+      ),
     );
+    
   }
 
   Widget _buildOtpField(

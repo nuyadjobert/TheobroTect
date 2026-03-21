@@ -19,7 +19,7 @@ class AppDatabase {
   Future<Database> _open() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'cacao_app.db');
-debugPrint('DB FILE: $path');
+    debugPrint('DB FILE: $path');
     return openDatabase(
       path,
       version: 1,
@@ -34,6 +34,9 @@ debugPrint('DB FILE: $path');
     CREATE TABLE IF NOT EXISTS users (
       user_id TEXT PRIMARY KEY,
       email TEXT NOT NULL,
+      name TEXT,
+      address TEXT,
+      contact_number TEXT,
       created_at TEXT NOT NULL
     );
   ''');
@@ -112,6 +115,7 @@ debugPrint('DB FILE: $path');
 
   Future<void> upsertUser(LocalUser user) async {
     final database = await db;
+    await database.delete('users');
     await database.insert(
       'users',
       user.toMap(),
@@ -184,29 +188,29 @@ debugPrint('DB FILE: $path');
   }
 
   Future<void> debugPrintDatabase() async {
-  final database = await AppDatabase().db;
+    final database = await AppDatabase().db;
 
-  final users = await database.query('users');
-  final scans = await database.query('scan_history');
+    final users = await database.query('users');
+    final scans = await database.query('scan_history');
 
-  debugPrint('USERS: $users');
-  debugPrint('SCAN HISTORY: $scans');
-}
-
-Future<void> debugPrintCurrentUserAndHistory() async {
-  final database = await AppDatabase().db;
-
-  final users = await database.query('users');
-  debugPrint('ALL USERS: $users');
-
-  if (users.isNotEmpty) {
-    final currentUserId = users.first['user_id'];
-    final rows = await database.query(
-      'scan_history',
-      where: 'user_id = ?',
-      whereArgs: [currentUserId],
-    );
-    debugPrint('HISTORY FOR CURRENT USER: $rows');
+    debugPrint('USERS: $users');
+    debugPrint('SCAN HISTORY: $scans');
   }
-}
+
+  Future<void> debugPrintCurrentUserAndHistory() async {
+    final database = await AppDatabase().db;
+
+    final users = await database.query('users');
+    debugPrint('ALL USERS: $users');
+
+    if (users.isNotEmpty) {
+      final currentUserId = users.first['user_id'];
+      final rows = await database.query(
+        'scan_history',
+        where: 'user_id = ?',
+        whereArgs: [currentUserId],
+      );
+      debugPrint('HISTORY FOR CURRENT USER: $rows');
+    }
+  }
 }

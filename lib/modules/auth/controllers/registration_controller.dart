@@ -82,7 +82,7 @@ class RegistrationController extends ChangeNotifier {
           if (resp.token != null) {
             await _saveTokenLocally(resp.token!); 
           }
-          await _saveNameLocally(name); 
+          await _saveNameLocally(email, name,address: address, contactNumber: contactNumber); 
           break;
         case RegistrationStatus.alreadyRegistered:
           _errorMessage = "This email is already registered.";
@@ -109,15 +109,17 @@ class RegistrationController extends ChangeNotifier {
     }
   }
 
-  // ─── Private helpers ──────────────────────────────────────────────────────
 
   Future<void> _saveTokenLocally(String token) async {
-    await _tokenStorage.save(token); // ✅ uses instance not new object each time
+    await _tokenStorage.save(token);
   }
 
-  Future<void> _saveNameLocally(String name) async {
+  Future<void> _saveNameLocally(String email, String name, {required String address, required String contactNumber}) async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', email);
     await prefs.setString('name', name);
+    await prefs.setString('address', address);
+    await prefs.setString('contact_number', contactNumber);
   }
 
   @override

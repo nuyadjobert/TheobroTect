@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../models/request_otp_result.dart';
 import '../models/verify_otp_result.dart';
 import '../models/registration_model.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   final Dio _dio;
@@ -31,6 +32,22 @@ class AuthService {
         '/api/theobrotect/auth/verify-otp',
         data: {'email': email, 'otp': otp},
       );
+
+      // --- ADDED FOR DEBUGGING ---
+    debugPrint('--- RAW BACKEND RESPONSE ---');
+    debugPrint('Status Code: ${res.statusCode}');
+    debugPrint('Data: ${res.data}'); 
+    
+    if (res.data['user'] != null) {
+      debugPrint('User ID from JSON: ${res.data['user']['id']}');
+      debugPrint('User Name from JSON: ${res.data['user']['name']}');
+      debugPrint('Address from Server: ${res.data['user']['address']}');
+debugPrint('Contact from Server: ${res.data['user']['contact_number']}'); 
+    } else {
+      debugPrint('WARNING: "user" object is NULL in response');
+    }
+    debugPrint('---------------------------');
+    //
       return VerifyOtpResult.fromJson(_asMap(res.data));
     } on DioException catch (e) {
       throw Exception(

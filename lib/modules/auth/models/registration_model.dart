@@ -49,7 +49,7 @@ class RegistrationResponse {
     final raw = (json["status"] ?? "").toString();
 
     switch (raw) {
-      case "OK":                   // ✅ handle success
+      case "OK":                   
         return RegistrationResponse(
           status: RegistrationStatus.success,
           token: json["token"],
@@ -68,7 +68,7 @@ class RegistrationResponse {
 }
 
 enum RegistrationStatus {
-  success,              // ✅ added
+  success,             
   alreadyRegistered,
   invalidInput,
   serverError,

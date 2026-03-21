@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 import 'package:cacao_apps/modules/settings/views/settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -92,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ShowCaseWidget.of(context).startShowCase([
         _profileKey,
         _catalogKey,

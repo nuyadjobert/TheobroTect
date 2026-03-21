@@ -1,12 +1,9 @@
 import 'package:cacao_apps/modules/auth/services/auth_services.dart';
-import 'package:cacao_apps/modules/auth/views/login_screen.dart';
-import 'package:cacao_apps/modules/auth/views/registration_screen.dart';
-import 'package:cacao_apps/modules/auth/views/verify_account_screen.dart';
-import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:cacao_apps/modules/introduction/views/introduction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'modules/home/views/home_screen.dart';
 
 import 'core/network/client.dart';
 import 'core/storage/token_storage.dart';

@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:cacao_apps/core/db/app_database.dart';
+import 'package:flutter/foundation.dart';
 
 class HistoryService {
   Future<List<Map<String, dynamic>>> getHistoryByUserId(String userId) async {
     final db = await AppDatabase().db;
+    debugPrint('Fetching history for UserID: $userId');
 
     final List<Map<String, dynamic>> maps = await db.query(
       'scan_history',

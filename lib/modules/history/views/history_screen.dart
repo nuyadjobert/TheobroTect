@@ -24,72 +24,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    // Rebuild the UI when the user types in the search bar
     _searchController.addListener(() {
       setState(() {});
     });
-  }
-
-  void _showDeleteDialog(String localId, String? imagePath) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            "Delete Scan?",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1B3022),
-            ),
-          ),
-          content: const Text(
-            "This action cannot be undone. Do you want to remove this scan from your history?",
-            style: TextStyle(color: Colors.black54),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Cancel",
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                final success = await _controller.deleteScan(localId, imagePath);
-
-                if (mounted && success) {
-                  Navigator.pop(context);
-                  setState(() {});
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Scan deleted successfully"),
-                      backgroundColor: Color(0xFF1B3022),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-              child: const Text(
-                "Delete",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -154,12 +91,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                     bool matchesFilter = true;
                     if (_controller.activeFilter == "Healthy") {
-                      matchesFilter = item['severity_key'] == 'default' || item['disease_key'] == 'healthy';
+                      matchesFilter =
+                          item['severity_key'] == 'default' ||
+                          item['disease_key'] == 'healthy';
                     } else if (_controller.activeFilter == "Infected") {
-                      matchesFilter = item['severity_key'] != 'default' && item['disease_key'] != 'healthy';
+                      matchesFilter =
+                          item['severity_key'] != 'default' &&
+                          item['disease_key'] != 'healthy';
                     } else if (_controller.activeFilter == "Treated") {
                       // Adjust 'is_treated' to match your actual database column name
-                      matchesFilter = item['is_treated'] == 1 || item['status'] == 'treated';
+                      matchesFilter =
+                          item['is_treated'] == 1 ||
+                          item['status'] == 'treated';
                     }
 
                     return matchesSearch && matchesFilter;
@@ -189,9 +132,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                       // Logic to determine display status
                       String displayStatus;
-                      if (item['is_treated'] == 1 || item['status'] == 'treated') {
+                      if (item['is_treated'] == 1 ||
+                          item['status'] == 'treated') {
                         displayStatus = 'Treated';
-                      } else if (item['severity_key'] == 'default' || item['disease_key'] == 'healthy') {
+                      } else if (item['severity_key'] == 'default' ||
+                          item['disease_key'] == 'healthy') {
                         displayStatus = 'Healthy';
                       } else {
                         displayStatus = 'Infected';
@@ -221,30 +166,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         data: formattedData,
                         controller: _scanResultController,
                         onTap: () async {
-  _scanResultController.setInputs(
-    diseaseName: formattedData['title'],
-    severity: item['severity_key']?.toString() ?? 'default',
-  );
+                          _scanResultController.setInputs(
+                            diseaseName: formattedData['title'],
+                            severity:
+                                item['severity_key']?.toString() ?? 'default',
+                          );
 
-  // Check if guide data exists in DB
-  final hasGuideData = item['what_to_do_now_en'] != null &&
-      item['what_to_do_now_en'].toString().trim().isNotEmpty;
+                          final hasGuideData =
+                              item['what_to_do_now_en'] != null &&
+                              item['what_to_do_now_en']
+                                  .toString()
+                                  .trim()
+                                  .isNotEmpty;
 
-  if (hasGuideData) {
-    // ✅ New scans: load instantly from DB
-    _scanResultController.loadFromHistory(item);
-  } else {
-    // ⚡ Old scans: fetch from JSON guide as fallback
-    await _scanResultController.initGuide();
-  }
+                          if (hasGuideData) {
+                            _scanResultController.loadFromHistory(item);
+                          } else {
+                            await _scanResultController.initGuide();
+                          }
 
-  if (!mounted) return;
-  ScanDetailsSheet.show(
-    context,
-    formattedData,
-    _scanResultController,
-  );
-},
+                          if (!mounted) return;
+                          ScanDetailsSheet.show(
+                            context,
+                            formattedData,
+                            _scanResultController,
+                          );
+                        },
                         onDeleteComplete: () => setState(() {}),
                       );
                     },
@@ -264,7 +211,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center, // Centers the text horizontally
+          crossAxisAlignment:
+              CrossAxisAlignment.center, // Centers the text horizontally
           children: [
             Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[300]),
             const SizedBox(height: 16),
@@ -279,8 +227,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              _controller.activeFilter == "All Scans" 
-                  ? "Try scanning some cacao pods first!" 
+              _controller.activeFilter == "All Scans"
+                  ? "Try scanning some cacao pods first!"
                   : "No items match the '${_controller.activeFilter}' filter.", // Fixed "Instance of"
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[500]),

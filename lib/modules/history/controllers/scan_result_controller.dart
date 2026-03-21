@@ -73,13 +73,12 @@ class ScanResultController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Helper to handle the newline characters (\n) from your SQLite database
-  List<String> _splitStoredString(dynamic val) {
-    if (val == null || val.toString().isEmpty) return const [];
-    return val.toString().split('\n').where((s) => s.trim().isNotEmpty).toList();
-  }
+List<String> _splitStoredString(dynamic val) {
+  final stringVal = val?.toString() ?? '';
+  if (stringVal.isEmpty) return const [];
+  return stringVal.split('\n').where((s) => s.trim().isNotEmpty).toList();
+}
 
-  /// Update the inputs used by initGuide() without changing existing method params.
   void setInputs({
     required String diseaseName,
     required String severity,

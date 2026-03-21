@@ -46,7 +46,6 @@ Widget build(BuildContext context) {
     ),
     child: Scaffold(
       backgroundColor: surfaceColor,
-      // ✅ wrap entire body in ListenableBuilder so UI rebuilds on controller changes
       body: ListenableBuilder(
         listenable: controller,
         builder: (context, _) => SafeArea(
@@ -179,18 +178,9 @@ Widget build(BuildContext context) {
                     onPressed: controller.isLoading
                         ? null
                         : () async {
-                            // ✅ trim values before submitting
                             final name = controller.nameController.text.trim();
                             final address = controller.addressController.text.trim();
                             final contactNumber = controller.phoneController.text.trim();
-
-                            // ✅ validate locally before hitting API
-                            if (name.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please enter your full name.')),
-                              );
-                              return;
-                            }
 
                             await controller.submitRegistration(
                               email: model.email,
