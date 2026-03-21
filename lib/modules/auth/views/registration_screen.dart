@@ -186,7 +186,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   height: 56,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: controller.isLoading
+                      backgroundColor:
+                          controller
+                              .isLoading // Changed from _isLoading
                           ? primaryGreen.withAlpha(180)
                           : primaryGreen,
                       foregroundColor: Colors.white,
@@ -196,16 +198,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
+                    // The button disables itself automatically when controller.isLoading is true
                     onPressed: controller.isLoading
                         ? null
                         : () async {
-                            await controller.submitRegistration(
+                            final resp = await controller.submitRegistration(
                               email: model.email,
                             );
 
                             if (!context.mounted) return;
-
-                            setState(() {});
 
                             if (controller.isRegistrationSuccessful) {
                               Navigator.of(context).pushAndRemoveUntil(
@@ -214,23 +215,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 ),
                                 (route) => false,
                               );
-                              return;
-                            }
-
-                            final msg = controller.errorMessage;
-                            if (msg != null && msg.isNotEmpty) {
-                              ScaffoldMessenger.of(
-                                context,
-                              ).showSnackBar(SnackBar(content: Text(msg)));
+                            } else {
+                              final msg = controller.errorMessage;
+                              if (msg != null && msg.isNotEmpty) {
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(SnackBar(content: Text(msg)));
+                              }
                             }
                           },
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
-                      transitionBuilder: (child, animation) => FadeTransition(
-                        opacity: animation,
-                        child: ScaleTransition(scale: animation, child: child),
-                      ),
-                      child: controller.isLoading
+                      child:
+                          controller
+                              .isLoading // Use the controller's state
                           ? const Row(
                               key: ValueKey('loading'),
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -241,18 +239,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   child: CircularProgressIndicator(
                                     color: Colors.white,
                                     strokeWidth: 2.5,
-                                    strokeCap: StrokeCap.round,
                                   ),
                                 ),
                                 SizedBox(width: 12),
-                                Text(
-                                  "Please wait...",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
+                                Text("Please wait..."),
                               ],
                             )
                           : const Row(

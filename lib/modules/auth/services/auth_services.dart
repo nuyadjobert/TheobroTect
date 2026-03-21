@@ -62,8 +62,9 @@ class AuthService {
 
   String? _readMessage(DioException e) {
     final data = e.response?.data;
-    if (data is Map && data['message'] != null)
+    if (data is Map && data['message'] != null){
       return data['message'].toString();
+    }
     return e.message;
   }
 

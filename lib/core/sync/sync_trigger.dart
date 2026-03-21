@@ -50,7 +50,7 @@ class SyncTrigger {
 
   Future<bool> _hasInternet() async {
     try {
-      final res = await DioClient.dio.get('/api/health');
+      final res = await DioClient.dio.get('/api/theobrotect/test');
       return res.statusCode != null && res.statusCode! >= 200 && res.statusCode! < 300;
     } catch (_) {
       return false;
