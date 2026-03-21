@@ -220,9 +220,9 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                                     ),
                                     model: RegistrationRequest(
                                       email: controller.email,
-                                      fullName: '',
+                                      name: '',
                                       address: '',
-                                      contactNumber: '',
+                                      contact_number: '',
                                     ),
                                   ),
                                 ),

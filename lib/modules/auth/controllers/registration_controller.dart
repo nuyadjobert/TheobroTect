@@ -41,9 +41,9 @@ class RegistrationController extends ChangeNotifier {
   }) {
     return RegistrationRequest(
       email: email,
-      fullName: nameController.text,
+      name: nameController.text,
       address: addressController.text,
-      contactNumber: phoneController.text,
+      contact_number: phoneController.text,
     );
   }
 
@@ -68,7 +68,7 @@ class RegistrationController extends ChangeNotifier {
 
       switch (resp.status) {
         case RegistrationStatus.pendingApproval:
-          await _saveNameLocally(req.fullName);
+          await _saveNameLocally(req.name);
           break;
         case RegistrationStatus.alreadyRegistered:
           _errorMessage = "This email is already registered.";

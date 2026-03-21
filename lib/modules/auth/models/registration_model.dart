@@ -1,28 +1,28 @@
 class RegistrationRequest {
   final String email;
-  final String fullName;
+  final String name;
   final String address;
-  final String contactNumber;
+  final String contact_number;
 
   const RegistrationRequest({
     required this.email,
-    required this.fullName,
+    required this.name,
     required this.address,
-    required this.contactNumber,
+    required this.contact_number,
   });
 
   Map<String, dynamic> toJson() => {
         "email": email.trim().toLowerCase(),
-        "full_name": fullName.trim(),
+        "full_name": name.trim(),
         "address": address.trim(),
-        "contact_number": contactNumber.trim(),
+        "contact_number": contact_number.trim(),
       };
 
   bool get isValid =>
       email.trim().isNotEmpty &&
-      fullName.trim().isNotEmpty &&
+      name.trim().isNotEmpty &&
       address.trim().isNotEmpty &&
-      contactNumber.trim().isNotEmpty &&
+      contact_number.trim().isNotEmpty &&
       _isValidEmail(email);
 
   static bool _isValidEmail(String email) {
