@@ -39,7 +39,6 @@ class HomeContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Profile Row
                 Row(
                   children: [
                     Showcase(

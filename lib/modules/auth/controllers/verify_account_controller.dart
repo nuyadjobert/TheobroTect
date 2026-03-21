@@ -100,6 +100,7 @@ class VerifyAccountController extends ChangeNotifier {
         await _secureStore.save(token);
 
         final userId = result.userId;
+        final address = result.address ?? '';
         final emailFromBackend = result.email ?? email;
 
         if (userId == null || userId.isEmpty) {
@@ -109,7 +110,13 @@ class VerifyAccountController extends ChangeNotifier {
           return result;
         }
 
-        await _saveUserLocally(userId: userId, email: emailFromBackend);
+        await _saveUserLocally(
+          userId: userId,
+          name: result.name ?? '',
+          email: emailFromBackend,
+          address: address,
+          contactNumber: result.contactNumber ?? '',
+        );
         notifyListeners();
         return result;
       }
@@ -140,13 +147,19 @@ class VerifyAccountController extends ChangeNotifier {
 
 Future<void> _saveUserLocally({
   required String userId,
+  required String name,      // Add this
   required String email,
+  required String address,
+  required String contactNumber,
 }) async {
   final now = DateTime.now().toIso8601String();
 
   final localUser = LocalUser(
     userId: userId,
     email: email,
+    name: name,              // Use the variable, not null!
+    address: address,
+    contactNumber: contactNumber,
     createdAt: now,
   );
 
