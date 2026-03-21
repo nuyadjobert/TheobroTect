@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cacao_apps/core/storage/token_storage.dart'; 
 import '../models/registration_model.dart';
 import '../services/auth_services.dart';
 
 class RegistrationController extends ChangeNotifier {
   final AuthService _auth;
+  final _tokenStorage = TokenStorage();
 
   RegistrationController(this._auth);
 
@@ -21,6 +23,9 @@ class RegistrationController extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   RegistrationResponse? get lastResponse => _lastResponse;
 
+  bool get isRegistrationSuccessful =>
+      _lastResponse?.status == RegistrationStatus.success;
+
   void _setLoading(bool v) {
     _isLoading = v;
     notifyListeners();
@@ -31,29 +36,35 @@ class RegistrationController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _saveNameLocally(String name) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_full_name', name);
-  }
-
   RegistrationRequest buildRequest({
     required String email,
+    required String name,
+    required String address,
+    required String contactNumber,
   }) {
     return RegistrationRequest(
       email: email,
-      name: nameController.text,
-      address: addressController.text,
-      contact_number: phoneController.text,
+      name: name,
+      address: address,
+      contactNumber: contactNumber,
     );
   }
 
   Future<RegistrationResponse?> submitRegistration({
     required String email,
+    required String name,
+    required String address,
+    required String contactNumber,
   }) async {
     _errorMessage = null;
     _lastResponse = null;
 
-    final req = buildRequest(email: email);
+    final req = buildRequest(
+      email: email,
+      name: name,
+      address: address,
+      contactNumber: contactNumber,
+    );
 
     if (!req.isValid) {
       _errorMessage = "Please enter valid registration details.";
@@ -67,8 +78,11 @@ class RegistrationController extends ChangeNotifier {
       _lastResponse = resp;
 
       switch (resp.status) {
-        case RegistrationStatus.pendingApproval:
-          await _saveNameLocally(req.name);
+        case RegistrationStatus.success:
+          if (resp.token != null) {
+            await _saveTokenLocally(resp.token!); 
+          }
+          await _saveNameLocally(name); 
           break;
         case RegistrationStatus.alreadyRegistered:
           _errorMessage = "This email is already registered.";
@@ -95,8 +109,16 @@ class RegistrationController extends ChangeNotifier {
     }
   }
 
-  bool get isRegistrationSuccessful =>
-    _lastResponse?.status == RegistrationStatus.pendingApproval;
+  // ─── Private helpers ──────────────────────────────────────────────────────
+
+  Future<void> _saveTokenLocally(String token) async {
+    await _tokenStorage.save(token); // ✅ uses instance not new object each time
+  }
+
+  Future<void> _saveNameLocally(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', name);
+  }
 
   @override
   void dispose() {

@@ -30,24 +30,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     model = widget.model;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+ @override
+Widget build(BuildContext context) {
+  final theme = Theme.of(context);
+  const Color primaryGreen = Color(0xFF2E7D32);
+  const Color inputBorderColor = Color(0xFF3D683A);
+  const Color surfaceColor = Colors.white;
 
-    const Color primaryGreen = Color(0xFF2E7D32);
-    const Color inputBorderColor = Color(0xFF3D683A);
-    const Color surfaceColor = Colors.white;
-
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: surfaceColor,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        backgroundColor: surfaceColor,
-        body: SafeArea(
+  return AnnotatedRegion<SystemUiOverlayStyle>(
+    value: const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: surfaceColor,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+    child: Scaffold(
+      backgroundColor: surfaceColor,
+      // ✅ wrap entire body in ListenableBuilder so UI rebuilds on controller changes
+      body: ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) => SafeArea(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -74,22 +76,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     const SizedBox(width: 48),
                   ],
                 ),
-
                 const SizedBox(height: 30),
                 Center(
-                  child: Container(
-                    alignment: Alignment.center,
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Image.asset(
-                      "assets/images/theobrotect.png",
-                      width: 78,
-                      height: 78,
-                    ),
+                  child: Image.asset(
+                    "assets/images/theobrotect.png",
+                    width: 78,
+                    height: 78,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -112,9 +104,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     height: 1.5,
                   ),
                 ),
-
                 const SizedBox(height: 32),
-
                 _buildLabel("Full Name", theme),
                 const SizedBox(height: 8),
                 _buildTextField(
@@ -123,9 +113,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   icon: Icons.person,
                   primaryColor: inputBorderColor,
                 ),
-
                 const SizedBox(height: 20),
-
                 _buildLabel("Address", theme),
                 const SizedBox(height: 8),
                 _buildTextField(
@@ -134,9 +122,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   icon: Icons.location_on,
                   primaryColor: inputBorderColor,
                 ),
-
                 const SizedBox(height: 20),
-
                 _buildLabel("Contact Number", theme),
                 const SizedBox(height: 8),
                 _buildTextField(
@@ -146,17 +132,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   primaryColor: inputBorderColor,
                   isNumber: true,
                 ),
-
                 const SizedBox(height: 24),
-
                 RichText(
                   textAlign: TextAlign.left,
                   text: TextSpan(
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     children: [
-                      const TextSpan(
-                        text: "By clicking Register, you agree to our ",
-                      ),
+                      const TextSpan(text: "By clicking Register, you agree to our "),
                       TextSpan(
                         text: "Terms of Service",
                         style: const TextStyle(
@@ -178,17 +160,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          controller
-                              .isLoading // Changed from _isLoading
+                      backgroundColor: controller.isLoading
                           ? primaryGreen.withAlpha(180)
                           : primaryGreen,
                       foregroundColor: Colors.white,
@@ -198,12 +176,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    // The button disables itself automatically when controller.isLoading is true
                     onPressed: controller.isLoading
                         ? null
                         : () async {
-                            final resp = await controller.submitRegistration(
+                            // ✅ trim values before submitting
+                            final name = controller.nameController.text.trim();
+                            final address = controller.addressController.text.trim();
+                            final contactNumber = controller.phoneController.text.trim();
+
+                            // ✅ validate locally before hitting API
+                            if (name.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please enter your full name.')),
+                              );
+                              return;
+                            }
+
+                            await controller.submitRegistration(
                               email: model.email,
+                              name: name,
+                              address: address,
+                              contactNumber: contactNumber,
                             );
 
                             if (!context.mounted) return;
@@ -218,17 +211,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             } else {
                               final msg = controller.errorMessage;
                               if (msg != null && msg.isNotEmpty) {
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showSnackBar(SnackBar(content: Text(msg)));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(msg)),
+                                );
                               }
                             }
                           },
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
-                      child:
-                          controller
-                              .isLoading // Use the controller's state
+                      child: controller.isLoading
                           ? const Row(
                               key: ValueKey('loading'),
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -263,15 +254,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 24),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildLabel(String text, ThemeData theme) {
     return Text(

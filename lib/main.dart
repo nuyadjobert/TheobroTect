@@ -37,12 +37,6 @@ void main() async {
 
   await NotificationService.instance.init();
 
-model = RegistrationRequest(
-  email: "",
-  fullName: "",
-  address: "",
-  contactNumber: "",
-);
 final authService = AuthService(DioClient.dio);
 
 controller = RegistrationController(authService);
@@ -62,14 +56,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
 
       home: const IntroductionScreen(),
-      // home: VerifyAccountScreen(email:  ""),
-      // home: const HomeScreen(),
-
-      // home: RegistrationScreen(
-      //   controller: controller,
-      //   model: model,
-      // ),
-
       routes: {
         '/notification': (_) => const NotificationScreen(),
       },

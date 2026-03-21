@@ -39,20 +39,25 @@ class AuthService {
     }
   }
 
-  Future<RegistrationResponse> register(RegistrationRequest request) async {
-    try {
-      final res = await _dio.post(
-        '/api/theobrotect/auth/register',
-        data: request.toJson(),
-        options: Options(headers: const {"Content-Type": "application/json"}),
-      );
-      return RegistrationResponse.fromJson(_asMap(res.data));
-    } on DioException catch (e) {
-      throw Exception(
-        _readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error',
-      );
-    }
+ Future<RegistrationResponse> register(RegistrationRequest request) async {
+  try {
+    final res = await _dio.post(
+      '/api/theobrotect/auth/register',
+      data: request.toJson(),
+      options: Options(
+        headers: const {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+      ),
+    );
+    return RegistrationResponse.fromJson(_asMap(res.data));
+  } on DioException catch (e) {
+    throw Exception(
+      _readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error',
+    );
   }
+}
 
   String? _readServerStatus(DioException e) {
     final data = e.response?.data;

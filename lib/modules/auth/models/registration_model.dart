@@ -2,27 +2,27 @@ class RegistrationRequest {
   final String email;
   final String name;
   final String address;
-  final String contact_number;
+  final String contactNumber;
 
   const RegistrationRequest({
     required this.email,
     required this.name,
     required this.address,
-    required this.contact_number,
+    required this.contactNumber,
   });
 
   Map<String, dynamic> toJson() => {
         "email": email.trim().toLowerCase(),
-        "full_name": name.trim(),
+        "name": name.trim(),
         "address": address.trim(),
-        "contact_number": contact_number.trim(),
+        "contact_number": contactNumber.trim(),
       };
 
   bool get isValid =>
       email.trim().isNotEmpty &&
       name.trim().isNotEmpty &&
       address.trim().isNotEmpty &&
-      contact_number.trim().isNotEmpty &&
+      contactNumber.trim().isNotEmpty &&
       _isValidEmail(email);
 
   static bool _isValidEmail(String email) {
@@ -32,25 +32,29 @@ class RegistrationRequest {
   }
 }
 
-enum RegistrationStatus {
-  pendingApproval,
-  alreadyRegistered,
-  invalidInput,
-  serverError,
-  unknown,
-}
+
 
 class RegistrationResponse {
   final RegistrationStatus status;
+  final String? token;
+  final Map<String, dynamic>? user;
 
-  const RegistrationResponse({required this.status});
+  const RegistrationResponse({
+    required this.status,
+    this.token,
+    this.user,
+  });
 
   factory RegistrationResponse.fromJson(Map<String, dynamic> json) {
     final raw = (json["status"] ?? "").toString();
 
     switch (raw) {
-      case "PENDING_APPROVAL":
-        return const RegistrationResponse(status: RegistrationStatus.pendingApproval);
+      case "OK":                   // ✅ handle success
+        return RegistrationResponse(
+          status: RegistrationStatus.success,
+          token: json["token"],
+          user: json["user"],
+        );
       case "ALREADY_REGISTERED":
         return const RegistrationResponse(status: RegistrationStatus.alreadyRegistered);
       case "INVALID_INPUT":
@@ -61,4 +65,12 @@ class RegistrationResponse {
         return const RegistrationResponse(status: RegistrationStatus.unknown);
     }
   }
+}
+
+enum RegistrationStatus {
+  success,              // ✅ added
+  alreadyRegistered,
+  invalidInput,
+  serverError,
+  unknown,
 }

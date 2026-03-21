@@ -222,7 +222,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                                       email: controller.email,
                                       name: '',
                                       address: '',
-                                      contact_number: '',
+                                      contactNumber: '',
                                     ),
                                   ),
                                 ),
