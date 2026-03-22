@@ -161,7 +161,7 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
         border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: const Text(
-        "COMMON",
+        "COMMON DISEASE",
         style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
       ),
     );

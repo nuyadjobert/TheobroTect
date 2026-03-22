@@ -1,4 +1,5 @@
 import 'package:cacao_apps/modules/auth/services/auth_services.dart';
+import 'package:cacao_apps/modules/home/views/home_screen.dart';
 import 'package:cacao_apps/modules/introduction/views/introduction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -51,7 +52,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
 
-      home: const IntroductionScreen(),
+      home: const HomeScreen(),
       routes: {
         '/notification': (_) => const NotificationScreen(),
       },

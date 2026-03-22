@@ -297,7 +297,7 @@ class HistoryCard extends StatelessWidget {
                             },
                             behavior: HitTestBehavior.opaque,
                             child: Text(
-                              "Details",
+                              "View Details",
                               textAlign: TextAlign.end,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
