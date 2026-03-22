@@ -40,7 +40,7 @@ class HistoryCard extends StatelessWidget {
     }
 
     final bool? confirmed = await _showDeleteDialog(context);
-    
+    if(!context.mounted) return;
     if (confirmed == true) {
       try {
         final String? id = data['id']?.toString(); 
@@ -58,7 +58,7 @@ class HistoryCard extends StatelessWidget {
           where: 'local_id = ?',
           whereArgs: [id], 
         );
-
+      if(!context.mounted) return;
         if (deletedRows == 0) {
           _showErrorSnackbar(context, "Scan not found in database");
           return;

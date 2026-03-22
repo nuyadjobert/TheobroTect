@@ -24,7 +24,7 @@ class MiniInspectionTile extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -36,7 +36,7 @@ class MiniInspectionTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: alertColor.withOpacity(0.12),
+              color: alertColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
@@ -64,13 +64,13 @@ class MiniInspectionTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.priority_high_rounded, size: 10, color: alertColor.withOpacity(0.8)),
+                    Icon(Icons.priority_high_rounded, size: 10, color: alertColor.withValues(alpha: 0.8)),
                     const SizedBox(width: 4),
                     Text(
                       "HIGH PRIORITY",
                       style: TextStyle(
                         fontSize: 10, 
-                        color: alertColor.withOpacity(0.9),
+                        color: alertColor.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.5,
                       ),
@@ -94,7 +94,7 @@ class MiniInspectionTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryDarkGreen.withOpacity(0.2),
+                        color: primaryDarkGreen.withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       )

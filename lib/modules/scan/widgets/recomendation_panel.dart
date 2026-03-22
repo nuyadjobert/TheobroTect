@@ -194,7 +194,7 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final text = items[index];
                   return _buildRecommendationCard(text, index);
@@ -246,7 +246,7 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
           boxShadow: isSelected 
             ? [
                 BoxShadow(
-                  color: const Color(0xFF2D6A4F).withOpacity(0.3),
+                  color: const Color(0xFF2D6A4F).withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
@@ -274,7 +274,7 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

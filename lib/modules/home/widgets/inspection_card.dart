@@ -17,7 +17,7 @@ class InspectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2D6A4F).withOpacity(0.1),
+            color: const Color(0xFF2D6A4F).withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -31,7 +31,7 @@ class InspectionCard extends StatelessWidget {
             child: Icon(
               Icons.eco,
               size: 150,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
           Padding(
@@ -72,7 +72,7 @@ class InspectionCard extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2D6A4F),
                       foregroundColor: Colors.white,
-                      shadowColor: const Color(0xFF2D6A4F).withOpacity(0.4),
+                      shadowColor: const Color(0xFF2D6A4F).withValues(alpha: 0.4),
                       elevation: 8,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                     ),

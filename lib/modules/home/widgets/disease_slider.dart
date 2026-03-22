@@ -76,7 +76,7 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
           borderRadius: BorderRadius.circular(16), // Less rounding for a "rectangular" look
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isActive ? 0.2 : 0.05),
+              color: Colors.black.withValues(alpha: isActive ? 0.2 : 0.05),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -101,7 +101,7 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.8),
+                      Colors.black.withValues(alpha: 0.8),
                     ],
                     stops: const [0.4, 1.0],
                   ),
@@ -137,7 +137,7 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
                     Text(
                       widget.diseaseData[index]["origin"] ?? "Global",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8), 
+                        color: Colors.white.withValues(alpha: 0.8), 
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
@@ -156,9 +156,9 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: const Text(
         "COMMON",
@@ -177,7 +177,7 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
           height: 4,
           width: _activePage == index ? 18 : 6,
           decoration: BoxDecoration(
-            color: _activePage == index ? Colors.green : Colors.grey.withOpacity(0.3),
+            color: _activePage == index ? Colors.green : Colors.grey.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(2),
           ),
         );

@@ -14,9 +14,9 @@ class TotalScannedCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: brandGreen.withOpacity(0.08)),
+        border: Border.all(color: brandGreen.withValues(alpha: 0.08)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 8)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 8)),
         ],
       ),
       child: Column(
@@ -32,7 +32,7 @@ class TotalScannedCard extends StatelessWidget {
                     child: CircularProgressIndicator(
                       value: 38 / 45,
                       strokeWidth: 6,
-                      backgroundColor: Colors.redAccent.withOpacity(0.1),
+                      backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
                       valueColor: const AlwaysStoppedAnimation<Color>(brandGreen),
                       strokeCap: StrokeCap.round,
                     ),
@@ -72,7 +72,7 @@ class TotalScannedCard extends StatelessWidget {
       children: [
         Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color, letterSpacing: -0.5)),
         const SizedBox(height: 4),
-        Container(height: 3, width: 20, decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(10))),
+        Container(height: 3, width: 20, decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10))),
         const SizedBox(height: 6),
         Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey, letterSpacing: 0.2)),
       ],

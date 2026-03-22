@@ -128,7 +128,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                     children: [
                       AnimatedBuilder(
                         animation: controller,
-                        builder: (_, __) {
+                        builder: (_, _) {
                           return Text(
                             "RESEND CODE IN ${controller.timerText}",
                             style: theme.textTheme.labelLarge?.copyWith(
@@ -175,48 +175,51 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: controller.isLoading 
-                            ? forestGreen.withOpacity(0.7) 
+                            ? forestGreen.withValues(alpha:0.7)
                             : forestGreen,
                         foregroundColor: Colors.white,
                         elevation: controller.isLoading ? 0 : 4,
-                        shadowColor: forestGreen.withOpacity(0.4),
+                        shadowColor: forestGreen.withValues(alpha: 0.4),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                           onPressed: controller.isLoading
-                        ? null
-                        : () async {
-                            await controller.verify();
-                            if (!mounted) return;
+    ? null
+    : () async {
+        final messenger = ScaffoldMessenger.of(context); // ✅ capture early
+        final navigator = Navigator.of(context);
 
-                            if (controller.isVerified ||
-                                controller.isNewUserRequired) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: const [
-                                      Icon(
-                                        Icons.verified_user_rounded,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: 12),
-                                      Text("Verification Successful!"),
-                                    ],
-                                  ),
-                                  backgroundColor:
-                                      forestGreen, 
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: const EdgeInsets.all(20),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+        await controller.verify();
+
+        if (!mounted) return;
+
+        if (controller.isVerified || controller.isNewUserRequired) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Row(
+                children: const [
+                  Icon(
+                    Icons.verified_user_rounded,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 12),
+                  Text("Verification Successful!"),
+                ],
+              ),
+              backgroundColor: forestGreen,
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.all(20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                               );
                             }
+                            
 
                             if (controller.isNewUserRequired) {
-                              Navigator.of(context).pushReplacement(
+                              navigator.pushReplacement(
                                 MaterialPageRoute(
                                   builder: (_) => RegistrationScreen(
                                     controller: RegistrationController(
@@ -232,7 +235,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                                 ),
                               );
                             } else if (controller.isVerified) {
-                              Navigator.of(context).pushAndRemoveUntil(
+                              navigator.pushAndRemoveUntil(
                                 MaterialPageRoute(
                                   builder: (_) => const HomeScreen(),
                                 ),
@@ -241,13 +244,13 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                             } else {
                               final msg = controller.errorMessage;
                               if (msg != null && msg.isNotEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(msg),
-                                    backgroundColor: Colors.redAccent,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                                messenger.showSnackBar(
+  SnackBar(
+    content: Text(msg),
+    backgroundColor: Colors.redAccent,
+    behavior: SnackBarBehavior.floating,
+  ),
+);
                               }
                             }
                           },

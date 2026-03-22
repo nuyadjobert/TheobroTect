@@ -63,7 +63,7 @@ class _WeatherCardState extends State<WeatherCard>
       });
       _fadeController.forward();
     } catch (e) {
-      print('Weather fetch error: $e');
+      debugPrint('Weather fetch error: $e');
       setState(() => _loading = false);
     }
   }
@@ -129,8 +129,10 @@ class _WeatherCardState extends State<WeatherCard>
 
     // Get actual current position
     return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+locationSettings: LocationSettings(
+  accuracy: LocationAccuracy.high,
+),  
+  );
   }
 
   @override

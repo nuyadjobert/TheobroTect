@@ -117,7 +117,7 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                     leading: Padding(
                       padding: const EdgeInsets.only(left: 12, top: 8),
                       child: CircleAvatar(
-                        backgroundColor: Colors.white.withOpacity(0.9),
+                        backgroundColor: Colors.white.withValues(alpha: 0.9),
                         child: const BackButton(color: Colors.black),
                       ),
                     ),

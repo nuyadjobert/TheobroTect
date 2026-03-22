@@ -66,8 +66,10 @@ class _ManagementSheetState extends State<ManagementSheet> {
             height: 55,
             child: ElevatedButton(
               onPressed: () {
-                if (isLastStep) Navigator.pop(context);
-                else setState(() => currentStep++);
+                if (isLastStep){ Navigator.pop(context);
+                }
+                else {setState(() => currentStep++);
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2D6A4F),

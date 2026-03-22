@@ -65,8 +65,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: Switch.adaptive(
                   value: _isNotifEnabled, 
                   onChanged: (v) => setState(() => _isNotifEnabled = v), 
-                  activeColor: const Color(0xFF2D6A4F),
-                ),
+activeThumbColor: const Color(0xFF2D6A4F),      
+activeTrackColor: const Color(0xFF2D6A4F), 
+          ),
               ),
               
               const SettingsTile(
@@ -120,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2D6A4F).withOpacity(0.3),
+            color: const Color(0xFF2D6A4F).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

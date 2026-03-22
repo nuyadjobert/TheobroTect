@@ -92,11 +92,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ShowCaseWidget.of(context).startShowCase([
-        _profileKey,
-        _catalogKey,
-        _scannerKey,
-      ]);
+      ShowcaseView.get().startShowCase([
+  _profileKey,
+  _catalogKey,
+  _scannerKey,
+]);
     });
   }
 
@@ -408,7 +408,7 @@ class SkeletonLayout extends StatelessWidget {
         return ListView.builder(
           padding: const EdgeInsets.all(20),
           itemCount: 8,
-          itemBuilder: (_, __) => Padding(
+          itemBuilder: (_, _) => Padding(
             padding: const EdgeInsets.only(bottom: 15),
             child: Row(
               children: [
@@ -442,7 +442,7 @@ class SkeletonLayout extends StatelessWidget {
                     crossAxisCount: 2, crossAxisSpacing: 15, mainAxisSpacing: 15, childAspectRatio: 0.8
                   ),
                   itemCount: 4,
-                  itemBuilder: (_, __) => Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15))),
+                  itemBuilder: (_, _) => Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15))),
                 ),
               ),
             ],

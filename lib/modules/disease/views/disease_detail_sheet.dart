@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class DiseaseDetailSheet extends StatefulWidget {
   final Map<String, dynamic> disease;

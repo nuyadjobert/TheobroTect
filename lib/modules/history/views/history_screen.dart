@@ -185,7 +185,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             await _scanResultController.initGuide();
                           }
 
-                          if (!mounted) return;
+                          if (!context.mounted) return;
                           ScanDetailsSheet.show(
                             context,
                             formattedData,
