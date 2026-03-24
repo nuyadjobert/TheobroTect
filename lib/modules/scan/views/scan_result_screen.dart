@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../widgets/severity_alert_card.dart';
 import '../widgets/confidence_meter.dart';
 import 'dart:io';
+import 'package:cacao_apps/modules/scan/controllers/save_scan_controller.dart';
 
 class ScanResultScreen extends StatefulWidget {
   final ScanResultModel result;
@@ -17,6 +18,7 @@ class ScanResultScreen extends StatefulWidget {
 
 class _ScanResultScreenState extends State<ScanResultScreen> {
   late final ScanResultController controller;
+  late final SaveScanController saveController;
 
   @override
   void initState() {
@@ -28,6 +30,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
       imagePath: widget.result.imagePath,
     );
 
+    saveController = SaveScanController();
     controller.init();
 
     SystemChrome.setSystemUIOverlayStyle(
@@ -42,6 +45,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   @override
   void dispose() {
     controller.dispose();
+    saveController.dispose();
     super.dispose();
   }
 
@@ -170,7 +174,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                   animation: controller,
                   builder: (context, _) {
                     final disabled =
-                        controller.isLoading || controller.isSaving;
+                        controller.isLoading || saveController.isSaving;
 
                     return OutlinedButton(
                       style: OutlinedButton.styleFrom(
@@ -194,7 +198,12 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                           : () async {
                               HapticFeedback.lightImpact();
 
-                              final ok = await controller.saveScanRecord(
+                              final ok = await saveController.saveScanRecord(
+                                diseaseKey: controller.diseaseKey,
+                                severityKey: controller.severityKey,
+                                confidence: controller.confidence,
+                                imagePath: controller.imagePath,
+                                rescanAfterDays: controller.rescanAfterDays,
                                 smsEnabled: false,
                               );
 
@@ -206,13 +215,12 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                                   content: Text(
                                     ok
                                         ? "Saved to Scan History successfully!"
-                                        : (controller.saveError ??
-                                            "Save failed"),
+                                        : (saveController.saveError ?? "Save failed"),
                                   ),
                                 ),
                               );
                             },
-                      child: controller.isSaving
+                      child: saveController.isSaving
                           ? const SizedBox(
                               height: 22,
                               width: 22,

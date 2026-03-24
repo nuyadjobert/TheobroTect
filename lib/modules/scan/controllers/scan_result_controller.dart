@@ -1,9 +1,7 @@
-import 'package:cacao_apps/core/db/app_database.dart';
 import 'package:cacao_apps/core/guide/cacao_guide_service.dart';
-import 'package:cacao_apps/core/location/location_service.dart';
 import 'package:flutter/material.dart';
 
-import '../services/scan_repository.dart';
+import 'save_scan_controller.dart';
 
 class ScanResultController extends ChangeNotifier {
   final String diseaseName;
@@ -12,7 +10,9 @@ class ScanResultController extends ChangeNotifier {
   final String? imagePath;
 
   final CacaoGuideService _guide = CacaoGuideService();
-  final ScanRepository _scanRepo = ScanRepository();
+
+  /// Delegate — handles all save-to-db concerns
+  final SaveScanController saveScan = SaveScanController();
 
   ScanResultController({
     required this.diseaseName,
@@ -67,18 +67,17 @@ class ScanResultController extends ChangeNotifier {
   List<TreatmentTask> get treatmentPlan => _treatmentPlan;
 
   // -------------------------
-  // Bookmark
+  // Bookmark (derived from save state)
   // -------------------------
-  bool _isBookmarked = false;
-  bool get isBookmarked => _isBookmarked;
+  bool get isBookmarked => saveScan.isSaved;
 
   void toggleBookmark() {
-    _isBookmarked = !_isBookmarked;
+    // Bookmark is now driven by saveScan.isSaved — call saveScanRecord() to save
     notifyListeners();
   }
 
   // -------------------------
-  // Init: load JSON
+  // Init: load guide data from JSON
   // -------------------------
   Future<void> init() async {
     _isLoading = true;
@@ -137,14 +136,14 @@ class ScanResultController extends ChangeNotifier {
 
       _treatmentPlan = whatToDoNowEn.isNotEmpty
           ? whatToDoNowEn
-                .map(
-                  (t) => TreatmentTask(
-                    icon: Icons.check_circle_outline,
-                    title: "Action",
-                    desc: t,
-                  ),
-                )
-                .toList(growable: false)
+              .map(
+                (t) => TreatmentTask(
+                  icon: Icons.check_circle_outline,
+                  title: "Action",
+                  desc: t,
+                ),
+              )
+              .toList(growable: false)
           : const [
               TreatmentTask(
                 icon: Icons.visibility_outlined,
@@ -160,6 +159,21 @@ class ScanResultController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // -------------------------
+  // Save — delegates to SaveScanController
+  // -------------------------
+  Future<bool> saveScanRecord({bool smsEnabled = false}) {
+    return saveScan.saveScanRecord(
+      diseaseKey: diseaseKey,
+      severityKey: severityKey,
+      confidence: confidence,
+      imagePath: imagePath,
+      rescanAfterDays: rescanAfterDays,
+      smsEnabled: smsEnabled,
+      isLoading: _isLoading,
+    );
   }
 
   // -------------------------
@@ -198,95 +212,6 @@ class ScanResultController extends ChangeNotifier {
       if (list is List) return list.map((e) => e.toString()).toList();
     }
     return const [];
-  }
-
-  final LocationService _locationService = LocationService();
-
-  bool _isSaving = false;
-  String? _saveError;
-
-  bool get isSaving => _isSaving;
-  String? get saveError => _saveError;
-
-  Future<bool> saveScanRecord({bool smsEnabled = false}) async {
-    if (_isSaving) return false;
-
-    if (_isLoading) {
-      _saveError = "Still loading scan data. Please try again.";
-      notifyListeners();
-      return false;
-    }
-
-    _isSaving = true;
-    _saveError = null;
-    notifyListeners();
-
-    try {
-      final u = await AppDatabase().getCurrentUser();
-      if (u == null) {
-        _saveError = "No logged-in user found. Please login again.";
-        _isSaving = false;
-        notifyListeners();
-        return false;
-      }
-
-      final userId = u.userId;
-
-      final now = DateTime.now();
-      final loc = await _locationService.getLocationSnapshot();
-
-      final nextScanAt = (rescanAfterDays != null)
-          ? now.add(Duration(days: rescanAfterDays!))
-          : null;
-
-      final localId = await _scanRepo.insertScan(
-        userId: userId,
-        diseaseKey: diseaseKey,
-        severityKey: severityKey,
-        confidence: confidence,
-        imagePath: imagePath,
-
-        scannedAt: now,
-        createdAt: now,
-        nextScanAt: nextScanAt,
-
-        locationLat: (loc?['location_lat'] is num)
-            ? (loc!['location_lat'] as num).toDouble()
-            : null,
-        locationLng: (loc?['location_lng'] is num)
-            ? (loc!['location_lng'] as num).toDouble()
-            : null,
-        locationAccuracy: (loc?['location_accuracy'] is num)
-            ? (loc!['location_accuracy'] as num).toDouble()
-            : null,
-        locationLabel: loc?['location_label']?.toString(),
-
-        notifLocalId: null,
-        smsEnabled: smsEnabled,
-
-        // sync defaults
-        syncState: 'pending',
-        backendId: null,
-        syncAttempts: 0,
-        lastSyncAt: null,
-        lastError: null,
-        nextRetryAt: null,
-        updatedAt: null,
-      );
-
-      final saved = await _scanRepo.getScanByLocalId(localId);
-      debugPrint('Saved scan row: $saved');
-
-      _isBookmarked = true;
-      _isSaving = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _saveError = e.toString();
-      _isSaving = false;
-      notifyListeners();
-      return false;
-    }
   }
 }
 
