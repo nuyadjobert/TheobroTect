@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class CacaoModelService {
   static final CacaoModelService _instance = CacaoModelService._internal();
@@ -22,17 +23,25 @@ class CacaoModelService {
     "mealybug_mild",
     "mealybug_moderate",
     "mealybug_severe",
+    "non_cacao",
   ];
 
   Future<void> loadModel() async {
     if (_isLoaded) return;
     _interpreter = await Interpreter.fromAsset(
-      'assets/models/final_cacao_disease_model1.1.tflite',
+      'assets/models/mobilenetv3large_trainmodelV7.tflite',
       options: InterpreterOptions()..threads = 2,
     );
-
     _isLoaded = true;
 
+    // ✅ ADDED: Debug tensor info on load
+    final inputTensor = _interpreter!.getInputTensor(0);
+    final outputTensor = _interpreter!.getOutputTensor(0);
+    debugPrint("Model loaded.");
+    debugPrint("  Input shape : ${inputTensor.shape}");
+    debugPrint("  Input type  : ${inputTensor.type}");
+    debugPrint("  Output shape: ${outputTensor.shape}");
+    debugPrint("  Output type : ${outputTensor.type}");
   }
 
   Future<ModelPrediction> predict(String imagePath) async {
@@ -53,14 +62,21 @@ class CacaoModelService {
 
     final resized = img.copyResize(decoded, width: w, height: h);
 
+    // ✅ CHANGED: Pass raw [0, 255] values — NOT normalized.
+    // The MobileNetV3Preprocess layer is baked into the TFLite model.
+    // It handles the [-1, 1] conversion internally.
+    // Normalizing here too causes double-processing → garbage predictions.
     final input = List.generate(
       1,
       (_) => List.generate(
         h,
         (y) => List.generate(w, (x) {
           final pixel = resized.getPixel(x, y);
-
-          return [pixel.r / 255.0, pixel.g / 255.0, pixel.b / 255.0];
+          return [
+            pixel.r.toDouble(),  // raw 0–255
+            pixel.g.toDouble(),  // raw 0–255
+            pixel.b.toDouble(),  // raw 0–255
+          ];
         }),
       ),
     );
@@ -84,6 +100,17 @@ class CacaoModelService {
     bestScore = max(0.0, min(1.0, bestScore));
     final bestLabel = labelsInOrder[bestIdx];
 
+    // ✅ CHANGED: Log ALL scores instead of only non_cacao alert
+    debugPrint("=== RAW SCORES ===");
+    for (int i = 0; i < scores.length; i++) {
+      debugPrint(
+        "  [$i] ${labelsInOrder[i]}: ${(scores[i] * 100).toStringAsFixed(2)}%",
+      );
+    }
+    debugPrint(
+      "=== BEST: $bestLabel @ ${(bestScore * 100).toStringAsFixed(1)}% ===",
+    );
+
     return ModelPrediction(
       label: bestLabel,
       confidence: bestScore,
@@ -102,4 +129,6 @@ class ModelPrediction {
     required this.confidence,
     required this.index,
   });
+
+  bool get isNonCacao => label == "non_cacao";
 }
