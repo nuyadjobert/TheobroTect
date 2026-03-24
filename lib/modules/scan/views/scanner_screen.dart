@@ -19,6 +19,10 @@ class _ScannerScreenState extends State<ScannerScreen>
   late AnimationController _animationController;
   late Animation<double> _animation;
 
+  // ── Rectangle dimensions for cacao pod frame ──
+  static const double _frameWidth = 280;
+  static const double _frameHeight = 400; // taller than wide = portrait pod shape
+
   @override
   void initState() {
     super.initState();
@@ -45,22 +49,22 @@ class _ScannerScreenState extends State<ScannerScreen>
   }
 
   Future<void> _onCapture() async {
-   final results = await controller.captureAndAnalyze();
-  if (!mounted || results == null) return;
+    final results = await controller.captureAndAnalyze();
+    if (!mounted || results == null) return;
 
-  final result = ScanResultModel(
-    diseaseName: results.diseaseName,
-    confidence: results.confidence,
-    severity: results.severity,
-    imagePath: results.imagePath,
-  );
+    final result = ScanResultModel(
+      diseaseName: results.diseaseName,
+      confidence: results.confidence,
+      severity: results.severity,
+      imagePath: results.imagePath,
+    );
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ScanResultScreen(result: result),
-    ),
-  );
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ScanResultScreen(result: result),
+      ),
+    );
   }
 
   @override
@@ -83,17 +87,17 @@ class _ScannerScreenState extends State<ScannerScreen>
           backgroundColor: Colors.black,
           body: Stack(
             children: [
-              // 1. Camera Preview
+              // 1. Camera Preview — full screen
               SizedBox(
                 height: MediaQuery.of(context).size.height,
                 width: double.infinity,
                 child: CameraPreview(controller.cameraController!),
               ),
 
-              // 2. Dark Overlay with "Cutout"
+              // 2. Dark Overlay with rectangular cutout
               ColorFiltered(
                 colorFilter: ColorFilter.mode(
-                  Colors.black.withAlpha(153), 
+                  Colors.black.withAlpha(178), // slightly darker for better contrast
                   BlendMode.srcOut,
                 ),
                 child: Stack(
@@ -106,11 +110,11 @@ class _ScannerScreenState extends State<ScannerScreen>
                     ),
                     Center(
                       child: Container(
-                        height: 300,
-                        width: 300,
+                        height: _frameHeight,
+                        width: _frameWidth,
                         decoration: BoxDecoration(
-                          color: Colors.white, 
-                          borderRadius: BorderRadius.circular(24),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                     ),
@@ -118,27 +122,34 @@ class _ScannerScreenState extends State<ScannerScreen>
                 ),
               ),
 
-              // 3. Scanning Animation & Corner Brackets
+              // 3. Scanning line animation + corner brackets
               Center(
                 child: SizedBox(
-                  height: 300,
-                  width: 300,
+                  height: _frameHeight,
+                  width: _frameWidth,
                   child: Stack(
                     children: [
+                      // Scanning line
                       AnimatedBuilder(
                         animation: _animation,
                         builder: (context, child) {
                           return Positioned(
-                            top: _animation.value * 280,
+                            top: _animation.value * (_frameHeight - 4),
                             left: 0,
                             right: 0,
                             child: Container(
                               height: 2,
                               decoration: BoxDecoration(
-                                color: Colors.greenAccent,
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.greenAccent,
+                                    Colors.transparent,
+                                  ],
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.greenAccent.withAlpha(128), // 0.5 * 255 = 128
+                                    color: Colors.greenAccent.withAlpha(128),
                                     blurRadius: 10,
                                     spreadRadius: 2,
                                   ),
@@ -148,6 +159,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                           );
                         },
                       ),
+
+                      // Corner brackets
                       _buildCorner(top: 0, left: 0),
                       _buildCorner(top: 0, right: 0),
                       _buildCorner(bottom: 0, left: 0),
@@ -157,7 +170,33 @@ class _ScannerScreenState extends State<ScannerScreen>
                 ),
               ),
 
-              // 4. UI Controls
+              // 4. Frame size label (helps user know the crop area)
+              Positioned(
+                top: MediaQuery.of(context).size.height / 2 + _frameHeight / 2 + 12,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.greenAccent.withAlpha(30),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.greenAccent.withAlpha(80)),
+                    ),
+                    child: const Text(
+                      "FIT THE CACAO POD INSIDE",
+                      style: TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // 5. UI Controls (top bar + capture button)
               SafeArea(
                 child: Column(
                   children: [
@@ -173,6 +212,16 @@ class _ScannerScreenState extends State<ScannerScreen>
                             icon: Icons.close,
                             onTap: () => Navigator.pop(context),
                           ),
+                          // Title label in center
+                          const Text(
+                            "SCAN POD",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                              fontSize: 13,
+                            ),
+                          ),
                           _buildGlassIconButton(
                             icon: controller.isFlashOn
                                 ? Icons.flash_on
@@ -186,10 +235,12 @@ class _ScannerScreenState extends State<ScannerScreen>
                       ),
                     ),
                     const Spacer(),
+
+                    // Hint text
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
-                        vertical: 12,
+                        vertical: 10,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.black54,
@@ -199,13 +250,13 @@ class _ScannerScreenState extends State<ScannerScreen>
                         "Align cocoa pod within frame",
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 28),
 
                     // Capture Button
                     GestureDetector(
@@ -216,7 +267,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withAlpha(128), 
+                            color: Colors.white.withAlpha(128),
                             width: 4,
                           ),
                         ),
@@ -242,7 +293,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                 ),
               ),
 
-              // 5. ANALYSIS OVERLAY (Shows when _isAnalyzing is true)
+              // 6. Analyzing overlay
               if (controller.isAnalyzing)
                 Container(
                   color: Colors.black87,
@@ -267,7 +318,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                       Text(
                         "Identifying disease patterns",
                         style: TextStyle(
-                          color: Colors.white.withAlpha(179), 
+                          color: Colors.white.withAlpha(179),
                           fontSize: 12,
                         ),
                       ),
@@ -293,21 +344,21 @@ class _ScannerScreenState extends State<ScannerScreen>
       left: left,
       right: right,
       child: Container(
-        height: 30,
-        width: 30,
+        height: 36,
+        width: 36,
         decoration: BoxDecoration(
           border: Border(
             top: top != null
-                ? const BorderSide(color: Colors.white, width: 4)
+                ? const BorderSide(color: Colors.greenAccent, width: 4)
                 : BorderSide.none,
             bottom: bottom != null
-                ? const BorderSide(color: Colors.white, width: 4)
+                ? const BorderSide(color: Colors.greenAccent, width: 4)
                 : BorderSide.none,
             left: left != null
-                ? const BorderSide(color: Colors.white, width: 4)
+                ? const BorderSide(color: Colors.greenAccent, width: 4)
                 : BorderSide.none,
             right: right != null
-                ? const BorderSide(color: Colors.white, width: 4)
+                ? const BorderSide(color: Colors.greenAccent, width: 4)
                 : BorderSide.none,
           ),
           borderRadius: BorderRadius.only(

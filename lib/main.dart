@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
 
-      home: const HomeScreen(),
+      home: const IntroductionScreen(),
       routes: {
         '/notification': (_) => const NotificationScreen(),
       },
