@@ -15,15 +15,12 @@ class CacaoGuideService {
     return _cache!;
   }
 
-  /// Returns the disease node map (e.g. diseases["black_pod_disease"])
   Future<Map<String, dynamic>?> getDisease(String diseaseKey) async {
     final guide = await loadGuide();
     final diseases = guide['diseases'] as Map<String, dynamic>?;
     return diseases?[diseaseKey] as Map<String, dynamic>?;
   }
 
-  /// Returns recommendations node for a disease + severity
-  /// e.g. diseases["black_pod_disease"]["recommendations"]["mild"]
   Future<Map<String, dynamic>?> getRecommendation({
     required String diseaseKey,
     required String severityKey,
@@ -34,18 +31,21 @@ class CacaoGuideService {
     final recs = disease['recommendations'] as Map<String, dynamic>?;
     if (recs == null) return null;
 
-    // Healthy uses "default" in your JSON
-    final key = (diseaseKey == 'healthy') ? 'default' : severityKey;
+    // ✅ FIX: Both 'healthy' and 'non_cacao' use 'default' key
+    final usesDefault = diseaseKey == 'healthy' || diseaseKey == 'non_cacao';
+    final key = usesDefault ? 'default' : severityKey;
 
     return recs[key] as Map<String, dynamic>?;
   }
 
-   Map<String, String> parseModelLabel(String label) {
+  /// Parses a model label string into diseaseKey + severityKey
+  Map<String, String> parseModelLabel(String label) {
     const severities = {'mild', 'moderate', 'severe'};
 
-    if (label == 'healthy') {
+    // ✅ Handle special single-word labels
+    if (label == 'healthy' || label == 'non_cacao') {
       return {
-        'diseaseKey': 'healthy',
+        'diseaseKey': label,
         'severityKey': 'default',
       };
     }
@@ -74,7 +74,8 @@ class CacaoGuideService {
     required String diseaseKey,
     required String severityKey,
   }) async {
-    if (diseaseKey == 'healthy') {
+    // ✅ FIX: Handle both 'healthy' and 'non_cacao' at the disease level
+    if (diseaseKey == 'healthy' || diseaseKey == 'non_cacao') {
       final disease = await getDisease(diseaseKey);
       final monitoringPlan = disease?['monitoring_plan'];
       if (monitoringPlan == null) return null;
@@ -100,7 +101,6 @@ class CacaoGuideService {
       diseaseKey: diseaseKey,
       severityKey: severityKey,
     );
-
     return (monitoringPlan?['rescan_after_days'] as num?)?.toInt() ?? 14;
   }
 
@@ -112,7 +112,6 @@ class CacaoGuideService {
       diseaseKey: diseaseKey,
       severityKey: severityKey,
     );
-
     return (monitoringPlan?['preferred_time_hour'] as num?)?.toInt() ?? 9;
   }
 
@@ -125,9 +124,7 @@ class CacaoGuideService {
       diseaseKey: diseaseKey,
       severityKey: severityKey,
     );
-
     final message = monitoringPlan?['message'] as Map<String, dynamic>?;
-
     return message?[languageCode] as String? ??
         message?['en'] as String? ??
         'Time to scan again.';
@@ -139,7 +136,6 @@ class CacaoGuideService {
   }) async {
     final disease = await getDisease(diseaseKey);
     final displayName = disease?['display_name'] as Map<String, dynamic>?;
-
     return displayName?[languageCode] as String? ??
         displayName?['en'] as String? ??
         diseaseKey;
