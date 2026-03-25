@@ -27,7 +27,7 @@ class SettingsTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withAlpha(7), // 0.03 * 255 = 7
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -39,7 +39,7 @@ class SettingsTile extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withAlpha(25), // 0.1 * 255 = 25
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: iconColor, size: 22),
