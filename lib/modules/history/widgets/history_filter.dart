@@ -90,8 +90,16 @@ class HistoryFilter extends StatelessWidget {
             );
           },
         );
-        onDateSelected(picked);
-      },
+// If user picks the same date again, clear it — acts as a toggle
+        if (picked != null && selectedDate != null &&
+            picked.year == selectedDate!.year &&
+            picked.month == selectedDate!.month &&
+            picked.day == selectedDate!.day) {
+          onDateSelected(null); // clear
+        } else {
+          onDateSelected(picked);
+        }
+              },
       avatar: Icon(
         hasDate ? Icons.event_available : Icons.calendar_month_outlined,
         size: 16,

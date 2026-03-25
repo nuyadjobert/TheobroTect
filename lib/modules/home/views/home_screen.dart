@@ -150,6 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
         key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5FAF3),
         extendBody: true,
+        resizeToAvoidBottomInset: false,
         drawer: const Drawer(
           backgroundColor: Colors.white,
           child: Column(
