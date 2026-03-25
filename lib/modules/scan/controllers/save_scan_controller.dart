@@ -1,18 +1,14 @@
 import 'package:cacao_apps/core/db/app_database.dart';
-import 'package:cacao_apps/core/location/location_service.dart';
 import 'package:flutter/material.dart';
 
 import '../services/scan_repository.dart';
+import 'location_picker_controller.dart';
 
-/// Handles all save-to-database logic for a scan result.
-/// Kept separate from [ScanResultController] for clean separation of concerns.
 class SaveScanController extends ChangeNotifier {
   final ScanRepository _scanRepo = ScanRepository();
-  final LocationService _locationService = LocationService();
 
-  // -------------------------
-  // State
-  // -------------------------
+  final LocationPickerController locationPicker = LocationPickerController();
+
   bool _isSaving = false;
   String? _saveError;
   bool _isSaved = false;
@@ -21,9 +17,11 @@ class SaveScanController extends ChangeNotifier {
   String? get saveError => _saveError;
   bool get isSaved => _isSaved;
 
-  // -------------------------
-  // Save scan record
-  // -------------------------
+  /// True when GPS is low/offline — UI should show the map picker sheet
+  bool get needsManualLocation => locationPicker.needsManualPick;
+
+  Future<void> detectLocation() => locationPicker.detectLocation();
+
   Future<bool> saveScanRecord({
     required String diseaseKey,
     required String severityKey,
@@ -37,6 +35,12 @@ class SaveScanController extends ChangeNotifier {
 
     if (isLoading) {
       _saveError = "Still loading scan data. Please try again.";
+      notifyListeners();
+      return false;
+    }
+
+    if (locationPicker.needsManualPick) {
+      _saveError = "Please pin your exact location on the map before saving.";
       notifyListeners();
       return false;
     }
@@ -56,7 +60,7 @@ class SaveScanController extends ChangeNotifier {
 
       final userId = u.userId;
       final now = DateTime.now();
-      final loc = await _locationService.getLocationSnapshot();
+      final loc = locationPicker.toLocationMap();
       final nextScanAt = rescanAfterDays != null
           ? now.add(Duration(days: rescanAfterDays))
           : null;
@@ -67,25 +71,15 @@ class SaveScanController extends ChangeNotifier {
         severityKey: severityKey,
         confidence: confidence,
         imagePath: imagePath,
-
         scannedAt: now,
         createdAt: now,
         nextScanAt: nextScanAt,
-
-        locationLat: (loc?['location_lat'] is num)
-            ? (loc!['location_lat'] as num).toDouble()
-            : null,
-        locationLng: (loc?['location_lng'] is num)
-            ? (loc!['location_lng'] as num).toDouble()
-            : null,
-        locationAccuracy: (loc?['location_accuracy'] is num)
-            ? (loc!['location_accuracy'] as num).toDouble()
-            : null,
+        locationLat: (loc?['location_lat'] is num) ? (loc!['location_lat'] as num).toDouble() : null,
+        locationLng: (loc?['location_lng'] is num) ? (loc!['location_lng'] as num).toDouble() : null,
+        locationAccuracy: (loc?['location_accuracy'] is num) ? (loc!['location_accuracy'] as num).toDouble() : null,
         locationLabel: loc?['location_label']?.toString(),
-
         notifLocalId: null,
         smsEnabled: smsEnabled,
-
         syncState: 'pending',
         backendId: null,
         syncAttempts: 0,
@@ -110,9 +104,9 @@ class SaveScanController extends ChangeNotifier {
     }
   }
 
-  /// Resets error state so UI can retry
   void clearError() {
     _saveError = null;
+    locationPicker.clearError();
     notifyListeners();
   }
 }
