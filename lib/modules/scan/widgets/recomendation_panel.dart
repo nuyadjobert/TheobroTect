@@ -246,7 +246,7 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
           boxShadow: isSelected 
             ? [
                 BoxShadow(
-                  color: const Color(0xFF2D6A4F).withAlpha(76),
+                  color: const Color(0xFF2D6A4F).withOpacity(0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
@@ -274,7 +274,7 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(10),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

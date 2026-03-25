@@ -65,8 +65,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: Switch.adaptive(
                   value: _isNotifEnabled, 
                   onChanged: (v) => setState(() => _isNotifEnabled = v), 
-                  activeColor: const Color(0xFF2D6A4F),
-                ),
+activeThumbColor: const Color(0xFF2D6A4F),      
+activeTrackColor: const Color(0xFF2D6A4F), 
+          ),
               ),
               
               const SettingsTile(

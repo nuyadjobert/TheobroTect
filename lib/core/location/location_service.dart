@@ -16,8 +16,10 @@ class LocationService {
     }
 
     final pos = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+  locationSettings: LocationSettings(
+    accuracy: LocationAccuracy.high,
+  ),
+);
 
     return {
       'location_lat': pos.latitude,

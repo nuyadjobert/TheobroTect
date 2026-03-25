@@ -19,21 +19,21 @@ class Lesson {
 // --- MASTER DATA MAP ---
 // This stores all your courses in one place
 final Map<String, List<Lesson>> courseDataMap = {
-  "Soil Fertility": [
-    Lesson(title: "Understanding Soil pH", duration: "6:24", isCompleted: true, videoUrl: "https://www.youtube.com/watch?v=CLMSSAAOueo"),
-    Lesson(title: "Nitrogen vs Phosphorus", duration: "10:15", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=5lO1kjsiSyo"),
-    Lesson(title: "Organic vs Synthetic", duration: "4:52", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=IMpEIOKdNJo"),
-    Lesson(title: "Composting Techniques", duration: "12:30", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=_K25WjjCBuw"),
+  "Soil Fertility Secrets": [
+    Lesson(title: "Understanding Soil pH", duration: "12:56", isCompleted: true, videoUrl: "https://www.youtube.com/watch?v=Izdgz-HBxlE"),
+    Lesson(title: "Nitrogen vs Phosphorus", duration: "6:27", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=jpYoiK5UlHA"),
+    Lesson(title: "Organic vs Synthetic", duration: "9:19", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=1IhKLu2gRbU"),
+    Lesson(title: "Composting Techniques", duration: "10:00", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=gjwZalZGmQA"),
   ],
-  "Rainy Season": [
-    Lesson(title: "Drainage for Heavy Rain", duration: "8:45", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=j5_mFjW82K0"),
-    Lesson(title: "Managing Wet Soil", duration: "11:20", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=vV689D6mY6U"),
-    Lesson(title: "Rainy Season Crops", duration: "9:15", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=68E6XfX6C98"),
+  "Rainy Season Care": [
+    Lesson(title: "Drainage for Heavy Rain", duration: "0:16", isCompleted: false, videoUrl: "https://www.youtube.com/shorts/H2t4-R1ghCs"),
+    Lesson(title: "Managing Wet Soil", duration: "11:21", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=QsaEmDF7heg"),
+    Lesson(title: "Rainy Season Crops", duration: "10:36", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=H4zScZTERQM"),
   ],
   "Organic Compost": [
-    Lesson(title: "How to Make Hot Compost", duration: "15:10", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=_K25WjjCBuw"),
+    Lesson(title: "How to Make Fast Compost", duration: "10:58", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=WS7X-5J5bQM"),
     Lesson(title: "Browns vs Greens Theory", duration: "7:45", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=M1kL49ZfLkE"),
-    Lesson(title: "Vermicomposting 101", duration: "12:00", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=V8miLevRI_o"),
+    Lesson(title: "Vermicomposting 101", duration: "8:52", isCompleted: false, videoUrl: "https://www.youtube.com/watch?v=oY97Aa4b6aM"),
   ],
 };
 
@@ -55,11 +55,8 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
   void initState() {
     super.initState();
     
-    // 1. Fetch the lessons based on the title passed to the screen
-    // If title doesn't match, default to Soil Fertility
-    activeLessons = courseDataMap[widget.title] ?? courseDataMap["Soil Fertility"]!;
+    activeLessons = courseDataMap[widget.title] ?? courseDataMap["Soil Fertility Secrets"]!;
 
-    // 2. Initialize controller with the first video of the selected course
     final String? videoId = YoutubePlayer.convertUrlToId(activeLessons[0].videoUrl);
     
     _controller = YoutubePlayerController(
@@ -237,7 +234,7 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             elevation: 4,
           ),
-          child: const Text("Resume Learning", 
+          child: const Text("Farming Technique's", 
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
         ),
       ),

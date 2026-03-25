@@ -52,130 +52,131 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         resizeToAvoidBottomInset: true,
-       body: ListenableBuilder( // Use ListenableBuilder to react to controller changes
+        body: ListenableBuilder(
+          // Use ListenableBuilder to react to controller changes
           listenable: controller,
           builder: (context, _) => SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 32.0,
-              vertical: 40.0,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Transform.translate(
-                        offset: const Offset(15, 0),
-                        child: Image.asset(
-                          'assets/images/theobrotect.png',
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 40.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Transform.translate(
+                          offset: const Offset(15, 0),
+                          child: Image.asset(
+                            'assets/images/theobrotect.png',
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.contain,
+                          ),
                         ),
-                      ),
-                      const Text(
-                        "TheobroTect",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: forestGreen,
-                          letterSpacing: -0.5,
+                        const Text(
+                          "TheobroTect",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: forestGreen,
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 50),
-
-                Center(
-                  child: Text(
-                    "Verify Identity",
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: forestGreen,
-                      letterSpacing: -1,
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "We've sent a 6-digit code to your email. Enter it below to proceed.",
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
 
-                const SizedBox(height: 48),
+                  const SizedBox(height: 50),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(
-                    6,
-                    (i) => _buildOtpField(context, i, colorScheme),
-                  ),
-                ),
-
-                const SizedBox(height: 48),
-                Center(
-                  child: Column(
-                    children: [
-                      AnimatedBuilder(
-                        animation: controller,
-                        builder: (_, _) {
-                          return Text(
-                            "RESEND CODE IN ${controller.timerText}",
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: controller.secondsLeft > 0
-                                  ? colorScheme.outline
-                                  : forestGreen,
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          );
-                        },
+                  Center(
+                    child: Text(
+                      "Verify Identity",
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: forestGreen,
+                        letterSpacing: -1,
                       ),
-                      AnimatedBuilder(
-                        animation: controller,
-                        builder: (_, _) {
-                          return TextButton(
-                            onPressed: controller.secondsLeft == 0
-                                ? () {
-                                    controller.startTimer(200);
-                                  }
-                                : null,
-                            style: TextButton.styleFrom(
-                              foregroundColor: forestGreen,
-                            ),
-                            child: Text(
-                              controller.secondsLeft == 0
-                                  ? "Resend New Code"
-                                  : "Didn't get a code?",
-                              style: const TextStyle(
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "We've sent a 6-digit code to your email. Enter it below to proceed.",
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                  ),
+
+                  const SizedBox(height: 48),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(
+                      6,
+                      (i) => _buildOtpField(context, i, colorScheme),
+                    ),
+                  ),
+
+                  const SizedBox(height: 48),
+                  Center(
+                    child: Column(
+                      children: [
+                        AnimatedBuilder(
+                          animation: controller,
+                          builder: (_, _) {
+                            return Text(
+                              "RESEND CODE IN ${controller.timerText}",
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: controller.secondsLeft > 0
+                                    ? colorScheme.outline
+                                    : forestGreen,
+                                letterSpacing: 1.2,
                                 fontWeight: FontWeight.bold,
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                            );
+                          },
+                        ),
+                        AnimatedBuilder(
+                          animation: controller,
+                          builder: (_, _) {
+                            return TextButton(
+                              onPressed: controller.secondsLeft == 0
+                                  ? () {
+                                      controller.startTimer(200);
+                                    }
+                                  : null,
+                              style: TextButton.styleFrom(
+                                foregroundColor: forestGreen,
+                              ),
+                              child: Text(
+                                controller.secondsLeft == 0
+                                    ? "Resend New Code"
+                                    : "Didn't get a code?",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 32),
+                  const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     height: 64,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: controller.isLoading 
-                            ? forestGreen.withAlpha(179) 
+                        backgroundColor: controller.isLoading
+                            ? forestGreen.withAlpha(179)
                             : forestGreen,
                         foregroundColor: Colors.white,
                         elevation: controller.isLoading ? 0 : 4,
@@ -184,73 +185,78 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                          onPressed: controller.isLoading
-                        ? null
-                        : () async {
-                            await controller.verify();
-                            if (!mounted) return;
+                      onPressed: controller.isLoading
+                          ? null
+                          : () async {
+                              final messenger = ScaffoldMessenger.of(
+                                context,
+                              ); // ✅ capture early
+                              final navigator = Navigator.of(context);
 
-                            if (controller.isVerified ||
-                                controller.isNewUserRequired) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: const [
-                                      Icon(
-                                        Icons.verified_user_rounded,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: 12),
-                                      Text("Verification Successful!"),
-                                    ],
-                                  ),
-                                  backgroundColor:
-                                      forestGreen, 
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: const EdgeInsets.all(20),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              );
-                            }
+                              await controller.verify();
 
-                            if (controller.isNewUserRequired) {
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (_) => RegistrationScreen(
-                                    controller: RegistrationController(
-                                      AuthService(DioClient.dio),
-                                    ),
-                                    model: RegistrationRequest(
-                                      email: controller.email,
-                                      name: '',
-                                      address: '',
-                                      contactNumber: '',
-                                    ),
-                                  ),
-                                ),
-                              );
-                            } else if (controller.isVerified) {
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (_) => const HomeScreen(),
-                                ),
-                                (route) => false,
-                              );
-                            } else {
-                              final msg = controller.errorMessage;
-                              if (msg != null && msg.isNotEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
+                              if (!mounted) return;
+
+                              if (controller.isVerified ||
+                                  controller.isNewUserRequired) {
+                                messenger.showSnackBar(
                                   SnackBar(
-                                    content: Text(msg),
-                                    backgroundColor: Colors.redAccent,
+                                    content: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.verified_user_rounded,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(width: 12),
+                                        Text("Verification Successful!"),
+                                      ],
+                                    ),
+                                    backgroundColor: forestGreen,
                                     behavior: SnackBarBehavior.floating,
+                                    margin: const EdgeInsets.all(20),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
                                 );
                               }
-                            }
-                          },
+
+                              if (controller.isNewUserRequired) {
+                                navigator.pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (_) => RegistrationScreen(
+                                      controller: RegistrationController(
+                                        AuthService(DioClient.dio),
+                                      ),
+                                      model: RegistrationRequest(
+                                        email: controller.email,
+                                        name: '',
+                                        address: '',
+                                        contactNumber: '',
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              } else if (controller.isVerified) {
+                                navigator.pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                    builder: (_) => const HomeScreen(),
+                                  ),
+                                  (route) => false,
+                                );
+                              } else {
+                                final msg = controller.errorMessage;
+                                if (msg != null && msg.isNotEmpty) {
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(msg),
+                                      backgroundColor: Colors.redAccent,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: controller.isLoading
@@ -263,7 +269,9 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 3,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
                                     ),
                                   ),
                                   SizedBox(width: 16),
@@ -286,32 +294,32 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                                   letterSpacing: 2,
                                 ),
                               ),
-                  ),
-                ),),
-
-                const SizedBox(height: 24),
-
-                Center(
-                  child: TextButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                    label: const Text(
-                      "BACK TO SIGN IN",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: colorScheme.outline,
+                      ),
                     ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 24),
+
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                      label: const Text(
+                        "BACK TO SIGN IN",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: colorScheme.outline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-      ),
     );
-    
   }
 
   Widget _buildOtpField(
@@ -323,7 +331,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
       width: 48,
       height: 64,
       decoration: BoxDecoration(
-        color: lightForest.withAlpha(77), 
+        color: lightForest.withAlpha(77),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: forestGreen.withAlpha(25), width: 1),
       ),
@@ -332,8 +340,8 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
         autofocus: index == 0,
         onChanged: (value) {
           if (value.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
-          if (value.isEmpty && index > 0){
-             FocusScope.of(context).previousFocus();
+          if (value.isEmpty && index > 0) {
+            FocusScope.of(context).previousFocus();
           }
         },
         textAlign: TextAlign.center,

@@ -90,11 +90,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ShowCaseWidget.of(context).startShowCase([
-        _profileKey,
-        _catalogKey,
-        _scannerKey,
-      ]);
+      ShowcaseView.get().startShowCase([
+  _profileKey,
+  _catalogKey,
+  _scannerKey,
+]);
     });
   }
 
