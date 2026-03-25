@@ -34,16 +34,20 @@ void main() async {
 
   await NotificationService.instance.init();
 
-final authService = AuthService(DioClient.dio);
+  final authService = AuthService(DioClient.dio);
+  controller = RegistrationController(authService);
 
-controller = RegistrationController(authService);
+  // ✅ Check token before app starts
+  final token = await tokenStorage.get();
+  final bool isLoggedIn = token != null && token.isNotEmpty;
 
   ShowcaseView.register();
-  runApp(const MyApp());
+  runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+  const MyApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +56,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
 
-      home: const HomeScreen(),
+      // ✅ Route based on login state
+      home: isLoggedIn ? const HomeScreen() : const IntroductionScreen(),
       routes: {
         '/notification': (_) => const NotificationScreen(),
       },
