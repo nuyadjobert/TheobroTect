@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:shimmer/shimmer.dart'; 
 import '../../disease/views/disease_detail_sheet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 import '../widgets/total_scanned_card.dart';
 import '../widgets/disease_slider.dart';
@@ -80,23 +82,35 @@ class _HomeScreenState extends State<HomeScreen> {
     },
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-    _controller.startBackgroundServices().then((_) {
-       if (mounted) setState(() {}); 
-    });
+ // Replace your initState with this:
+@override
+void initState() {
+  super.initState();
+  _pageController = PageController();
+  _controller.startBackgroundServices().then((_) {
+    if (mounted) setState(() {});
+  });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ShowcaseView.get().startShowCase([
-  _profileKey,
-  _catalogKey,
-  _scannerKey,
-]);
-    });
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _maybeStartShowcase();
+  });
+}
+
+// Add this new method:
+Future<void> _maybeStartShowcase() async {
+  if (!mounted) return;
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeenShowcase = prefs.getBool('has_seen_showcase') ?? false;
+
+  if (!hasSeenShowcase) {
+    ShowcaseView.get().startShowCase([
+      _profileKey,
+      _catalogKey,
+      _scannerKey,
+    ]);
+    await prefs.setBool('has_seen_showcase', true);
   }
+}
 
   @override
   void dispose() {
