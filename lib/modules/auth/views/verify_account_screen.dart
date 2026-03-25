@@ -128,7 +128,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                     children: [
                       AnimatedBuilder(
                         animation: controller,
-                        builder: (_, __) {
+                        builder: (_, _) {
                           return Text(
                             "RESEND CODE IN ${controller.timerText}",
                             style: theme.textTheme.labelLarge?.copyWith(
@@ -175,11 +175,11 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: controller.isLoading 
-                            ? forestGreen.withOpacity(0.7) 
+                            ? forestGreen.withAlpha(179) 
                             : forestGreen,
                         foregroundColor: Colors.white,
                         elevation: controller.isLoading ? 0 : 4,
-                        shadowColor: forestGreen.withOpacity(0.4),
+                        shadowColor: forestGreen.withAlpha(102),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),

@@ -15,7 +15,7 @@ class SeverityAlertCard extends StatelessWidget {
         // Soft elevation to make it look like a physical card
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withOpacity(0.08),
+            color: Colors.red.withAlpha(20),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -30,7 +30,7 @@ class SeverityAlertCard extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.red.withOpacity(0.05), Colors.white],
+                    colors: [Colors.red.withAlpha(12), Colors.white],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -52,7 +52,7 @@ class SeverityAlertCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withAlpha(25),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.warning_rounded, color: Colors.red, size: 28),
@@ -75,7 +75,7 @@ class SeverityAlertCard extends StatelessWidget {
                       Text(
                         "Urgent Action Required",
                         style: TextStyle(
-                          color: Colors.red.withOpacity(0.7),
+                          color: Colors.red.withAlpha(179),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -84,7 +84,7 @@ class SeverityAlertCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   // "Checking" mark to show the status is verified
-                  Icon(Icons.check_circle_outline, color: Colors.red.withOpacity(0.3), size: 20),
+                  Icon(Icons.check_circle_outline, color: Colors.red.withAlpha(76), size: 20),
                 ],
               ),
             ),

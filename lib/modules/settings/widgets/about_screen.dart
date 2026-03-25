@@ -40,7 +40,7 @@ class AboutScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF2D6A4F).withOpacity(0.2),
+                            color: const Color(0xFF2D6A4F).withAlpha(51),
                             blurRadius: 15,
                             offset: const Offset(0, 8),
                           )
@@ -155,7 +155,7 @@ class AboutScreen extends StatelessWidget {
             border: Border.all(color: Colors.white, width: 4),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withAlpha(20),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               )
@@ -180,7 +180,7 @@ class AboutScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFF2D6A4F).withOpacity(0.1),
+            color: const Color(0xFF2D6A4F).withAlpha(25),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -205,9 +205,9 @@ class AboutScreen extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.grey.withOpacity(0.0), 
-            Colors.grey.withOpacity(0.3), 
-            Colors.grey.withOpacity(0.0)
+            Colors.grey.withAlpha(0), 
+            Colors.grey.withAlpha(76), 
+            Colors.grey.withAlpha(0)
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,

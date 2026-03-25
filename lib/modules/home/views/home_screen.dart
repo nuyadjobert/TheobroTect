@@ -6,7 +6,6 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:shimmer/shimmer.dart'; 
 import '../../disease/views/disease_detail_sheet.dart';
 
-import '../widgets/weather_card.dart';
 import '../widgets/total_scanned_card.dart';
 import '../widgets/disease_slider.dart';
 import '../widgets/inspection_card.dart';
@@ -36,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final HomeController _controller = HomeController();
 
-  bool _showWeatherTip = false;
   int _bottomNavIndex = 0;
   int _targetIndex = 0; 
   late PageController _pageController;
@@ -337,12 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                WeatherCard(
-                  showWeatherTip: _showWeatherTip,
-                  onTap: () => setState(() => _showWeatherTip = !_showWeatherTip),
-                ),
-                const SizedBox(height: 15),
-                Showcase(
+                            Showcase(
                   key: _catalogKey,
                   title: 'Disease Catalog',
                   description: 'Tap or swipe to see symptoms of common cacao diseases.',
@@ -408,7 +401,7 @@ class SkeletonLayout extends StatelessWidget {
         return ListView.builder(
           padding: const EdgeInsets.all(20),
           itemCount: 8,
-          itemBuilder: (_, __) => Padding(
+          itemBuilder: (_, _) => Padding(
             padding: const EdgeInsets.only(bottom: 15),
             child: Row(
               children: [
@@ -442,7 +435,7 @@ class SkeletonLayout extends StatelessWidget {
                     crossAxisCount: 2, crossAxisSpacing: 15, mainAxisSpacing: 15, childAspectRatio: 0.8
                   ),
                   itemCount: 4,
-                  itemBuilder: (_, __) => Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15))),
+                  itemBuilder: (_, _) => Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15))),
                 ),
               ),
             ],

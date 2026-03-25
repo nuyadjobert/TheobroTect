@@ -24,7 +24,7 @@ class GuideCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: themeColor.withOpacity(0.12),
+            color: themeColor.withAlpha(30), // 0.12 * 255 = 30
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -46,7 +46,7 @@ class GuideCard extends StatelessWidget {
                   child: Icon(
                     Icons.menu_book_rounded,
                     size: 100,
-                    color: themeColor.withOpacity(0.05),
+                    color: themeColor.withAlpha(13), // 0.05 * 255 = 13
                   ),
                 ),
                 Padding(
@@ -57,7 +57,7 @@ class GuideCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: themeColor.withOpacity(0.1),
+                          color: themeColor.withAlpha(25), // 0.1 * 255 = 25
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(Icons.auto_stories_rounded, color: themeColor, size: 20),

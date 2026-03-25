@@ -53,7 +53,7 @@ class NotificationScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2D6A4F).withOpacity(0.3),
+                    color: const Color(0xFF2D6A4F).withAlpha(77), // 0.3 * 255 = 77
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -67,7 +67,7 @@ class NotificationScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withAlpha(51), // 0.2 * 255 = 51
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.analytics_outlined, color: Colors.white, size: 20),
@@ -87,7 +87,7 @@ class NotificationScreen extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text(
                     "Identified in Sector B • 2 hours ago",
-                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                    style: TextStyle(color: Colors.white.withAlpha(179), fontSize: 13), // 0.7 * 255 = 179
                   ),
                 ],
               ),
