@@ -179,7 +179,7 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
   return Container(
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(28),
-      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, 10))],
+      boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 20, offset: const Offset(0, 10))],
     ),
     child: ClipRRect(
       borderRadius: BorderRadius.circular(28),
@@ -268,7 +268,7 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
                 duration: const Duration(milliseconds: 250),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: selected ? forestGreen : Colors.black.withValues(alpha: 0.05),
+                  color: selected ? forestGreen : Colors.black.withAlpha(13),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -299,9 +299,9 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.black.withAlpha(13)), // 0.05 * 255 = 13
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))
+          BoxShadow(color: Colors.black.withAlpha(51), blurRadius: 10, offset: const Offset(0, 4)) // 0.02 * 255 = 51
         ],
       ),
       child: Row(

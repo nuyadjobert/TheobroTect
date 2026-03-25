@@ -17,7 +17,7 @@ class PreventionTipCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2D6A4F).withValues(alpha: 0.3),
+            color: const Color(0xFF2D6A4F).withAlpha(77), // 0.3 * 255 = 77
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -55,7 +55,7 @@ class PreventionTipCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2), 
+              color: Colors.white.withAlpha(51), // 0.2 * 255 = 51
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.sanitizer_rounded, color: Colors.white, size: 28),

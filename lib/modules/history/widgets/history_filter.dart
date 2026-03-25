@@ -61,7 +61,7 @@ class HistoryFilter extends StatelessWidget {
                 shadowColor: Colors.black26,
               ),
             );
-          })
+          }),
         ],
       ),
     );

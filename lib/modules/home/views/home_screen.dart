@@ -6,7 +6,6 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:shimmer/shimmer.dart'; 
 import '../../disease/views/disease_detail_sheet.dart';
 
-import '../widgets/weather_card.dart';
 import '../widgets/total_scanned_card.dart';
 import '../widgets/disease_slider.dart';
 import '../widgets/inspection_card.dart';
@@ -36,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final HomeController _controller = HomeController();
 
-  bool _showWeatherTip = false;
   int _bottomNavIndex = 0;
   int _targetIndex = 0; 
   late PageController _pageController;
@@ -337,12 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                WeatherCard(
-                  showWeatherTip: _showWeatherTip,
-                  onTap: () => setState(() => _showWeatherTip = !_showWeatherTip),
-                ),
-                const SizedBox(height: 15),
-                Showcase(
+                            Showcase(
                   key: _catalogKey,
                   title: 'Disease Catalog',
                   description: 'Tap or swipe to see symptoms of common cacao diseases.',

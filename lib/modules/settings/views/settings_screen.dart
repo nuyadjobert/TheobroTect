@@ -121,7 +121,7 @@ activeTrackColor: const Color(0xFF2D6A4F),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2D6A4F).withValues(alpha: 0.3),
+            color: const Color(0xFF2D6A4F).withAlpha(77), // 0.3 * 255 = 77
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

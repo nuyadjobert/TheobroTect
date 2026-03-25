@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart';
-import '../widgets/weather_card.dart';
 import '../widgets/disease_slider.dart';
 import '../widgets/inspection_card.dart';
 import '../widgets/notification_icon.dart';
@@ -88,13 +87,7 @@ class HomeContent extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                // Weather Section
-                WeatherCard(
-                  showWeatherTip: showWeatherTip,
-                  onTap: onWeatherTipToggle,
-                ),
-                const SizedBox(height: 15),
-                // NEW SLIDER SECTION
+              
                 Showcase(
                   key: catalogKey,
                   title: 'Disease Catalog',
