@@ -14,10 +14,10 @@ class ScanSyncService {
     for (final row in pending) {
       final localId = (row['local_id'] ?? '').toString();
       if (localId.isEmpty) continue;
+
       final payload = {
         'local_id': row['local_id'],
         'disease_key': row['disease_key'],
-        'image_url': row['image_path'],
         'severity_key': row['severity_key'],
         'confidence': row['confidence'],
         'location_lat': row['location_lat'],
@@ -29,19 +29,20 @@ class ScanSyncService {
       };
 
       try {
-        final idempotencyKey = (row['idempotency_key'] ?? row['local_id'])
-            .toString();
+        final idempotencyKey =
+            (row['idempotency_key'] ?? row['local_id']).toString();
 
         final res = await dio.post(
-          '/api/scans/sync',
+          '/api/theobrotect/scans/scan-results',
           data: payload,
           options: Options(headers: {'Idempotency-Key': idempotencyKey}),
         );
 
         final data = res.data as Map<String, dynamic>;
         if (data['status'] == 'OK') {
-          final scan = data['scan'] as Map<String, dynamic>?;
-          final backendId = (scan?['id'] ?? scan?['_id'] ?? '').toString();
+          final scan = data['data'] as Map<String, dynamic>?;
+          final backendId =
+              (scan?['id'] ?? scan?['_id'] ?? '').toString();
 
           await db.markScanSynced(
             localId: localId,
@@ -53,12 +54,26 @@ class ScanSyncService {
             errorMessage: 'Backend status: ${data['status']}',
           );
         }
+      } on DioException catch (e) {
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.sendTimeout ||
+            e.type == DioExceptionType.receiveTimeout ||
+            e.type == DioExceptionType.connectionError) {
+          return; 
+        }
+
+        await db.markScanSyncFailed(
+          localId: localId,
+          errorMessage: e.toString(),
+        );
       } catch (e) {
         await db.markScanSyncFailed(
           localId: localId,
           errorMessage: e.toString(),
         );
       }
+
+      await Future.delayed(const Duration(milliseconds: 100));
     }
   }
 }

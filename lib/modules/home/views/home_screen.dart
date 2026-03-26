@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cacao_apps/core/sync/sync_trigger.dart';
 import 'package:cacao_apps/modules/settings/views/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -82,39 +83,32 @@ class _HomeScreenState extends State<HomeScreen> {
     },
   ];
 
- // Replace your initState with this:
-@override
-void initState() {
-  super.initState();
-  _pageController = PageController();
-  _controller.startBackgroundServices().then((_) {
-    if (mounted) setState(() {});
-  });
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    _maybeStartShowcase();
-  });
-}
+   final _syncTrigger = SyncTrigger();
 
-// Add this new method:
-Future<void> _maybeStartShowcase() async {
-  if (!mounted) return;
-  final prefs = await SharedPreferences.getInstance();
-  final hasSeenShowcase = prefs.getBool('has_seen_showcase') ?? false;
-
-  if (!hasSeenShowcase) {
-    ShowcaseView.get().startShowCase([
-      _profileKey,
-      _catalogKey,
-      _scannerKey,
-    ]);
-    await prefs.setBool('has_seen_showcase', true);
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _controller.startBackgroundServices().then((_) {
+       if (mounted) setState(() {}); 
+    });
+    _syncTrigger.start();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ShowcaseView.get().startShowCase([
+  _profileKey,
+  _catalogKey,
+  _scannerKey,
+]);
+    });
   }
 }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _syncTrigger.stop();
     super.dispose();
   }
 
