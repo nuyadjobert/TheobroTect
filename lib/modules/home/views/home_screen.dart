@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cacao_apps/core/sync/sync_trigger.dart';
 import 'package:cacao_apps/modules/settings/views/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -80,6 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
     },
   ];
 
+
+   final _syncTrigger = SyncTrigger();
+
   @override
   void initState() {
     super.initState();
@@ -87,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _controller.startBackgroundServices().then((_) {
        if (mounted) setState(() {}); 
     });
-
+    _syncTrigger.start();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ShowcaseView.get().startShowCase([
@@ -101,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _syncTrigger.stop();
     super.dispose();
   }
 
