@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import '../widgets/settings_tile.dart'; 
 import '../widgets/help_center_screen.dart'; 
 import '../widgets/about_screen.dart';
+import 'package:cacao_apps/modules/auth/login_factory.dart';
+import '../controllers/settings_controller.dart';
+
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -13,6 +16,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isNotifEnabled = true;
+  final SettingsController _controller = SettingsController();
 
   @override
   Widget build(BuildContext context) {
@@ -187,31 +191,60 @@ activeTrackColor: const Color(0xFF2D6A4F),
   }
 
   Widget _buildLogoutButton() {
-    return Center(
-      child: InkWell(
-        onTap: () {
-          // Add your Logout logic here
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
-              SizedBox(width: 8),
-              Text(
-                "Logout Account",
-                style: TextStyle(
-                  color: Colors.redAccent, 
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
+  return Center(
+    child: InkWell(
+      onTap: () async {
+        // Show confirmation dialog first
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text("Logout", style: TextStyle(fontWeight: FontWeight.bold)),
+            content: const Text("Are you sure you want to logout?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
+        );
+
+        if (confirm != true) return;
+
+        // Clear token then go to IntroductionScreen
+await _controller.logout();
+
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+  MaterialPageRoute(builder: (_) => buildLoginScreen()),
+  (route) => false,
+);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+            SizedBox(width: 8),
+            Text(
+              "Logout Account",
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

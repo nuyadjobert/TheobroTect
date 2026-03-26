@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:shimmer/shimmer.dart'; 
 import '../../disease/views/disease_detail_sheet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 import '../widgets/total_scanned_card.dart';
 import '../widgets/disease_slider.dart';
@@ -101,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
 ]);
     });
   }
+}
 
   @override
   void dispose() {
@@ -155,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
         key: _scaffoldKey,
         backgroundColor: const Color(0xFFF5FAF3),
         extendBody: true,
+        resizeToAvoidBottomInset: false,
         drawer: const Drawer(
           backgroundColor: Colors.white,
           child: Column(

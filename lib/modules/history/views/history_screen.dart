@@ -47,7 +47,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.tune, color: Colors.white),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
             onPressed: () => setState(() {}),
           ),
         ],
@@ -84,11 +84,40 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                   // --- START FILTERING LOGIC ---
                   final rawData = snapshot.data ?? [];
-                  final filteredData = rawData.where((item) {
-                    final title = item['disease_key'].toString().toLowerCase();
-                    final searchText = _searchController.text.toLowerCase();
-                    bool matchesSearch = title.contains(searchText);
+final filteredData = rawData.where((item) {
+  final searchText = _searchController.text.toLowerCase();
 
+  // Determine status for this item
+  String itemStatus;
+  if (item['is_treated'] == 1 || item['status'] == 'treated') {
+    itemStatus = 'treated';
+  } else if (item['severity_key'] == 'default' || item['disease_key'] == 'healthy') {
+    itemStatus = 'healthy';
+  } else {
+    itemStatus = 'infected';
+  }
+
+  final title = item['disease_key'].toString().replaceAll('_', ' ').toLowerCase();
+  final date = item['created_at'].toString().toLowerCase();
+
+  // Search matches disease name, status, or date
+  bool matchesSearch = title.contains(searchText) ||
+      itemStatus.contains(searchText) ||
+      date.contains(searchText);
+
+  // ✅ Date filter — match by year, month, day
+  bool matchesDate = true;
+  if (_controller.selectedDate != null) {
+    try {
+      final itemDate = DateTime.parse(item['created_at'].toString());
+      final selected = _controller.selectedDate!;
+      matchesDate = itemDate.year == selected.year &&
+          itemDate.month == selected.month &&
+          itemDate.day == selected.day;
+    } catch (_) {
+      matchesDate = false;
+    }
+  }
                     bool matchesFilter = true;
                     if (_controller.activeFilter == "Healthy") {
                       matchesFilter =
@@ -105,7 +134,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           item['status'] == 'treated';
                     }
 
-                    return matchesSearch && matchesFilter;
+return matchesSearch && matchesFilter && matchesDate;
                   }).toList();
 
                   if (filteredData.isEmpty) {
