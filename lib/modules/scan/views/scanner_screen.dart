@@ -19,7 +19,6 @@ class _ScannerScreenState extends State<ScannerScreen>
   late AnimationController _animationController;
   late Animation<double> _animation;
 
-  // ── Rectangle dimensions for cacao pod frame ──
   static const double _frameWidth = 280;
   static const double _frameHeight = 400; // taller than wide = portrait pod shape
 
@@ -235,30 +234,6 @@ class _ScannerScreenState extends State<ScannerScreen>
                       ),
                     ),
                     const Spacer(),
-
-                    // Hint text
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: const Text(
-                        "Align cocoa pod within frame",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // Capture Button
                     GestureDetector(
                       onTap: controller.isAnalyzing ? null : _onCapture,
                       child: Container(
