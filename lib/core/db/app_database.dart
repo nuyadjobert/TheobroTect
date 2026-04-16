@@ -135,15 +135,20 @@ class AppDatabase {
     await database.delete('users');
   }
 
-  Future<List<Map<String, Object?>>> getPendingScans({int limit = 20}) async {
-    final database = await db;
-    return database.query(
-      'scan_history',
-      where: "sync_state IN ('pending','error')",
-      orderBy: 'scanned_at ASC',
-      limit: limit,
-    );
-  }
+Future<List<Map<String, Object?>>> getPendingScans({
+  required String userId,   // ← add this
+  int limit = 20,
+}) async {
+  final database = await db;
+  return database.query(
+    'scan_history',
+    where: "user_id = ? AND sync_state IN ('pending','error')",
+    whereArgs: [userId],
+    orderBy: 'scanned_at ASC',
+    limit: limit,
+  );
+}
+
 
   Future<void> markScanSynced({
     required String localId,

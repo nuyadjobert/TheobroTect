@@ -70,6 +70,7 @@ class ScanResultController extends ChangeNotifier {
   // Bookmark (derived from save state)
   // -------------------------
   bool get isBookmarked => saveScan.isSaved;
+  bool get isNonCacao => diseaseKey == 'non_cacao';
 
   void toggleBookmark() {
     // Bookmark is now driven by saveScan.isSaved — call saveScanRecord() to save
@@ -185,6 +186,7 @@ class ScanResultController extends ChangeNotifier {
     if (n.contains('pod borer')) return 'cacao_pod_borer';
     if (n.contains('mealybug')) return 'mealybug';
     if (n.contains('healthy')) return 'healthy';
+    if (n.contains('non_cacao') || n.contains('non cacao')) return 'non_cacao';
     return 'healthy';
   }
 

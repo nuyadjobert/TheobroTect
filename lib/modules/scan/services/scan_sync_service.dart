@@ -8,7 +8,13 @@ class ScanSyncService {
   ScanSyncService({required this.dio, required this.db});
 
   Future<void> syncPendingScans() async {
-    final pending = await db.getPendingScans(limit: 50);
+    final currentUser = await db.getCurrentUser();
+    if (currentUser == null) return;
+
+    final pending = await db.getPendingScans(
+      userId: currentUser.userId,
+      limit: 50,
+    );
     if (pending.isEmpty) return;
 
     for (final row in pending) {
@@ -29,8 +35,8 @@ class ScanSyncService {
       };
 
       try {
-        final idempotencyKey =
-            (row['idempotency_key'] ?? row['local_id']).toString();
+        final idempotencyKey = (row['idempotency_key'] ?? row['local_id'])
+            .toString();
 
         final res = await dio.post(
           '/api/theobrotect/scans/scan-results',
@@ -41,8 +47,7 @@ class ScanSyncService {
         final data = res.data as Map<String, dynamic>;
         if (data['status'] == 'OK') {
           final scan = data['data'] as Map<String, dynamic>?;
-          final backendId =
-              (scan?['id'] ?? scan?['_id'] ?? '').toString();
+          final backendId = (scan?['id'] ?? scan?['_id'] ?? '').toString();
 
           await db.markScanSynced(
             localId: localId,
@@ -59,7 +64,7 @@ class ScanSyncService {
             e.type == DioExceptionType.sendTimeout ||
             e.type == DioExceptionType.receiveTimeout ||
             e.type == DioExceptionType.connectionError) {
-          return; 
+          return;
         }
 
         await db.markScanSyncFailed(

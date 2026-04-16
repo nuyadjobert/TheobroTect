@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../widgets/settings_tile.dart'; 
-import '../widgets/help_center_screen.dart'; 
+import '../widgets/settings_tile.dart';
+import '../widgets/help_center_screen.dart';
 import '../widgets/about_screen.dart';
 import 'package:cacao_apps/modules/auth/login_factory.dart';
 import '../controllers/settings_controller.dart';
-
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -20,90 +19,83 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. SYSTEM UI CONFIGURATION
-    // This makes the status bar at the top visible and readable
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // Makes the bar blend with your app color
-        statusBarIconBrightness: Brightness.dark, // Dark icons (time/battery) for light BG (Android)
-        statusBarBrightness: Brightness.light, // Dark icons for iOS
-        systemNavigationBarColor: Colors.white, // Bottom nav bar color
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
         backgroundColor: const Color(0xFFF9FBF9),
-        // 2. APPBAR CONFIGURATION
-        // We set the background to transparent to let the Scaffold color show through
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          systemOverlayStyle: SystemUiOverlayStyle.dark, // Extra backup for visibility
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
           elevation: 0,
           centerTitle: true,
           title: const Text(
             "Settings",
             style: TextStyle(
-              color: Color(0xFF1B3022), 
+              color: Color(0xFF1B3022),
               fontWeight: FontWeight.w900,
               letterSpacing: 0.5,
             ),
           ),
         ),
+        // Returning to a single scrollable area
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          // Added significant bottom padding (100) to ensure the logout button 
+          // can be scrolled well above the bottom of the screen
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
-              
-              // Enhanced Profile Card
               _buildProfileCard(),
-              
               const SizedBox(height: 32),
               _buildSectionLabel("GENERAL"),
-              
               SettingsTile(
                 icon: Icons.notifications_active_outlined,
                 title: "Notifications",
                 onTap: () => setState(() => _isNotifEnabled = !_isNotifEnabled),
                 trailing: Switch.adaptive(
-                  value: _isNotifEnabled, 
-                  onChanged: (v) => setState(() => _isNotifEnabled = v), 
-activeThumbColor: const Color(0xFF2D6A4F),      
-activeTrackColor: const Color(0xFF2D6A4F), 
-          ),
+                  value: _isNotifEnabled,
+                  onChanged: (v) => setState(() => _isNotifEnabled = v),
+                  activeThumbColor: const Color(0xFF2D6A4F),
+                  activeTrackColor: const Color(0xFF2D6A4F),
+                ),
               ),
-              
               const SettingsTile(
                 icon: Icons.language_rounded,
                 title: "App Language",
                 subtitle: "English (US)",
               ),
-
               const SizedBox(height: 24),
               _buildSectionLabel("SUPPORT"),
-              
               SettingsTile(
-                icon: Icons.help_outline_rounded, 
+                icon: Icons.help_outline_rounded,
                 title: "Help Center",
                 onTap: () => Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (context) => const HelpCenterScreen())
+                  context,
+                  MaterialPageRoute(builder: (context) => const HelpCenterScreen()),
+                ),
+              ),
+              SettingsTile(
+                icon: Icons.info_outline_rounded,
+                title: "About TheobroTect",
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutScreen()),
                 ),
               ),
               
-              SettingsTile(
-                icon: Icons.info_outline_rounded, 
-                title: "About TheobroTect",
-                onTap: () => Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (context) => const AboutScreen())
-                ),
-              ),
-
-              const SizedBox(height: 40),
+              // Spacing before the button
+              const SizedBox(height: 60),
+              
+              // Button is now part of the scrollable list
               _buildLogoutButton(),
-              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -111,7 +103,7 @@ activeTrackColor: const Color(0xFF2D6A4F),
     );
   }
 
-  // --- ENHANCED HELPER WIDGETS ---
+  // --- HELPER WIDGETS ---
 
   Widget _buildProfileCard() {
     return Container(
@@ -125,7 +117,7 @@ activeTrackColor: const Color(0xFF2D6A4F),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2D6A4F).withAlpha(77), // 0.3 * 255 = 77
+            color: const Color(0xFF2D6A4F).withAlpha(77),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -152,11 +144,7 @@ activeTrackColor: const Color(0xFF2D6A4F),
               children: const [
                 Text(
                   "Farmer John",
-                  style: TextStyle(
-                    color: Colors.white, 
-                    fontWeight: FontWeight.bold, 
-                    fontSize: 18,
-                  ),
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 SizedBox(height: 2),
                 Text(
@@ -181,9 +169,9 @@ activeTrackColor: const Color(0xFF2D6A4F),
       child: Text(
         text,
         style: const TextStyle(
-          fontSize: 11, 
-          fontWeight: FontWeight.w900, 
-          color: Colors.grey, 
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          color: Colors.grey,
           letterSpacing: 1.8,
         ),
       ),
@@ -191,60 +179,52 @@ activeTrackColor: const Color(0xFF2D6A4F),
   }
 
   Widget _buildLogoutButton() {
-  return Center(
-    child: InkWell(
-      onTap: () async {
-        // Show confirmation dialog first
-        final confirm = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text("Logout", style: TextStyle(fontWeight: FontWeight.bold)),
-            content: const Text("Are you sure you want to logout?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+    return Center(
+      child: SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: OutlinedButton.icon(
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                title: const Text("Logout", style: TextStyle(fontWeight: FontWeight.bold)),
+                content: const Text("Are you sure you want to logout?"),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-              ),
-            ],
+            );
+
+            if (confirm != true) return;
+
+            await _controller.logout();
+            if (!mounted) return;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => buildLoginScreen()),
+              (route) => false,
+            );
+          },
+          icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+          label: const Text(
+            "Logout Account",
+            style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15),
           ),
-        );
-
-        if (confirm != true) return;
-
-        // Clear token then go to IntroductionScreen
-await _controller.logout();
-
-        if (!mounted) return;
-        Navigator.of(context).pushAndRemoveUntil(
-  MaterialPageRoute(builder: (_) => buildLoginScreen()),
-  (route) => false,
-);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
-            SizedBox(width: 8),
-            Text(
-              "Logout Account",
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-          ],
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Colors.redAccent, width: 1.5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: Colors.redAccent.withOpacity(0.05),
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

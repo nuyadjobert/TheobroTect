@@ -4,7 +4,7 @@ class LocalUser {
   final String? name;
   final String address;
   final String contactNumber;
-  final String createdAt; 
+  final String createdAt;
 
   LocalUser({
     required this.userId,
@@ -16,20 +16,20 @@ class LocalUser {
   });
 
   Map<String, Object?> toMap() => {
-        'user_id': userId,
-        'email': email,
-        'name': name,
-        'address': address,
-        'contact_number': contactNumber,
-        'created_at': createdAt,
-      };
+    'user_id': userId,
+    'email': email,
+    'name': name,
+    'address': address,
+    'contact_number': contactNumber,
+    'created_at': createdAt,
+  };
 
   static LocalUser fromMap(Map<String, Object?> map) => LocalUser(
-        userId: map['user_id'] as String,
-        email: map['email'] as String,
-        name: map['name'] as String?,
-        address: map['address'] as String,
-        contactNumber: map['contact_number'] as String,
-        createdAt: map['created_at'] as String,
-      );
+    userId: map['user_id'] as String,
+    email: map['email'] as String,
+    name: map['name'] as String?,
+    address: (map['address'] as String?) ?? '',
+    contactNumber: (map['contact_number'] as String?) ?? '',
+    createdAt: map['created_at'] as String,
+  );
 }
