@@ -93,7 +93,10 @@ class VerifyAccountController extends ChangeNotifier {
 
       // ❌ backend rejected OTP
       if (result.status != 'OK') {
-        _errorMessage = _mapStatusToMessage(result.status);
+        _lastResult = result;
+        _errorMessage = result.status == 'NEW_USER_REQUIRED'
+            ? null
+            : _mapStatusToMessage(result.status);
         notifyListeners();
         return result;
       }

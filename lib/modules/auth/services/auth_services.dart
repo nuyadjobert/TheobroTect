@@ -68,6 +68,17 @@ debugPrint('Contact from Server: ${res.data['user']['contact_number']}');
         },
       ),
     );
+
+    debugPrint('--- RAW REGISTER RESPONSE ---');
+    debugPrint('Status Code: ${res.statusCode}');
+    debugPrint('Data: ${res.data}');
+    if (res.data['user'] != null) {
+      debugPrint('User ID: ${res.data['user']['id']}');
+    } else {
+      debugPrint('WARNING: "user" object is NULL in register response');
+    }
+    debugPrint('-----------------------------');
+
     return RegistrationResponse.fromJson(_asMap(res.data));
   } on DioException catch (e) {
     throw Exception(
