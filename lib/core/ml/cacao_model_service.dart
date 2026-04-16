@@ -62,10 +62,6 @@ class CacaoModelService {
 
     final resized = img.copyResize(decoded, width: w, height: h);
 
-    // ✅ CHANGED: Pass raw [0, 255] values — NOT normalized.
-    // The MobileNetV3Preprocess layer is baked into the TFLite model.
-    // It handles the [-1, 1] conversion internally.
-    // Normalizing here too causes double-processing → garbage predictions.
     final input = List.generate(
       1,
       (_) => List.generate(

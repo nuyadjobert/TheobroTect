@@ -36,15 +36,18 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     saveController = SaveScanController();
     controller.init();
 
-    // Detect location as soon as screen opens
-    saveController.detectLocation().then((_) {
+    controller.init().then((_) {
       if (!mounted) return;
-      // If GPS is low/offline, auto-show the map picker
-      if (saveController.needsManualLocation) {
-        _showLocationPicker();
+
+      if (!controller.isNonCacao) {
+        saveController.detectLocation().then((_) {
+          if (!mounted) return;
+          if (saveController.needsManualLocation) {
+            _showLocationPicker();
+          }
+        });
       }
     });
-
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -135,7 +138,11 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -206,6 +213,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             _LocationStatusBanner(
               locationPicker: saveController.locationPicker,
               onTap: _showLocationPicker,
+              isDisabled: controller.isNonCacao,
             ),
             const SizedBox(height: 24),
 
@@ -247,7 +255,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                 listenable: Listenable.merge([controller, saveController]),
                 builder: (context, _) {
                   final disabled =
-                      controller.isLoading || saveController.isSaving;
+                      controller.isLoading ||
+                      saveController.isSaving ||
+                      controller.isNonCacao;
                   final saved = saveController.isSaved;
 
                   return OutlinedButton(
@@ -287,12 +297,21 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                                 size: 22,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                saved ? "SAVED" : "SAVE",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  letterSpacing: 0.5,
+                              Flexible(
+                                child: Text(
+                                  controller.isNonCacao
+                                      ? "N/A"
+                                      : saved
+                                      ? "SAVED"
+                                      : "SAVE",
+                                  overflow: TextOverflow
+                                      .ellipsis, // 🔥 prevents overflow
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
                               ),
                             ],
@@ -351,10 +370,12 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
 class _LocationStatusBanner extends StatelessWidget {
   final LocationPickerController locationPicker;
   final VoidCallback onTap;
+  final bool isDisabled;
 
   const _LocationStatusBanner({
     required this.locationPicker,
     required this.onTap,
+    required this.isDisabled,
   });
 
   @override
@@ -362,6 +383,13 @@ class _LocationStatusBanner extends StatelessWidget {
     return ListenableBuilder(
       listenable: locationPicker,
       builder: (context, _) {
+        if (isDisabled) {
+          return _BannerTile(
+            icon: Icons.block,
+            color: Colors.grey,
+            message: "Location not required for non-cacao scan",
+          );
+        }
         final lp = locationPicker;
 
         // Still detecting
@@ -373,7 +401,10 @@ class _LocationStatusBanner extends StatelessWidget {
             trailing: const SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.orange,
+              ),
             ),
           );
         }
@@ -388,7 +419,11 @@ class _LocationStatusBanner extends StatelessWidget {
               message: lp.accuracy != null
                   ? "Low GPS accuracy (±${lp.accuracy!.toStringAsFixed(0)}m) — tap to pin"
                   : "No GPS signal — tap to pin your location",
-              trailing: Icon(Icons.chevron_right, color: Colors.red.shade600, size: 20),
+              trailing: Icon(
+                Icons.chevron_right,
+                color: Colors.red.shade600,
+                size: 20,
+              ),
             ),
           );
         }
@@ -401,8 +436,11 @@ class _LocationStatusBanner extends StatelessWidget {
               icon: Icons.location_on,
               color: const Color(0xFF2D6A4F),
               message: "Location pinned manually — tap to adjust",
-              trailing: Icon(Icons.edit_location_alt_outlined,
-                  color: const Color(0xFF2D6A4F), size: 18),
+              trailing: Icon(
+                Icons.edit_location_alt_outlined,
+                color: const Color(0xFF2D6A4F),
+                size: 18,
+              ),
             ),
           );
         }
@@ -417,8 +455,11 @@ class _LocationStatusBanner extends StatelessWidget {
             message: acc != null
                 ? "Location detected (±${acc.toStringAsFixed(0)}m) — tap to adjust"
                 : "Location detected — tap to adjust",
-            trailing: Icon(Icons.edit_location_alt_outlined,
-                color: const Color(0xFF2D6A4F), size: 18),
+            trailing: Icon(
+              Icons.edit_location_alt_outlined,
+              color: const Color(0xFF2D6A4F),
+              size: 18,
+            ),
           ),
         );
       },
@@ -462,10 +503,7 @@ class _BannerTile extends StatelessWidget {
               ),
             ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 6),
-            trailing!,
-          ],
+          if (trailing != null) ...[const SizedBox(width: 6), trailing!],
         ],
       ),
     );

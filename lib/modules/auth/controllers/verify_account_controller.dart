@@ -6,7 +6,6 @@ import '../services/auth_services.dart';
 import '../models/verify_otp_result.dart';
 import 'dart:async';
 
-
 class VerifyAccountController extends ChangeNotifier {
   final AuthService _auth;
   final String email;
@@ -23,6 +22,8 @@ class VerifyAccountController extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   VerifyOtpResult? _lastResult;
+  bool _isVerified = false;
+  bool get isVerified => _isVerified;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -37,7 +38,8 @@ class VerifyAccountController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
- Timer? _timer;
+
+  Timer? _timer;
   int _secondsLeft = 0;
 
   int get secondsLeft => _secondsLeft;
@@ -67,15 +69,16 @@ class VerifyAccountController extends ChangeNotifier {
     _timer?.cancel();
   }
 
-
   String get otp => otpControllers.map((c) => c.text).join().trim();
   bool get isOtpValid => otp.length == 6;
   bool get isNewUserRequired => _lastResult?.status == 'NEW_USER_REQUIRED';
-  bool get isVerified => _lastResult?.status == 'OK';
 
   Future<VerifyOtpResult?> verify() async {
     clearError();
+
+    // reset state every attempt
     _lastResult = null;
+    _isVerified = false;
 
     if (!isOtpValid) {
       _errorMessage = 'Please enter the 6-digit code.';
@@ -84,49 +87,61 @@ class VerifyAccountController extends ChangeNotifier {
     }
 
     _setLoading(true);
+
     try {
       final result = await _auth.verifyOtp(email: email, otp: otp);
-      _lastResult = result;
 
-      if (result.status == 'OK') {
-        final token = result.token;
-        if (token == null || token.isEmpty) {
-          _errorMessage =
-              'Login succeeded but token is missing. Check backend response.';
-          notifyListeners();
-          return result;
-        }
-
-        await _secureStore.save(token);
-
-        final userId = result.userId;
-        final address = result.address ?? '';
-        final emailFromBackend = result.email ?? email;
-
-        if (userId == null || userId.isEmpty) {
-          _errorMessage =
-              'Login succeeded but userId is missing. Check backend response.';
-          notifyListeners();
-          return result;
-        }
-
-        await _saveUserLocally(
-          userId: userId,
-          name: result.name ?? '',
-          email: emailFromBackend,
-          address: address,
-          contactNumber: result.contactNumber ?? '',
-        );
+      // ❌ backend rejected OTP
+      if (result.status != 'OK') {
+        _errorMessage = _mapStatusToMessage(result.status);
         notifyListeners();
         return result;
       }
 
-      _errorMessage = _mapStatusToMessage(result.status);
+      final token = result.token;
+      final userId = result.userId;
+
+      // ❌ missing token
+      if (token == null || token.isEmpty) {
+        _errorMessage = 'Missing token from server.';
+        notifyListeners();
+        return result;
+      }
+
+      // ❌ missing userId
+      if (userId == null || userId.isEmpty) {
+        _errorMessage = 'Missing userId from server.';
+        notifyListeners();
+        return result;
+      }
+
+      // ✅ Step 1: save token
+      await _secureStore.save(token);
+
+      // ✅ Step 2: save user locally (must succeed)
+      try {
+        await _saveUserLocally(
+          userId: userId,
+          name: result.name ?? '',
+          email: result.email ?? email,
+          address: result.address ?? '',
+          contactNumber: result.contactNumber ?? '',
+        );
+      } catch (e) {
+        _errorMessage = 'Failed to save user locally: $e';
+        notifyListeners();
+        return null;
+      }
+
+      // ✅ Step 3: mark success ONLY when EVERYTHING is OK
+      _lastResult = result;
+      _isVerified = true;
+      _errorMessage = null;
+
       notifyListeners();
       return result;
     } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
+      _errorMessage = 'Unexpected error: $e';
       return null;
     } finally {
       _setLoading(false);
@@ -134,39 +149,38 @@ class VerifyAccountController extends ChangeNotifier {
   }
 
   Future<void> requestOtp() async {
-  try {
-    final result = await _auth.requestOtp(email);
+    try {
+      final result = await _auth.requestOtp(email);
 
-    startTimer(result.expiresInSeconds ?? 200);
-
-  } catch (e) {
-    _errorMessage = e.toString();
-    notifyListeners();
+      startTimer(result.expiresInSeconds ?? 200);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
   }
-}
 
-Future<void> _saveUserLocally({
-  required String userId,
-  required String name,      // Add this
-  required String email,
-  required String address,
-  required String contactNumber,
-}) async {
-  final now = DateTime.now().toIso8601String();
+  Future<void> _saveUserLocally({
+    required String userId,
+    required String name, // Add this
+    required String email,
+    required String address,
+    required String contactNumber,
+  }) async {
+    final now = DateTime.now().toIso8601String();
 
-  final localUser = LocalUser(
-    userId: userId,
-    email: email,
-    name: name,              // Use the variable, not null!
-    address: address,
-    contactNumber: contactNumber,
-    createdAt: now,
-  );
+    final localUser = LocalUser(
+      userId: userId,
+      email: email,
+      name: name, // Use the variable, not null!
+      address: address,
+      contactNumber: contactNumber,
+      createdAt: now,
+    );
 
-  final db = AppDatabase();
-  await db.clearUsers();
-  await db.upsertUser(localUser);
-}
+    final db = AppDatabase();
+    await db.clearUsers();
+    await db.upsertUser(localUser);
+  }
 
   // Status mapping
   String _mapStatusToMessage(String status) {

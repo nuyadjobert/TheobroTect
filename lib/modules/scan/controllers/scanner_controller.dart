@@ -106,9 +106,12 @@ _ParsedLabel _parseLabel(String label) {
   if (label == 'healthy') {
     return const _ParsedLabel(diseaseKey: 'healthy', severityKey: 'default');
   }
+  if (label == 'non_cacao') {
+    return const _ParsedLabel(diseaseKey: 'non_cacao', severityKey: 'default');
+  }
   final idx = label.lastIndexOf('_');
-  final diseaseKey = label.substring(0, idx);     
-  final severityKey = label.substring(idx + 1);   
+  final diseaseKey = label.substring(0, idx);
+  final severityKey = label.substring(idx + 1);
   return _ParsedLabel(diseaseKey: diseaseKey, severityKey: severityKey);
 }
 
@@ -122,6 +125,8 @@ String _toDisplayName(String diseaseKey) {
       return 'Mealybug';
     case 'healthy':
       return 'Healthy';
+    case 'non_cacao':
+      return 'Non Cacao';
     default:
       return diseaseKey;
   }

@@ -33,6 +33,12 @@ class SaveScanController extends ChangeNotifier {
   }) async {
     if (_isSaving) return false;
 
+    if (diseaseKey == 'non_cacao') {
+      _saveError = "This is not a cacao plant. Saving is disabled.";
+      notifyListeners();
+      return false;
+    }
+
     if (isLoading) {
       _saveError = "Still loading scan data. Please try again.";
       notifyListeners();
@@ -74,9 +80,15 @@ class SaveScanController extends ChangeNotifier {
         scannedAt: now,
         createdAt: now,
         nextScanAt: nextScanAt,
-        locationLat: (loc?['location_lat'] is num) ? (loc!['location_lat'] as num).toDouble() : null,
-        locationLng: (loc?['location_lng'] is num) ? (loc!['location_lng'] as num).toDouble() : null,
-        locationAccuracy: (loc?['location_accuracy'] is num) ? (loc!['location_accuracy'] as num).toDouble() : null,
+        locationLat: (loc?['location_lat'] is num)
+            ? (loc!['location_lat'] as num).toDouble()
+            : null,
+        locationLng: (loc?['location_lng'] is num)
+            ? (loc!['location_lng'] as num).toDouble()
+            : null,
+        locationAccuracy: (loc?['location_accuracy'] is num)
+            ? (loc!['location_accuracy'] as num).toDouble()
+            : null,
         locationLabel: loc?['location_label']?.toString(),
         notifLocalId: null,
         smsEnabled: smsEnabled,
@@ -91,6 +103,7 @@ class SaveScanController extends ChangeNotifier {
 
       final saved = await _scanRepo.getScanByLocalId(localId);
       debugPrint('Saved scan row: $saved');
+      debugPrint("Logged user: ${u.userId} | ${u.name} | ${u.email}");
 
       _isSaved = true;
       _isSaving = false;
