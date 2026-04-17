@@ -1,47 +1,42 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
-
 import '../../core/network/client.dart';
 import '../../core/db/app_database.dart';
 import 'package:cacao_apps/modules/scan/services/scan_sync_service.dart';
+
+import 'dart:developer' as developer;
+import 'package:rxdart/rxdart.dart';
 
 class SyncTrigger {
   StreamSubscription<List<ConnectivityResult>>? _sub;
   Timer? _retryTimer;
   bool _running = false;
-
   late final ScanSyncService _scanSync;
 
   SyncTrigger() {
-    _scanSync = ScanSyncService(
-      dio: DioClient.dio,
-      db: AppDatabase(),
-    );
+    _scanSync = ScanSyncService(dio: DioClient.dio, db: AppDatabase());
   }
 
-  Future<void> start() async {
-    // don't await — let it run in the background so it won't block the UI
+  void start() {
+    developer.log('🔌 SyncTrigger started', name: 'SyncTrigger');
+
     _trySync();
 
-    // listen for connectivity changes
-    _sub = Connectivity().onConnectivityChanged.listen((results) {
-      final online = results.any((r) => r != ConnectivityResult.none);
-      if (online) {
-        _trySync();
-      }
-    });
-
-    // periodic retry every 5 minutes for scans that failed earlier
-    _retryTimer = Timer.periodic(const Duration(minutes: 5), (_) {
-      _trySync();
-    });
-  }
-
-  Future<void> stop() async {
-    _retryTimer?.cancel();
-    _retryTimer = null;
-    await _sub?.cancel();
-    _sub = null;
+    // Listen to changes with a small debounce to avoid flicker
+    _sub = Connectivity().onConnectivityChanged
+        .where((results) => results.any((r) => r != ConnectivityResult.none))
+        .debounceTime(const Duration(seconds: 2)) 
+        .listen((_) {
+          developer.log(
+            '📡 Signal detected, attempting sync...',
+            name: 'SyncTrigger',
+          );
+          _trySync();
+        });
+    _retryTimer = Timer.periodic(
+      const Duration(minutes: 15),
+      (_) => _trySync(),
+    );
   }
 
   Future<void> _trySync() async {
@@ -49,23 +44,39 @@ class SyncTrigger {
     _running = true;
 
     try {
-      final ok = await _hasInternet();
-      if (!ok) return;
+      final hasData = await AppDatabase().hasPendingScans();
+      if (!hasData) return;
+
+      // 2. Real-world reachability check
+      final ok = await _isServerReachable();
+      if (!ok) {
+        developer.log(
+          '🌐 Server unreachable (True offline)',
+          name: 'SyncTrigger',
+        );
+        return;
+      }
 
       await _scanSync.syncPendingScans();
+    } catch (e) {
+      developer.log('❌ Sync trigger error', name: 'SyncTrigger', error: e);
     } finally {
       _running = false;
     }
   }
 
-  Future<bool> _hasInternet() async {
+  Future<bool> _isServerReachable() async {
     try {
-      final res = await DioClient.dio.get('/api/theobrotect/test');
-      return res.statusCode != null &&
-          res.statusCode! >= 200 &&
-          res.statusCode! < 300;
+      // Use a fast HEAD request to check availability
+      final res = await DioClient.dio.head('/api/theobrotect/test');
+      return res.statusCode == 200;
     } catch (_) {
       return false;
     }
+  }
+
+  void stop() {
+    _retryTimer?.cancel();
+    _sub?.cancel();
   }
 }

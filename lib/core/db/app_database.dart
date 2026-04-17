@@ -135,20 +135,19 @@ class AppDatabase {
     await database.delete('users');
   }
 
-Future<List<Map<String, Object?>>> getPendingScans({
-  required String userId,   // ← add this
-  int limit = 20,
-}) async {
-  final database = await db;
-  return database.query(
-    'scan_history',
-    where: "user_id = ? AND sync_state IN ('pending','error')",
-    whereArgs: [userId],
-    orderBy: 'scanned_at ASC',
-    limit: limit,
-  );
-}
-
+  Future<List<Map<String, Object?>>> getPendingScans({
+    required String userId, // ← add this
+    int limit = 20,
+  }) async {
+    final database = await db;
+    return database.query(
+      'scan_history',
+      where: "user_id = ? AND sync_state IN ('pending','error')",
+      whereArgs: [userId],
+      orderBy: 'scanned_at ASC',
+      limit: limit,
+    );
+  }
 
   Future<void> markScanSynced({
     required String localId,
@@ -190,6 +189,19 @@ Future<List<Map<String, Object?>>> getPendingScans({
   ''',
       [now, now, localId],
     );
+  }
+
+  Future<bool> hasPendingScans() async {
+    final database = await db;
+    // We use firstIntValue to quickly get the result of the COUNT query
+    final count = Sqflite.firstIntValue(
+      await database.rawQuery('''
+    SELECT COUNT(*) FROM scan_history 
+    WHERE sync_state IN ('pending', 'error')
+  '''),
+    );
+
+    return (count ?? 0) > 0;
   }
 
   Future<void> debugPrintDatabase() async {
