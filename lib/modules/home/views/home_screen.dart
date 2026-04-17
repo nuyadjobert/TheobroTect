@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../disease/views/disease_detail_sheet.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../widgets/total_scanned_card.dart';
 import '../widgets/disease_slider.dart';
@@ -142,10 +141,10 @@ Future<void> _checkPendingScans() async {
 
   final pending = await db.getPendingScans(userId: user.userId);
 
-  debugPrint("📦 [HOME] Pending scans count: ${pending.length}");
+  debugPrint(" [HOME] Pending scans count: ${pending.length}");
 
   for (var scan in pending) {
-    debugPrint("➡️ [HOME] Pending local_id: ${scan['local_id']}");
+    debugPrint(" [HOME] Pending local_id: ${scan['local_id']}");
   }
 }
 

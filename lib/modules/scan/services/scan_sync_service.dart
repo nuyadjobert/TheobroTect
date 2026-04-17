@@ -9,17 +9,11 @@ class ScanSyncService {
   ScanSyncService({required this.dio, required this.db});
 
   Future<void> syncPendingScans() async {
-    developer.log(
-      '🔄 Initialization: Checking for pending scans...',
-      name: 'ScanSync',
-    );
+    developer.log('🔄 Sync started...', name: 'ScanSync');
 
     final currentUser = await db.getCurrentUser();
     if (currentUser == null) {
-      developer.log(
-        '⚠️ Sync aborted: No current user found.',
-        name: 'ScanSync',
-      );
+      developer.log('❌ No user found. Aborting sync.', name: 'ScanSync');
       return;
     }
 
@@ -29,15 +23,12 @@ class ScanSyncService {
     );
 
     if (pending.isEmpty) {
-      developer.log(
-        '✅ Sync complete: No pending scans to upload.',
-        name: 'ScanSync',
-      );
+      developer.log('✅ No pending scans.', name: 'ScanSync');
       return;
     }
 
     developer.log(
-      '🚀 Found ${pending.length} pending scans. Starting upload...',
+      '📦 Found ${pending.length} pending scans.',
       name: 'ScanSync',
     );
 
@@ -48,94 +39,101 @@ class ScanSyncService {
       final payload = {
         'local_id': localId,
         'disease_key': row['disease_key'],
+        'image_url': row['image_url'],
         'severity_key': row['severity_key'],
         'confidence': row['confidence'],
-
         'location_lat': row['location_lat'] ?? 0,
         'location_lng': row['location_lng'] ?? 0,
         'location_accuracy': row['location_accuracy'],
         'location_label': row['location_label'],
-
         'scanned_at': row['scanned_at'],
         'next_scan_at': row['next_scan_at'],
-        'Status': row['Status'] ?? 1,
+        'status': row['status'] ?? 1,
       };
 
       try {
         final idempotencyKey = (row['idempotency_key'] ?? row['local_id'])
             .toString();
 
-        developer.log(
-          '📤 Uploading Scan [LocalID: $localId]...',
-          name: 'ScanSync',
-        );
+        developer.log('⬆️ Uploading $localId...', name: 'ScanSync');
 
         final res = await dio.post(
-          '/api/theobrotect/scans/scan-results',
+          '/api/theobrotect/scans/sync',
           data: payload,
           options: Options(headers: {'Idempotency-Key': idempotencyKey}),
         );
 
-        final data = res.data as Map<String, dynamic>;
-
-        if (data['status'] == 'OK') {
-          final scan = data['data'] as Map<String, dynamic>?;
-          final backendId = (scan?['id'] ?? scan?['_id'] ?? '').toString();
-
-          await db.markScanSynced(
-            localId: localId,
-            backendId: backendId.isEmpty ? localId : backendId,
-          );
-
-          developer.log(
-            '✨ Success: Scan $localId synced. BackendID: $backendId',
-            name: 'ScanSync',
-          );
-        } else {
-          final error = 'Backend status: ${data['status']}';
-          await db.markScanSyncFailed(localId: localId, errorMessage: error);
-          developer.log(
-            '❌ Failed: Server returned status ${data['status']} for Scan $localId',
-            name: 'ScanSync',
-            error: error,
-          );
+        // ✅ Check response type
+        if (res.data is! Map<String, dynamic>) {
+          throw Exception('Invalid response format (not JSON)');
         }
+
+        final data = res.data;
+
+        // ✅ Handle HTTP status
+        if (res.statusCode != 200) {
+          final msg = data['message'] ?? 'HTTP ${res.statusCode} error';
+
+          await db.markScanSyncFailed(localId: localId, errorMessage: msg);
+
+          developer.log('❌ HTTP Error ($localId): $msg', name: 'ScanSync');
+          continue;
+        }
+
+        // ✅ Handle backend response
+        if (data['status'] != 'OK') {
+          final msg = data['message'] ?? 'Unknown backend error';
+
+          await db.markScanSyncFailed(localId: localId, errorMessage: msg);
+
+          developer.log('❌ Backend Error ($localId): $msg', name: 'ScanSync');
+          continue;
+        }
+
+        final scan = data['data'] as Map<String, dynamic>?;
+        final backendId = (scan?['id'] ?? scan?['_id'] ?? localId).toString();
+
+        await db.markScanSynced(localId: localId, backendId: backendId);
+
+        developer.log('✅ Synced $localId → $backendId', name: 'ScanSync');
       } on DioException catch (e) {
-        if (e.type == DioExceptionType.connectionTimeout ||
-            e.type == DioExceptionType.sendTimeout ||
-            e.type == DioExceptionType.receiveTimeout ||
-            e.type == DioExceptionType.connectionError) {
+        final status = e.response?.statusCode;
+
+        // 🔐 AUTH ERROR
+        if (status == 401) {
           developer.log(
-            '📶 Sync paused: Connection error/timeout. Will retry later.',
+            '🔐 Unauthorized. Token invalid. Stopping sync.',
             name: 'ScanSync',
           );
           return;
         }
 
-        await db.markScanSyncFailed(
-          localId: localId,
-          errorMessage: e.toString(),
-        );
-        developer.log(
-          '❌ Dio Error: Could not sync Scan $localId',
-          name: 'ScanSync',
-          error: e.message,
-        );
+        // 🌐 NETWORK ERROR
+        if (e.type == DioExceptionType.connectionError ||
+            e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout) {
+          developer.log('🌐 Network issue. Sync paused.', name: 'ScanSync');
+          break;
+        }
+
+        // ❌ OTHER ERRORS
+        final msg = e.response?.data?.toString() ?? e.message;
+
+        await db.markScanSyncFailed(localId: localId, errorMessage: msg ?? 'Unknown error');
+
+        developer.log('❌ Dio Error ($localId): $msg', name: 'ScanSync');
       } catch (e) {
         await db.markScanSyncFailed(
           localId: localId,
           errorMessage: e.toString(),
         );
-        developer.log(
-          '🚨 Unexpected Error: Scan $localId',
-          name: 'ScanSync',
-          error: e.toString(),
-        );
+
+        developer.log('🚨 Unexpected Error ($localId): $e', name: 'ScanSync');
       }
 
       await Future.delayed(const Duration(milliseconds: 100));
     }
 
-    developer.log('🏁 Finished processing pending queue.', name: 'ScanSync');
+    developer.log('🏁 Sync finished.', name: 'ScanSync');
   }
 }
