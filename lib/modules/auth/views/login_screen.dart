@@ -68,55 +68,60 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
-                  child: Stack(
-                    alignment: Alignment.topCenter,
-                    clipBehavior: Clip.none,
-                    children: [
-                      const SizedBox(height: 30),
-                      Center(
-                        child: Container(
-                          alignment: Alignment.center,
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Image.asset(
-                            "assets/images/theobrotect.png",
-                            width: 78,
-                            height: 78,
-                          ),
-                        ),
-                      ),
-                      Column(
-                        children: [
-                          const SizedBox(height: 180),
-                          RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 32,
-                                letterSpacing: -1,
-                                color: colorScheme.onSurface,
-                              ),
-                              children: [
-                                const TextSpan(
-                                  text: "Theobro",
-                                  style: TextStyle(fontWeight: FontWeight.w300),
-                                ),
-                                TextSpan(
-                                  text: "Tect",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                              ],
+                  child: SizedBox(
+                    height: 260,
+                    child: Stack(
+                      alignment: Alignment.topCenter,
+                      clipBehavior: Clip.none,
+                      children: [
+                        // ✅ Logo — change `top: 60` to move it lower or higher
+                        Positioned(
+                          top: 80,
+                          child: Container(
+                            alignment: Alignment.center,
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Image.asset(
+                              "assets/images/theobrotect.png",
+                              width: 78,
+                              height: 78,
                             ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        // Text stays below logo
+                        Column(
+                          children: [
+                            const SizedBox(height: 180),
+                            RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  letterSpacing: -1,
+                                  color: colorScheme.onSurface,
+                                ),
+                                children: [
+                                  const TextSpan(
+                                    text: "Theobro",
+                                    style: TextStyle(fontWeight: FontWeight.w300),
+                                  ),
+                                  TextSpan(
+                                    text: "Tect",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
