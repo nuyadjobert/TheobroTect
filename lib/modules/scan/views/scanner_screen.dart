@@ -19,8 +19,8 @@ class _ScannerScreenState extends State<ScannerScreen>
   late AnimationController _animationController;
   late Animation<double> _animation;
 
-  static const double _frameWidth = 280;
-  static const double _frameHeight = 400; // taller than wide = portrait pod shape
+  static const double _frameWidth = 300;
+  static const double _frameHeight = 600; // taller than wide = portrait pod shape
 
   @override
   void initState() {
