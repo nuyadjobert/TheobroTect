@@ -56,7 +56,7 @@ class ScanSyncService {
       developer.log('Sending batch request...', name: 'ScanSync');
 
       final res = await dio.post(
-        '/api/theobrotect/scans/sync/batch',
+        '/api/theobrotect/scans/sync',
         data: {'scans': scansPayload},
       );
 
