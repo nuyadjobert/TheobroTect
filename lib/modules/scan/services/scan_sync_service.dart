@@ -9,11 +9,11 @@ class ScanSyncService {
   ScanSyncService({required this.dio, required this.db});
 
   Future<void> syncPendingScans() async {
-    developer.log('🔄 Batch Sync started...', name: 'ScanSync');
+    developer.log('Batch Sync started...', name: 'ScanSync');
 
     final currentUser = await db.getCurrentUser();
     if (currentUser == null) {
-      developer.log('❌ No user found. Aborting sync.', name: 'ScanSync');
+      developer.log('No user found. Aborting sync.', name: 'ScanSync');
       return;
     }
 
@@ -23,16 +23,15 @@ class ScanSyncService {
     );
 
     if (pending.isEmpty) {
-      developer.log('✅ No pending scans.', name: 'ScanSync');
+      developer.log('No pending scans.', name: 'ScanSync');
       return;
     }
 
     developer.log(
-      '📦 Preparing ${pending.length} scans for batch upload...',
+      'Preparing ${pending.length} scans for batch upload...',
       name: 'ScanSync',
     );
 
-    // ✅ BUILD ARRAY
     final scansPayload = pending.map((row) {
       return {
         'local_id': (row['local_id'] ?? '').toString(),
