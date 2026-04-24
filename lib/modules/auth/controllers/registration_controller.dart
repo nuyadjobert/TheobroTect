@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cacao_apps/core/db/app_database.dart';
+import 'package:cacao_apps/core/db/user_repository.dart'; 
 import 'package:cacao_apps/core/model/user.model.dart';
 import 'package:cacao_apps/core/storage/token_storage.dart';
 import '../models/registration_model.dart';
@@ -9,6 +9,9 @@ import '../services/auth_services.dart';
 class RegistrationController extends ChangeNotifier {
   final AuthService _auth;
   final _tokenStorage = TokenStorage();
+  
+  // 2. Initialize the User Repository
+  final UserRepository _userRepository = UserRepository();
 
   RegistrationController(this._auth);
 
@@ -152,9 +155,10 @@ class RegistrationController extends ChangeNotifier {
       contactNumber: contactNumber,
       createdAt: now,
     );
-    final db = AppDatabase();
-    await db.clearUsers();
-    await db.upsertUser(localUser);
+    
+    // 3. Swap the raw database calls for the repository methods
+    await _userRepository.clearUsers();
+    await _userRepository.upsertUser(localUser);
   }
 
   @override

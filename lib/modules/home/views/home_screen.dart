@@ -21,7 +21,8 @@ import '../widgets/nav_drawer_header.dart';
 import '../widgets/nav_farm_info.dart';
 import '../widgets/nav_stats_card.dart';
 import '../Controller/home_controller.dart';
-import 'package:cacao_apps/core/db/app_database.dart';
+import 'package:cacao_apps/core/db/user_repository.dart';
+import 'package:cacao_apps/core/db/scan_repository.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -131,15 +132,15 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
 Future<void> _checkPendingScans() async {
-  final db = AppDatabase();
-
-  final user = await db.getCurrentUser();
+final UserRepository userRepository = UserRepository();
+final ScanRepository scanRepository = ScanRepository();
+  final user = await userRepository.getCurrentUser();
   if (user == null) {
     debugPrint("❌ [HOME] No user found");
     return;
   }
 
-  final pending = await db.getPendingScans(userId: user.userId);
+  final pending = await scanRepository.getPendingScans(userId: user.userId);
 
   debugPrint(" [HOME] Pending scans count: ${pending.length}");
 

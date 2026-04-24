@@ -1,5 +1,5 @@
+import 'package:cacao_apps/core/db/user_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:cacao_apps/core/db/app_database.dart'; // Ensure path is correct
 import 'package:cacao_apps/core/model/user.model.dart';
 
 class NavDrawerHeader extends StatelessWidget {
@@ -7,8 +7,9 @@ class NavDrawerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final UserRepository userRepository =UserRepository();
     return FutureBuilder<LocalUser?>(
-      future: AppDatabase().getCurrentUser(),
+      future: userRepository.getCurrentUser(),
       builder: (context, snapshot) {
         // 1. Get the user data or use fallbacks
         final user = snapshot.data;

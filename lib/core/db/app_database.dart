@@ -1,233 +1,306 @@
-import 'package:cacao_apps/core/model/user.model.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'package:flutter/foundation.dart';
+// import 'package:cacao_apps/core/model/user.model.dart';
+// import 'package:sqflite/sqflite.dart';
+// import 'package:path/path.dart';
+// import 'package:flutter/foundation.dart';
+// import 'dart:convert';
 
-class AppDatabase {
-  static final AppDatabase _instance = AppDatabase._internal();
-  factory AppDatabase() => _instance;
-  AppDatabase._internal();
+// class AppDatabase {
+//   static final AppDatabase _instance = AppDatabase._internal();
+//   factory AppDatabase() => _instance;
+//   AppDatabase._internal();
 
-  static Database? _db;
+//   static Database? _db;
 
-  Future<Database> get db async {
-    if (_db != null) return _db!;
-    _db = await _open();
-    return _db!;
-  }
+//   Future<Database> get db async {
+//     if (_db != null) return _db!;
+//     _db = await _open();
+//     return _db!;
+//   }
 
-  Future<Database> _open() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'cacao_app.db');
-    debugPrint('DB FILE: $path');
-    return openDatabase(
-      path,
-      version: 1,
-      onCreate: (Database database, int version) async {
-        await _createTables(database);
-      },
-    );
-  }
+//   Future<Database> _open() async {
+//     final dbPath = await getDatabasesPath();
+//     final path = join(dbPath, 'cacao_app.db');
+//     debugPrint('DB FILE: $path');
+//     return openDatabase(
+//       path,
+//       version: 1,
+//       onCreate: (Database database, int version) async {
+//         await _createTables(database);
+//       },
+//     );
+//   }
 
-  Future<void> _createTables(Database database) async {
-    await database.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-      user_id TEXT PRIMARY KEY,
-      email TEXT NOT NULL,
-      name TEXT,
-      address TEXT,
-      contact_number TEXT,
-      created_at TEXT NOT NULL
-    );
-  ''');
+//   Future<void> _createTables(Database database) async {
+//     await database.execute('''
+//     CREATE TABLE IF NOT EXISTS users (
+//       user_id TEXT PRIMARY KEY,
+//       email TEXT NOT NULL,
+//       name TEXT,
+//       address TEXT,
+//       contact_number TEXT,
+//       created_at TEXT NOT NULL
+//     );
+//   ''');
 
-    await database.execute('''
-    CREATE TABLE IF NOT EXISTS scan_history (
+//     await database.execute('''
+//     CREATE TABLE IF NOT EXISTS scan_history (
 
-      -- Identity
-      local_id TEXT PRIMARY KEY,                 
-      backend_id TEXT,                           
+//       -- Identity
+//       local_id TEXT PRIMARY KEY,                 
+//       backend_id TEXT,                           
 
-      -- Ownership
-      user_id TEXT NOT NULL,
+//       -- Ownership
+//       user_id TEXT NOT NULL,
 
-      -- Scan Data
-      scanned_at TEXT NOT NULL,
-      image_path TEXT,
-      disease_key TEXT NOT NULL,
-      severity_key TEXT NOT NULL,
-      confidence REAL NOT NULL,
+//       -- Scan Data
+//       scanned_at TEXT NOT NULL,
+//       image_path TEXT,
+//       disease_key TEXT NOT NULL,
+//       severity_key TEXT NOT NULL,
+//       confidence REAL NOT NULL,
 
-      -- Location
-      location_lat REAL,
-      location_lng REAL,
-      location_accuracy REAL,
-      location_label TEXT,
+//       -- Location
+//       location_lat REAL,
+//       location_lng REAL,
+//       location_accuracy REAL,
+//       location_label TEXT,
 
-      -- Follow-up
-      next_scan_at TEXT,
-      notif_local_id INTEGER,
-      sms_enabled INTEGER DEFAULT 0,
+//       -- Follow-up
+//       next_scan_at TEXT,
+//       notif_local_id INTEGER,
+//       sms_enabled INTEGER DEFAULT 0,
 
-      -- Sync State Machine
-      sync_state TEXT NOT NULL DEFAULT 'pending',   -- pending | error | synced
-      sync_attempts INTEGER NOT NULL DEFAULT 0,
-      last_sync_at TEXT,
-      last_error TEXT,
+//       -- Sync State Machine
+//       sync_state TEXT NOT NULL DEFAULT 'pending',   -- pending | error | synced
+//       sync_attempts INTEGER NOT NULL DEFAULT 0,
+//       last_sync_at TEXT,
+//       last_error TEXT,
 
-      -- Retry + Idempotency
-      next_retry_at TEXT,
-      idempotency_key TEXT NOT NULL,
+//       -- Retry + Idempotency
+//       next_retry_at TEXT,
+//       idempotency_key TEXT NOT NULL,
 
-      -- Audit
-      created_at TEXT NOT NULL,
-      updated_at TEXT,
+//       -- Audit
+//       created_at TEXT NOT NULL,
+//       updated_at TEXT,
 
-      FOREIGN KEY (user_id) REFERENCES users(user_id)
-    );
-  ''');
+//       FOREIGN KEY (user_id) REFERENCES users(user_id)
+//     );
+//   ''');
 
-    await database.execute('''
-    CREATE INDEX IF NOT EXISTS idx_scan_user
-    ON scan_history(user_id);
-  ''');
+//     await database.execute('''
+//     CREATE INDEX IF NOT EXISTS idx_scan_user
+//     ON scan_history(user_id);
+//   ''');
 
-    await database.execute('''
-    CREATE INDEX IF NOT EXISTS idx_scan_sync
-    ON scan_history(sync_state, next_retry_at);
-  ''');
+//     await database.execute('''
+//     CREATE INDEX IF NOT EXISTS idx_scan_sync
+//     ON scan_history(sync_state, next_retry_at);
+//   ''');
 
-    await database.execute('''
-    CREATE INDEX IF NOT EXISTS idx_scan_scanned_at
-    ON scan_history(scanned_at);
-  ''');
+//     await database.execute('''
+//     CREATE INDEX IF NOT EXISTS idx_scan_scanned_at
+//     ON scan_history(scanned_at);
+//   ''');
 
-    await database.execute('''
-    CREATE INDEX IF NOT EXISTS idx_scan_backend
-    ON scan_history(backend_id);
-  ''');
+//     await database.execute('''
+//     CREATE INDEX IF NOT EXISTS idx_scan_backend
+//     ON scan_history(backend_id);
+//   ''');
 
-    await database.execute('''
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_scan_idempotency_key
-    ON scan_history(idempotency_key);
-  ''');
-  }
+//     await database.execute('''
+//     CREATE UNIQUE INDEX IF NOT EXISTS idx_scan_idempotency_key
+//     ON scan_history(idempotency_key);
+//   ''');
+//   }
 
-  Future<void> upsertUser(LocalUser user) async {
-    final database = await db;
-    await database.delete('users');
-    await database.insert(
-      'users',
-      user.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
+//   Future<void> syncCacaoGuide(List<dynamic> backendJsonPayload) async {
+//   final database = await db;
+  
+//   // Start a single transaction for performance
+//   final batch = database.batch();
 
-  Future<LocalUser?> getCurrentUser() async {
-    final database = await db;
-    final rows = await database.query('users', limit: 1);
-    if (rows.isEmpty) return null;
-    return LocalUser.fromMap(rows.first);
-  }
+//   for (var diseaseMap in backendJsonPayload) {
+//     final diseaseId = diseaseMap['disease_id'];
 
-  Future<void> clearUsers() async {
-    final database = await db;
-    await database.delete('users');
-  }
+//     // 1. Insert Disease
+//     batch.insert(
+//       'guide_diseases',
+//       {
+//         'id': diseaseId,
+//         'disease_key': diseaseMap['disease_key'],
+//         'display_name': jsonEncode(diseaseMap['display_name']),
+//         'description': jsonEncode(diseaseMap['description']),
+//       },
+//       conflictAlgorithm: ConflictAlgorithm.replace,
+//     );
 
-  Future<List<Map<String, Object?>>> getPendingScans({
-    required String userId, // ← add this
-    int limit = 20,
-  }) async {
-    final database = await db;
-    return database.query(
-      'scan_history',
-      where: "user_id = ? AND sync_state IN ('pending','error')",
-      whereArgs: [userId],
-      orderBy: 'scanned_at ASC',
-      limit: limit,
-    );
-  }
+//     // 2. Process Severities
+//     final severities = diseaseMap['severities'] as List<dynamic>? ?? [];
+//     for (var severityMap in severities) {
+//       final severityId = severityMap['severity_id'];
 
-  Future<void> markScanSynced({
-    required String localId,
-    required String backendId,
-  }) async {
-    final database = await db;
-    final now = DateTime.now().toIso8601String();
+//       batch.insert(
+//         'guide_disease_severities',
+//         {
+//           'id': severityId,
+//           'disease_id': diseaseId,
+//           'severity_level': severityMap['level'],
+//         },
+//         conflictAlgorithm: ConflictAlgorithm.replace,
+//       );
 
-    await database.update(
-      'scan_history',
-      {
-        'sync_state': 'synced',
-        'backend_id': backendId,
-        'last_sync_at': now,
-        'updated_at': now,
-        'sync_attempts': 0,
-        'last_error': null,
-      },
-      where: 'local_id = ?',
-      whereArgs: [localId],
-    );
-  }
+//       // 3. Process Monitoring Plan
+//       final monitoringPlan = severityMap['monitoring_plan'];
+//       if (monitoringPlan != null) {
+//         batch.insert(
+//           'guide_monitoring_plans',
+//           {
+//             // We use the severityId as the foreign key connection
+//             'disease_severity_id': severityId, 
+//             'rescan_after_days': monitoringPlan['rescan_after_days'],
+//             'preferred_time_hour': monitoringPlan['preferred_time_hour'],
+//             'message': jsonEncode(monitoringPlan['message']),
+//             'checklist': jsonEncode(monitoringPlan['checklist']),
+//           },
+//           conflictAlgorithm: ConflictAlgorithm.replace,
+//         );
+//       }
 
-  Future<void> markScanSyncFailed({
-    required String localId,
-    required String errorMessage,
-  }) async {
-    final database = await db;
-    final now = DateTime.now().toIso8601String();
+//       // 4. Process Recommendations
+//       final recommendations = severityMap['recommendations'] as List<dynamic>? ?? [];
+//       for (var recMap in recommendations) {
+//         batch.insert(
+//           'guide_recommendations',
+//           {
+//             'disease_severity_id': severityId,
+//             'category_key': recMap['category'],
+//             'content': jsonEncode(recMap['content']),
+//             'sort_order': recMap['sort_order'],
+//           },
+//           conflictAlgorithm: ConflictAlgorithm.replace,
+//         );
+//       }
+//     }
+//   }
+//   await batch.commit(noResult: true);
+// }
+  
 
-    await database.rawUpdate(
-      '''
-    UPDATE scan_history
-    SET sync_state = 'error',
-        sync_attempts = COALESCE(sync_attempts, 0) + 1,
-        last_sync_at = ?,
-        updated_at = ?
-    WHERE local_id = ?
-  ''',
-      [now, now, localId],
-    );
-  }
+//   Future<void> upsertUser(LocalUser user) async {
+//     final database = await db;
+//     await database.delete('users');
+//     await database.insert(
+//       'users',
+//       user.toMap(),
+//       conflictAlgorithm: ConflictAlgorithm.replace,
+//     );
+//   }
 
-  Future<bool> hasPendingScans() async {
-    final database = await db;
-    // We use firstIntValue to quickly get the result of the COUNT query
-    final count = Sqflite.firstIntValue(
-      await database.rawQuery('''
-    SELECT COUNT(*) FROM scan_history 
-    WHERE sync_state IN ('pending', 'error')
-  '''),
-    );
+//   Future<LocalUser?> getCurrentUser() async {
+//     final database = await db;
+//     final rows = await database.query('users', limit: 1);
+//     if (rows.isEmpty) return null;
+//     return LocalUser.fromMap(rows.first);
+//   }
 
-    return (count ?? 0) > 0;
-  }
+//   Future<void> clearUsers() async {
+//     final database = await db;
+//     await database.delete('users');
+//   }
 
-  Future<void> debugPrintDatabase() async {
-    final database = await AppDatabase().db;
+//   Future<List<Map<String, Object?>>> getPendingScans({
+//     required String userId, // ← add this
+//     int limit = 20,
+//   }) async {
+//     final database = await db;
+//     return database.query(
+//       'scan_history',
+//       where: "user_id = ? AND sync_state IN ('pending','error')",
+//       whereArgs: [userId],
+//       orderBy: 'scanned_at ASC',
+//       limit: limit,
+//     );
+//   }
 
-    final users = await database.query('users');
-    final scans = await database.query('scan_history');
+//   Future<void> markScanSynced({
+//     required String localId,
+//     required String backendId,
+//   }) async {
+//     final database = await db;
+//     final now = DateTime.now().toIso8601String();
 
-    debugPrint('USERS: $users');
-    debugPrint('SCAN HISTORY: $scans');
-  }
+//     await database.update(
+//       'scan_history',
+//       {
+//         'sync_state': 'synced',
+//         'backend_id': backendId,
+//         'last_sync_at': now,
+//         'updated_at': now,
+//         'sync_attempts': 0,
+//         'last_error': null,
+//       },
+//       where: 'local_id = ?',
+//       whereArgs: [localId],
+//     );
+//   }
 
-  Future<void> debugPrintCurrentUserAndHistory() async {
-    final database = await AppDatabase().db;
+//   Future<void> markScanSyncFailed({
+//     required String localId,
+//     required String errorMessage,
+//   }) async {
+//     final database = await db;
+//     final now = DateTime.now().toIso8601String();
 
-    final users = await database.query('users');
-    debugPrint('ALL USERS: $users');
+//     await database.rawUpdate(
+//       '''
+//     UPDATE scan_history
+//     SET sync_state = 'error',
+//         sync_attempts = COALESCE(sync_attempts, 0) + 1,
+//         last_sync_at = ?,
+//         updated_at = ?
+//     WHERE local_id = ?
+//   ''',
+//       [now, now, localId],
+//     );
+//   }
 
-    if (users.isNotEmpty) {
-      final currentUserId = users.first['user_id'];
-      final rows = await database.query(
-        'scan_history',
-        where: 'user_id = ?',
-        whereArgs: [currentUserId],
-      );
-      debugPrint('HISTORY FOR CURRENT USER: $rows');
-    }
-  }
-}
+//   Future<bool> hasPendingScans() async {
+//     final database = await db;
+//     final count = Sqflite.firstIntValue(
+//       await database.rawQuery('''
+//     SELECT COUNT(*) FROM scan_history 
+//     WHERE sync_state IN ('pending', 'error')
+//   '''),
+//     );
+
+//     return (count ?? 0) > 0;
+//   }
+
+//   Future<void> debugPrintDatabase() async {
+//     final database = await AppDatabase().db;
+
+//     final users = await database.query('users');
+//     final scans = await database.query('scan_history');
+
+//     debugPrint('USERS: $users');
+//     debugPrint('SCAN HISTORY: $scans');
+//   }
+
+//   Future<void> debugPrintCurrentUserAndHistory() async {
+//     final database = await AppDatabase().db;
+
+//     final users = await database.query('users');
+//     debugPrint('ALL USERS: $users');
+
+//     if (users.isNotEmpty) {
+//       final currentUserId = users.first['user_id'];
+//       final rows = await database.query(
+//         'scan_history',
+//         where: 'user_id = ?',
+//         whereArgs: [currentUserId],
+//       );
+//       debugPrint('HISTORY FOR CURRENT USER: $rows');
+//     }
+//   }
+// }

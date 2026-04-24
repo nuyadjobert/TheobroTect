@@ -1,15 +1,17 @@
-import 'package:cacao_apps/core/db/app_database.dart';
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:cacao_apps/core/db/user_repository.dart'; 
 import 'package:cacao_apps/core/model/user.model.dart';
 import 'package:cacao_apps/core/storage/token_storage.dart';
-import 'package:flutter/material.dart';
 import '../services/auth_services.dart';
 import '../models/verify_otp_result.dart';
-import 'dart:async';
 
 class VerifyAccountController extends ChangeNotifier {
   final AuthService _auth;
   final String email;
   final _secureStore = TokenStorage();
+
+  final UserRepository _userRepository = UserRepository();
 
   VerifyAccountController({required AuthService auth, required this.email})
     : _auth = auth;
@@ -76,7 +78,6 @@ class VerifyAccountController extends ChangeNotifier {
   Future<VerifyOtpResult?> verify() async {
     clearError();
 
-    // reset state every attempt
     _lastResult = null;
     _isVerified = false;
 
@@ -91,7 +92,6 @@ class VerifyAccountController extends ChangeNotifier {
     try {
       final result = await _auth.verifyOtp(email: email, otp: otp);
 
-      // ❌ backend rejected OTP
       if (result.status != 'OK') {
         _lastResult = result;
         _errorMessage = result.status == 'NEW_USER_REQUIRED'
@@ -104,24 +104,20 @@ class VerifyAccountController extends ChangeNotifier {
       final token = result.token;
       final userId = result.userId;
 
-      // ❌ missing token
       if (token == null || token.isEmpty) {
         _errorMessage = 'Missing token from server.';
         notifyListeners();
         return result;
       }
 
-      // ❌ missing userId
       if (userId == null || userId.isEmpty) {
         _errorMessage = 'Missing userId from server.';
         notifyListeners();
         return result;
       }
 
-      // ✅ Step 1: save token
       await _secureStore.save(token);
 
-      // ✅ Step 2: save user locally (must succeed)
       try {
         await _saveUserLocally(
           userId: userId,
@@ -135,8 +131,6 @@ class VerifyAccountController extends ChangeNotifier {
         notifyListeners();
         return null;
       }
-
-      // ✅ Step 3: mark success ONLY when EVERYTHING is OK
       _lastResult = result;
       _isVerified = true;
       _errorMessage = null;
@@ -180,12 +174,10 @@ class VerifyAccountController extends ChangeNotifier {
       createdAt: now,
     );
 
-    final db = AppDatabase();
-    await db.clearUsers();
-    await db.upsertUser(localUser);
+    await _userRepository.clearUsers();
+    await _userRepository.upsertUser(localUser);
   }
 
-  // Status mapping
   String _mapStatusToMessage(String status) {
     switch (status) {
       case 'INVALID_OTP':

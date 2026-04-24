@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../core/network/client.dart';
-import '../../core/db/app_database.dart';
+// 1. Point to the new Scan Repository
+import 'package:cacao_apps/core/db/scan_repository.dart';
 import 'package:cacao_apps/modules/scan/services/scan_sync_service.dart';
 
 import 'dart:developer' as developer;
@@ -12,9 +13,13 @@ class SyncTrigger {
   Timer? _retryTimer;
   bool _running = false;
   late final ScanSyncService _scanSync;
+  
+  // 2. Initialize the Scan Repository
+  final ScanRepository _scanRepository = ScanRepository();
 
   SyncTrigger() {
-    _scanSync = ScanSyncService(dio: DioClient.dio, db: AppDatabase());
+    // 3. Pass the repository into the sync service instead of the raw DB
+    _scanSync = ScanSyncService(dio: DioClient.dio, scanRepository: _scanRepository);
   }
 
   void start() {
@@ -44,10 +49,11 @@ class SyncTrigger {
     _running = true;
 
     try {
-      final hasData = await AppDatabase().hasPendingScans();
+      // 4. Ask the repository if there are pending scans
+      final hasData = await _scanRepository.hasPendingScans();
       if (!hasData) return;
 
-      // 2. Real-world reachability check
+      // Real-world reachability check
       final ok = await _isServerReachable();
       if (!ok) {
         developer.log(

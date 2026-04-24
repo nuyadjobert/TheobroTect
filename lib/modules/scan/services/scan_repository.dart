@@ -1,14 +1,14 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
-import '../../../core/db/app_database.dart';
+import '../../../core/db/database_helper.dart';
 
 class ScanRepository {
-  final AppDatabase _dbProvider;
+ final DatabaseHelper _dbHelper;
   final Uuid _uuid;
 
-  ScanRepository({AppDatabase? dbProvider, Uuid? uuid})
-    : _dbProvider = dbProvider ?? AppDatabase(),
-      _uuid = uuid ?? const Uuid();
+  ScanRepository({DatabaseHelper? dbHelper, Uuid? uuid})
+      : _dbHelper = dbHelper ?? DatabaseHelper(),
+        _uuid = uuid ?? const Uuid();
 
   Future<String> insertScan({
     required String userId,
@@ -44,7 +44,7 @@ class ScanRepository {
 
     ConflictAlgorithm conflictAlgorithm = ConflictAlgorithm.replace,
   }) async {
-    final db = await _dbProvider.db;
+    final db = await _dbHelper.db;
 
     final localId = _uuid.v4();
     final now = DateTime.now();
@@ -88,7 +88,7 @@ class ScanRepository {
   }
 
   Future<Map<String, Object?>?> getScanByLocalId(String localId) async {
-    final db = await _dbProvider.db;
+    final db = await _dbHelper.db;
     final rows = await db.query(
       'scan_history',
       where: 'local_id = ?',

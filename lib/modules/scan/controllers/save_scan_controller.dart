@@ -1,4 +1,5 @@
 import 'package:cacao_apps/core/db/app_database.dart';
+import 'package:cacao_apps/core/db/user_repository.dart';
 import 'package:flutter/material.dart';
 
 import '../services/scan_repository.dart';
@@ -8,6 +9,7 @@ class SaveScanController extends ChangeNotifier {
   final ScanRepository _scanRepo = ScanRepository();
 
   final LocationPickerController locationPicker = LocationPickerController();
+  final UserRepository userRepository =UserRepository();
 
   bool _isSaving = false;
   String? _saveError;
@@ -56,7 +58,7 @@ class SaveScanController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final u = await AppDatabase().getCurrentUser();
+      final u = await userRepository.getCurrentUser();
       if (u == null) {
         _saveError = "No logged-in user found. Please login again.";
         _isSaving = false;

@@ -1,5 +1,5 @@
+import 'package:cacao_apps/core/db/user_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:cacao_apps/core/db/app_database.dart';
 import 'package:cacao_apps/core/model/user.model.dart';
 
 class NavFarmInfo extends StatelessWidget {
@@ -7,8 +7,10 @@ class NavFarmInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+        final UserRepository userRepository=UserRepository();
+
     return FutureBuilder<LocalUser?>(
-      future: AppDatabase().getCurrentUser(),
+      future: userRepository.getCurrentUser(),
       builder: (context, snapshot) {
         // 🔄 Loading state
         if (snapshot.connectionState == ConnectionState.waiting) {

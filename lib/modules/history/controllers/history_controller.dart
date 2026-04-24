@@ -1,10 +1,9 @@
 import '../services/history_service.dart';
 import 'package:cacao_apps/core/db/app_database.dart';
-
+import 'package:cacao_apps/core/db/user_repository.dart';
 class HistoryController {
   final HistoryService _historyService = HistoryService();
-  final AppDatabase _appDatabase = AppDatabase();
-
+final UserRepository _userRepository = UserRepository();
   String _activeFilter = "All Scans";
   DateTime? _selectedDate;
 
@@ -20,7 +19,7 @@ class HistoryController {
   }
 
   Future<List<Map<String, dynamic>>> getHistory() async {
-    final currentUser = await _appDatabase.getCurrentUser();
+    final currentUser = await _userRepository.getCurrentUser();
 
     if (currentUser == null) {
       return [];
@@ -31,7 +30,7 @@ class HistoryController {
 
   Future<bool> deleteScan(String localId, String? imagePath) async {
     try {
-      final currentUser = await _appDatabase.getCurrentUser();
+      final currentUser = await _userRepository.getCurrentUser();
 
       if (currentUser == null) return false;
 

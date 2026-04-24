@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Added for date formatting
-import 'package:cacao_apps/core/db/app_database.dart';
+import 'package:intl/intl.dart';
+import 'package:cacao_apps/core/db/scan_repository.dart';
+import 'package:cacao_apps/core/db/user_repository.dart';
 import '../widgets/scan_details.dart'; 
 import '../controllers/scan_result_controller.dart'; 
 import 'dart:io'; 
@@ -34,13 +35,16 @@ class HistoryCard extends StatelessWidget {
 
   // --- DELETE FUNCTION ---
   Future<void> _handleDelete(BuildContext context) async {
+    // If the parent screen passed a delete function (like from HistoryController), use that!
     if (onDelete != null) {
       onDelete!();
       return;
     }
 
+    // Otherwise, use the fallback manual deletion
     final bool? confirmed = await _showDeleteDialog(context);
     if(!context.mounted) return;
+    
     if (confirmed == true) {
       try {
         final String? id = data['id']?.toString(); 
@@ -51,19 +55,26 @@ class HistoryCard extends StatelessWidget {
           return;
         }
 
-        final db = await AppDatabase().db;
-        
-        final deletedRows = await db.delete(
-          'scan_history',
-          where: 'local_id = ?',
-          whereArgs: [id], 
-        );
-      if(!context.mounted) return;
-        if (deletedRows == 0) {
-          _showErrorSnackbar(context, "Scan not found in database");
-          return;
-        }
+        // 2. Initialize Repositories
+        final userRepo = UserRepository();
+        final scanRepo = ScanRepository();
 
+        // 3. Get the current user to ensure we delete the correct record
+        final currentUser = await userRepo.getCurrentUser();
+        if (currentUser == null) {
+           _showErrorSnackbar(context, "Unable to delete: User not logged in");
+           return;
+        }
+        
+        // 4. Ask the ScanRepository to delete the record
+        await scanRepo.deleteHistoryItem(
+          localId: id,
+          userId: currentUser.userId,
+        );
+
+        if(!context.mounted) return;
+
+        // 5. Delete the physical image file
         if (imagePath != null && imagePath.isNotEmpty) {
           final file = File(imagePath);
           if (await file.exists()) {

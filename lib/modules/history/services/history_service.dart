@@ -1,41 +1,27 @@
 import 'dart:io';
-import 'package:cacao_apps/core/db/app_database.dart';
 import 'package:flutter/foundation.dart';
-
+import 'package:cacao_apps/core/db/scan_repository.dart';
 class HistoryService {
+  // 2. Initialize the repository
+  final ScanRepository _scanRepository = ScanRepository();
+
   Future<List<Map<String, dynamic>>> getHistoryByUserId(String userId) async {
-    final db = await AppDatabase().db;
     debugPrint('Fetching history for UserID: $userId');
-
-    final List<Map<String, dynamic>> maps = await db.query(
-      'scan_history',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-      orderBy: 'created_at DESC',
-    );
-
-    return maps;
-  }
-
-  Future<void> deleteHistoryItem({
-    required String localId,
-    required String userId,
-  }) async {
-    final db = await AppDatabase().db;
-
-    await db.delete(
-      'scan_history',
-      where: 'local_id = ? AND user_id = ?',
-      whereArgs: [localId, userId],
-    );
+    // 3. Ask the repository for the data
+    return await _scanRepository.getHistoryByUserId(userId);
   }
 
   Future<void> deleteImageFile(String? imagePath) async {
     if (imagePath == null || imagePath.isEmpty) return;
 
-    final file = File(imagePath);
-    if (await file.exists()) {
-      await file.delete();
+    try {
+      final file = File(imagePath);
+      if (await file.exists()) {
+        await file.delete();
+        debugPrint('Image file deleted: $imagePath');
+      }
+    } catch (e) {
+      debugPrint('Error deleting image file: $e');
     }
   }
 
@@ -44,11 +30,13 @@ class HistoryService {
     required String userId,
     String? imagePath,
   }) async {
-    await deleteHistoryItem(
+    // 4. Ask the repository to delete the database record
+    await _scanRepository.deleteHistoryItem(
       localId: localId,
       userId: userId,
     );
 
+    // 5. Delete the physical image file
     await deleteImageFile(imagePath);
   }
 }
