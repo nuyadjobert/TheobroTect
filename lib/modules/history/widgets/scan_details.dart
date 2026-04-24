@@ -152,7 +152,7 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: items.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 12),
+                          separatorBuilder: (context, index) => const SizedBox(height: 12),
                           itemBuilder: (context, index) => _buildInstructionCard(items[index], index + 1),
                         ),
                       
@@ -194,7 +194,7 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
                 ? Image.file(
                     File(path),
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
+                    errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[200],
                       child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 48),
                     ),

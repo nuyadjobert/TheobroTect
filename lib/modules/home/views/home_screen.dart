@@ -511,7 +511,7 @@ class SkeletonLayout extends StatelessWidget {
         return ListView.builder(
           padding: const EdgeInsets.all(20),
           itemCount: 8,
-          itemBuilder: (_, _) => Padding(
+          itemBuilder: (context, index) => Padding(
             padding: const EdgeInsets.only(bottom: 15),
             child: Row(
               children: [
@@ -559,7 +559,7 @@ class SkeletonLayout extends StatelessWidget {
                     childAspectRatio: 0.8,
                   ),
                   itemCount: 4,
-                  itemBuilder: (_, _) => Container(
+                  itemBuilder: (context, index) => Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(15),

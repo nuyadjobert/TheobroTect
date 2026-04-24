@@ -129,7 +129,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                       children: [
                         AnimatedBuilder(
                           animation: controller,
-                          builder: (_, _) {
+                          builder: (context, index) {
                             return Text(
                               "RESEND CODE IN ${controller.timerText}",
                               style: theme.textTheme.labelLarge?.copyWith(
@@ -144,7 +144,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                         ),
                         AnimatedBuilder(
                           animation: controller,
-                          builder: (_, _) {
+                          builder: (context, index) {
                             return TextButton(
                               onPressed: controller.secondsLeft == 0
                                   ? () {

@@ -1,5 +1,4 @@
 import '../services/history_service.dart';
-import 'package:cacao_apps/core/db/app_database.dart';
 import 'package:cacao_apps/core/db/user_repository.dart';
 class HistoryController {
   final HistoryService _historyService = HistoryService();
