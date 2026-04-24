@@ -1,4 +1,3 @@
-import 'package:cacao_apps/core/db/app_database.dart';
 import 'package:cacao_apps/core/db/user_repository.dart';
 import 'package:flutter/material.dart';
 

@@ -194,7 +194,7 @@ class _RecommendationsPanelState extends State<RecommendationsPanel> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final text = items[index];
                   return _buildRecommendationCard(text, index);
