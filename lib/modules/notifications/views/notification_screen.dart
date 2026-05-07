@@ -74,7 +74,7 @@ class NotificationScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1B4332).withOpacity(0.2),
+            color: const Color(0xFF1B4332).withAlpha(51),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -93,7 +93,7 @@ class NotificationScreen extends StatelessWidget {
                     Text(
                       alert['id']!,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withAlpha(153),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.1,
@@ -115,7 +115,7 @@ class NotificationScreen extends StatelessWidget {
                 Text(
                   "Location: ${alert['sector']} • ${alert['date']}",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withAlpha(179),
                     fontSize: 13,
                   ),
                 ),
@@ -124,7 +124,7 @@ class NotificationScreen extends StatelessWidget {
           ),
           
           // Action Buttons Divider
-          Container(height: 1, color: Colors.white.withOpacity(0.1)),
+          Container(height: 1, color: Colors.white.withAlpha(26)),
           
           // Row of Buttons
           IntrinsicHeight(
@@ -139,14 +139,14 @@ class NotificationScreen extends StatelessWidget {
                     child: Text(
                       "IGNORE",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withAlpha(128),
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
                     ),
                   ),
                 ),
-                VerticalDivider(color: Colors.white.withOpacity(0.1), width: 1, indent: 10, endIndent: 10),
+                VerticalDivider(color: Colors.white.withAlpha(26), width: 1, indent: 10, endIndent: 10),
                 Expanded(
                   child: TextButton(
                     onPressed: () {
@@ -197,9 +197,9 @@ class NotificationScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withAlpha(51),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withAlpha(128)),
       ),
       child: Text(
         severity.toUpperCase(),

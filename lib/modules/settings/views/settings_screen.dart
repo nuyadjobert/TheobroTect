@@ -221,7 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Colors.redAccent, width: 1.5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            backgroundColor: Colors.redAccent.withOpacity(0.05),
+            backgroundColor: Colors.redAccent.withAlpha(128),
           ),
         ),
       ),
