@@ -29,12 +29,11 @@ class CacaoModelService {
   Future<void> loadModel() async {
     if (_isLoaded) return;
     _interpreter = await Interpreter.fromAsset(
-      'assets/models/mobilenetv3large_trainmodelV7.tflite',
+      'assets/models/mobilenetv3large_trainmodelV7.1.tflite',
       options: InterpreterOptions()..threads = 2,
     );
     _isLoaded = true;
 
-    // ✅ ADDED: Debug tensor info on load
     final inputTensor = _interpreter!.getInputTensor(0);
     final outputTensor = _interpreter!.getOutputTensor(0);
     debugPrint("Model loaded.");

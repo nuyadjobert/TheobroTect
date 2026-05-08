@@ -8,6 +8,9 @@ import './database_helper.dart';
 class CacaoGuideRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
+  // ==========================================
+  // 1. WRITE: SYNC DATA FROM SERVER
+  // ==========================================
   Future<void> syncCacaoGuide(List<dynamic> backendJsonPayload) async {
     final database = await _dbHelper.db;
     final batch = database.batch();
@@ -77,5 +80,83 @@ class CacaoGuideRepository {
       debugPrint('Error syncing cacao guide: $e');
       rethrow;
     }
+  }
+
+  // ==========================================
+  // 2. UTILITY: CHECK IF EMPTY
+  // ==========================================
+  Future<bool> isDatabaseEmpty() async {
+    final database = await _dbHelper.db;
+    final count = Sqflite.firstIntValue(
+      await database.rawQuery('SELECT COUNT(*) FROM guide_diseases')
+    );
+    return (count ?? 0) == 0;
+  }
+
+  // ==========================================
+  // 3. READ: GETTERS FOR THE UI
+  // ==========================================
+  
+  Future<Map<String, dynamic>?> getDisease(String diseaseKey) async {
+    final database = await _dbHelper.db;
+    final rows = await database.query(
+      'guide_diseases',
+      where: 'disease_key = ?',
+      whereArgs: [diseaseKey],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) return null;
+
+    final row = rows.first;
+    return {
+      'id': row['id'],
+      'disease_key': row['disease_key'],
+      // Decode the TEXT back to JSON for the UI (en/tl)
+      'display_name': json.decode(row['display_name'] as String),
+      'description': json.decode(row['description'] as String),
+    };
+  }
+
+  Future<Map<String, dynamic>?> getMonitoringPlan(String diseaseKey, String severityLevel) async {
+    final database = await _dbHelper.db;
+    
+    final rows = await database.rawQuery('''
+      SELECT m.rescan_after_days, m.preferred_time_hour, m.message, m.checklist 
+      FROM guide_monitoring_plans m
+      INNER JOIN guide_disease_severities s ON m.disease_severity_id = s.id
+      INNER JOIN guide_diseases d ON s.disease_id = d.id
+      WHERE d.disease_key = ? AND s.severity_level = ?
+      LIMIT 1
+    ''', [diseaseKey, severityLevel]);
+
+    if (rows.isEmpty) return null;
+
+    final row = rows.first;
+    return {
+      'rescan_after_days': row['rescan_after_days'],
+      'preferred_time_hour': row['preferred_time_hour'],
+      'message': json.decode(row['message'] as String),
+      'checklist': json.decode(row['checklist'] as String),
+    };
+  }
+
+  Future<List<Map<String, dynamic>>> getRecommendations(String diseaseKey, String severityLevel) async {
+    final database = await _dbHelper.db;
+    
+    final rows = await database.rawQuery('''
+      SELECT r.category_key, r.content, r.sort_order 
+      FROM guide_recommendations r
+      INNER JOIN guide_disease_severities s ON r.disease_severity_id = s.id
+      INNER JOIN guide_diseases d ON s.disease_id = d.id
+      WHERE d.disease_key = ? AND s.severity_level = ?
+      ORDER BY r.sort_order ASC
+    ''', [diseaseKey, severityLevel]);
+
+    return rows.map((row) => {
+      'category_key': row['category_key'],
+      'content': json.decode(row['content'] as String),
+      'sort_order': row['sort_order'],
+    }).toList();
   }
 }
