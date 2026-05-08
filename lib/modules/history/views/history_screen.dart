@@ -84,57 +84,60 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                   // --- START FILTERING LOGIC ---
                   final rawData = snapshot.data ?? [];
-final filteredData = rawData.where((item) {
-  final searchText = _searchController.text.toLowerCase();
+                  final filteredData = rawData.where((item) {
+                    final searchText = _searchController.text.toLowerCase();
 
-  // Determine status for this item
-  String itemStatus;
-  if (item['is_treated'] == 1 || item['status'] == 'treated') {
-    itemStatus = 'treated';
-  } else if (item['severity_key'] == 'default' || item['disease_key'] == 'healthy') {
-    itemStatus = 'healthy';
-  } else {
-    itemStatus = 'infected';
-  }
+                    // Determine status for this item
+                    String itemStatus;
+                    if (item['is_treated'] == 1 ||
+                        item['status'] == 'treated') {
+                      itemStatus = 'treated';
+                    } else if (item['severity_key'] == 'default' ||
+                        item['disease_key'] == 'healthy') {
+                      itemStatus = 'healthy';
+                    } else {
+                      itemStatus = 'infected';
+                    }
 
-  final title = item['disease_key'].toString().replaceAll('_', ' ').toLowerCase();
-  final date = item['created_at'].toString().toLowerCase();
+                    final title = item['disease_key']
+                        .toString()
+                        .replaceAll('_', ' ')
+                        .toLowerCase();
+                    final date = item['created_at'].toString().toLowerCase();
 
-  // Search matches disease name, status, or date
-  bool matchesSearch = title.contains(searchText) ||
-      itemStatus.contains(searchText) ||
-      date.contains(searchText);
+                    // Search matches disease name, status, or date
+                    bool matchesSearch = title.contains(searchText) ||
+                        itemStatus.contains(searchText) ||
+                        date.contains(searchText);
 
-  // ✅ Date filter — match by year, month, day
-  bool matchesDate = true;
-  if (_controller.selectedDate != null) {
-    try {
-      final itemDate = DateTime.parse(item['created_at'].toString());
-      final selected = _controller.selectedDate!;
-      matchesDate = itemDate.year == selected.year &&
-          itemDate.month == selected.month &&
-          itemDate.day == selected.day;
-    } catch (_) {
-      matchesDate = false;
-    }
-  }
+                    // ✅ Date filter — match by year, month, day
+                    bool matchesDate = true;
+                    if (_controller.selectedDate != null) {
+                      try {
+                        final itemDate =
+                            DateTime.parse(item['created_at'].toString());
+                        final selected = _controller.selectedDate!;
+                        matchesDate = itemDate.year == selected.year &&
+                            itemDate.month == selected.month &&
+                            itemDate.day == selected.day;
+                      } catch (_) {
+                        matchesDate = false;
+                      }
+                    }
                     bool matchesFilter = true;
                     if (_controller.activeFilter == "Healthy") {
-                      matchesFilter =
-                          item['severity_key'] == 'default' ||
+                      matchesFilter = item['severity_key'] == 'default' ||
                           item['disease_key'] == 'healthy';
                     } else if (_controller.activeFilter == "Infected") {
-                      matchesFilter =
-                          item['severity_key'] != 'default' &&
+                      matchesFilter = item['severity_key'] != 'default' &&
                           item['disease_key'] != 'healthy';
                     } else if (_controller.activeFilter == "Treated") {
                       // Adjust 'is_treated' to match your actual database column name
-                      matchesFilter =
-                          item['is_treated'] == 1 ||
+                      matchesFilter = item['is_treated'] == 1 ||
                           item['status'] == 'treated';
                     }
 
-return matchesSearch && matchesFilter && matchesDate;
+                    return matchesSearch && matchesFilter && matchesDate;
                   }).toList();
 
                   if (filteredData.isEmpty) {
@@ -150,11 +153,11 @@ return matchesSearch && matchesFilter && matchesDate;
                     physics: const BouncingScrollPhysics(),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 15,
-                          mainAxisSpacing: 15,
-                          childAspectRatio: 0.68,
-                        ),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 15,
+                      mainAxisSpacing: 15,
+                      childAspectRatio: 0.68,
+                    ),
                     itemCount: filteredData.length,
                     itemBuilder: (context, index) {
                       final item = filteredData[index];
@@ -178,8 +181,8 @@ return matchesSearch && matchesFilter && matchesDate;
                             .replaceAll('_', ' ')
                             .toUpperCase(),
                         "date": item['created_at'],
-                        "confidence": (item['confidence'] * 100)
-                            .toStringAsFixed(1),
+                        "confidence":
+                            (item['confidence'] * 100).toStringAsFixed(1),
                         "status": displayStatus,
                         "image": item['image_path'],
                         "isLocalFile": true,
@@ -203,10 +206,10 @@ return matchesSearch && matchesFilter && matchesDate;
 
                           final hasGuideData =
                               item['what_to_do_now_en'] != null &&
-                              item['what_to_do_now_en']
-                                  .toString()
-                                  .trim()
-                                  .isNotEmpty;
+                                  item['what_to_do_now_en']
+                                      .toString()
+                                      .trim()
+                                      .isNotEmpty;
 
                           if (hasGuideData) {
                             _scanResultController.loadFromHistory(item);
@@ -230,6 +233,27 @@ return matchesSearch && matchesFilter && matchesDate;
             ),
           ),
         ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(
+          bottom: 96, // approximately 1 inch
+          right: 16,
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            // Add your sync logic here
+          },
+          backgroundColor: Colors.green,
+          icon: const Icon(Icons.sync_rounded, color: Colors.white),
+          label: const Text(
+            "Sync Data",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ),
     );
   }

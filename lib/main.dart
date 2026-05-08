@@ -14,6 +14,7 @@ import 'modules/notifications/views/notification_screen.dart';
 import 'modules/auth/controllers/registration_controller.dart';
 import 'modules/auth/models/registration_model.dart';
 import 'core/config/app_config.dart';
+import 'core/db/database_helper.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -34,12 +35,14 @@ void main() async {
     getToken: () => tokenStorage.get(),
   );
 
+  final dbHelper = DatabaseHelper();
+  await dbHelper.db;
+
   await NotificationService.instance.init();
 
   final authService = AuthService(DioClient.dio);
   controller = RegistrationController(authService);
 
-  // ✅ Check token before app starts
   final token = await tokenStorage.get();
   final bool isLoggedIn = token != null && token.isNotEmpty;
 

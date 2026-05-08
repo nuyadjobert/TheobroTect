@@ -174,7 +174,6 @@ class VerifyAccountController extends ChangeNotifier {
       createdAt: now,
     );
 
-    await _userRepository.clearUsers();
     await _userRepository.upsertUser(localUser);
   }
 

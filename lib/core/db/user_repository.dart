@@ -1,7 +1,7 @@
 // File: lib/core/database/repositories/user_repository.dart
 
 import 'package:sqflite/sqflite.dart';
-import 'package:cacao_apps/core/model/user.model.dart'; // Ensure correct path
+import 'package:cacao_apps/core/model/user.model.dart';
 import './database_helper.dart';
 
 class UserRepository {
@@ -9,7 +9,6 @@ class UserRepository {
 
   Future<void> upsertUser(LocalUser user) async {
     final database = await _dbHelper.db;
-    await database.delete('users');
     await database.insert(
       'users',
       user.toMap(),

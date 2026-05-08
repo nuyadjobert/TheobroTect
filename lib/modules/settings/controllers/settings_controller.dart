@@ -1,10 +1,18 @@
 import 'package:cacao_apps/core/db/user_repository.dart';
 import 'package:cacao_apps/core/storage/token_storage.dart';
+import 'package:flutter/foundation.dart';
 
 class SettingsController {
   final UserRepository userRepository =UserRepository();
-  Future<void> logout() async {
+  // settings_controller.dart
+Future<void> logout() async {
+  try {
     await TokenStorage().clear();
     await userRepository.clearUsers();
+  } catch (e) {
+    debugPrint("Logout Error: $e");
+    // Optionally: clear storage anyway even if DB fails
+    await TokenStorage().clear(); 
   }
+}
 }
