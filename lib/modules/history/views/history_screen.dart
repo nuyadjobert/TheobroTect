@@ -4,6 +4,7 @@ import '../widgets/history_card.dart';
 import '../widgets/history_filter.dart';
 import '../widgets/scan_details.dart';
 import '../controllers/scan_result_controller.dart';
+import '../../../core/sync/sync_trigger.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -20,6 +21,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     confidence: 0.0,
     severity: "default",
   );
+  bool _isSyncing = false;
+  final SyncTrigger _syncTrigger = SyncTrigger();
 
   @override
   void initState() {
@@ -234,21 +237,69 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
+      
+       // 1. Keep only one location (endFloat keeps it on the right)
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(
           bottom: 96, // approximately 1 inch
           right: 16,
         ),
+        // 2. This must be 'child', not 'floatingActionButton'
         child: FloatingActionButton.extended(
-          onPressed: () {
-            // Add your sync logic here
-          },
-          backgroundColor: Colors.green,
-          icon: const Icon(Icons.sync_rounded, color: Colors.white),
-          label: const Text(
-            "Sync Data",
-            style: TextStyle(
+          // Disable the button if it's already syncing
+          onPressed: _isSyncing
+              ? null
+              : () async {
+                  setState(() {
+                    _isSyncing = true;
+                  });
+
+                  // Call your new public method
+                  final success = await _syncTrigger.forceSync();
+
+                  if (!context.mounted) return;
+
+                  // Show a snackbar based on the result
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? "Sync completed successfully!"
+                            : "No pending data to sync.",
+                      ),
+                      backgroundColor: success ? Colors.green : Colors.orange,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+
+                  setState(() {
+                    _isSyncing = false;
+                  });
+
+                  // Optional: Refresh the UI if the sync updated the database
+                  if (success) {
+                    setState(() {}); // This forces FutureBuilder to rebuild
+                  }
+                },
+          // Change color to grey when disabled/syncing
+          backgroundColor: _isSyncing ? Colors.grey[600] : Colors.green,
+          // Swap the icon for a loading spinner
+          icon: _isSyncing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+              : const Icon(Icons.sync_rounded, color: Colors.white),
+          // Update the text
+          label: Text(
+            _isSyncing ? "Syncing..." : "Sync Data",
+            style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),

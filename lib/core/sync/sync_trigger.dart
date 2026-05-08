@@ -85,4 +85,31 @@ class SyncTrigger {
     _retryTimer?.cancel();
     _sub?.cancel();
   }
+
+  // Inside your SyncTrigger class...
+
+  // Change this from private `_trySync()` to public `forceSync()`
+  Future<bool> forceSync() async {
+    if (_running) return false; // Already running
+    _running = true;
+
+    try {
+      final hasData = await _scanRepository.hasPendingScans();
+      if (!hasData) return false; // Nothing to sync
+
+      final ok = await _isServerReachable();
+      if (!ok) {
+        developer.log('🌐 Server unreachable', name: 'SyncTrigger');
+        return false; // No internet
+      }
+
+      await _scanSync.syncPendingScans();
+      return true; // Sync successful
+    } catch (e) {
+      developer.log('❌ Sync trigger error', name: 'SyncTrigger', error: e);
+      return false; // Sync failed
+    } finally {
+      _running = false;
+    }
+  }
 }
