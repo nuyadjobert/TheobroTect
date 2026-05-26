@@ -1,5 +1,3 @@
-// File: lib/core/database/repositories/cacao_guide_repository.dart
-
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -81,6 +79,17 @@ class CacaoGuideRepository {
       rethrow;
     }
   }
+  Future<int> getDiseaseCount() async {
+  final database = await _dbHelper.db;
+
+  final count = Sqflite.firstIntValue(
+    await database.rawQuery(
+      'SELECT COUNT(*) FROM guide_diseases',
+    ),
+  );
+
+  return count ?? 0;
+}
 
   // ==========================================
   // 2. UTILITY: CHECK IF EMPTY

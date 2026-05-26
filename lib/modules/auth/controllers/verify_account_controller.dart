@@ -1,20 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cacao_apps/core/db/user_repository.dart'; 
+import 'package:cacao_apps/core/db/user_repository.dart';
 import 'package:cacao_apps/core/model/user.model.dart';
 import 'package:cacao_apps/core/storage/token_storage.dart';
 import '../services/auth_services.dart';
 import '../models/verify_otp_result.dart';
+
 
 class VerifyAccountController extends ChangeNotifier {
   final AuthService _auth;
   final String email;
   final _secureStore = TokenStorage();
 
+
   final UserRepository _userRepository = UserRepository();
 
   VerifyAccountController({required AuthService auth, required this.email})
-    : _auth = auth;
+      : _auth = auth;
 
   final List<TextEditingController> otpControllers = List.generate(
     6,
@@ -117,7 +119,6 @@ class VerifyAccountController extends ChangeNotifier {
       }
 
       await _secureStore.save(token);
-
       try {
         await _saveUserLocally(
           userId: userId,

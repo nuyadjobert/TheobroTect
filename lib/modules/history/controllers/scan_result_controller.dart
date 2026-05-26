@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:cacao_apps/core/guide/cacao_guide_service.dart';
-
+import '../../../core/db/cacao_guide_repository.dart';
 class ScanResultController extends ChangeNotifier {
-  // keep these as given inputs (immutable)
+  // Keep these as given inputs
   final String diseaseName;
   final double confidence;
   final String severity;
 
-  final CacaoGuideService _guide = CacaoGuideService();
+  // 1. Initialize your new SQLite Repository
+  final CacaoGuideRepository _guideRepo = CacaoGuideRepository();
 
-  // mutable UI state (this is what your UI should read)
   late String _diseaseName = diseaseName;
   late String _severity = severity;
   late double _confidence = confidence;
@@ -21,14 +20,13 @@ class ScanResultController extends ChangeNotifier {
   bool isInfected = false;
   String scanDate = DateTime.now().toIso8601String();
 
-  // Loading state for guide fetch
   bool _isLoadingGuide = false;
   String? _guideError;
 
   bool get isLoadingGuide => _isLoadingGuide;
   String? get guideError => _guideError;
 
-  // guide display
+  // Guide display variables
   Map<String, String> displayName = const {"en": "Unknown", "tl": "Hindi Kilala"};
   Map<String, String> description = const {"en": "", "tl": ""};
 
@@ -46,39 +44,6 @@ class ScanResultController extends ChangeNotifier {
     required this.severity,
   });
 
-  // ---------------------------------------------------------
-  // NEW: Load from History Map (Instant Hydration)
-  // This bridges the gap for the red error in your ScanDetailsSheet
-  // ---------------------------------------------------------
-  void loadFromHistory(Map<String, dynamic> data) {
-    _isLoadingGuide = false;
-    _guideError = null;
-
-    // Split the newline-separated strings from the DB back into Lists for the UI
-    whatToDoNowEn = _splitStoredString(data['what_to_do_now_en']);
-    whatToDoNowTl = _splitStoredString(data['what_to_do_now_tl']);
-    
-    preventionEn = _splitStoredString(data['prevention_en']);
-    preventionTl = _splitStoredString(data['prevention_tl']);
-    
-    whenToEscalateEn = _splitStoredString(data['when_to_escalate_en']);
-    whenToEscalateTl = _splitStoredString(data['when_to_escalate_tl']);
-
-    // Map the display names based on history data
-    displayName = {
-      "en": data['title'] ?? (data['status'] == 'Infected' ? "Detected Infection" : "Healthy Leaf"),
-      "tl": data['title_tl'] ?? (data['status'] == 'Infected' ? "May Impeksyon" : "Malusog na Dahon"),
-    };
-
-    notifyListeners();
-  }
-
-List<String> _splitStoredString(dynamic val) {
-  final stringVal = val?.toString() ?? '';
-  if (stringVal.isEmpty) return const [];
-  return stringVal.split('\n').where((s) => s.trim().isNotEmpty).toList();
-}
-
   void setInputs({
     required String diseaseName,
     required String severity,
@@ -90,6 +55,24 @@ List<String> _splitStoredString(dynamic val) {
     notifyListeners();
   }
 
+  // ---------------------------------------------------------
+  // NEW: Hydrate from History using relational DB keys
+  // ---------------------------------------------------------
+  Future<void> loadFromHistory(Map<String, dynamic> scanRow) async {
+    // Override the current controller state with the DB row
+    _diseaseName = scanRow['disease_key']; // Or whatever you map it to
+    _severity = scanRow['severity_key'];
+    _confidence = scanRow['confidence'] ?? 0.0;
+    scanDate = scanRow['scanned_at'];
+    isInfected = _diseaseName != 'healthy' && _diseaseName != 'non_cacao';
+    
+    // Now just fetch the latest text from the SQLite Guide tables!
+    await initGuide();
+  }
+
+  // ---------------------------------------------------------
+  // NEW: Fetch from SQLite instead of JSON
+  // ---------------------------------------------------------
   Future<void> initGuide() async {
     _isLoadingGuide = true;
     _guideError = null;
@@ -99,31 +82,45 @@ List<String> _splitStoredString(dynamic val) {
       final diseaseKey = _diseaseKeyFromName(_diseaseName);
       final severityKey = _severityKeyFromText(_severity);
 
-      final disease = await _guide.getDisease(diseaseKey);
-      if (disease == null) {
-        throw Exception('Disease not found in guide: $diseaseKey');
+      isInfected = diseaseKey != 'healthy' && diseaseKey != 'non_cacao';
+
+      // 1. Fetch Disease Info from DB
+      final diseaseInfo = await _guideRepo.getDisease(diseaseKey);
+      if (diseaseInfo == null) {
+        throw Exception('Disease not found in SQLite: $diseaseKey');
       }
 
-      displayName = _mapLang(disease['display_name']);
-      description = _mapLang(disease['description']);
+      // Convert dynamic Map to strict String Map
+      displayName = Map<String, String>.from(diseaseInfo['display_name']);
+      description = Map<String, String>.from(diseaseInfo['description']);
 
-      final rec = await _guide.getRecommendation(
-        diseaseKey: diseaseKey,
-        severityKey: severityKey,
-      );
+      // 2. Fetch Recommendations from DB
+      final recsList = await _guideRepo.getRecommendations(diseaseKey, severityKey);
 
-      if (rec == null) {
-        throw Exception('Recommendation not found: $diseaseKey / $severityKey');
+      // Clear existing lists before populating
+      whatToDoNowEn.clear(); whatToDoNowTl.clear();
+      preventionEn.clear(); preventionTl.clear();
+      whenToEscalateEn.clear(); whenToEscalateTl.clear();
+
+      // 3. Sort recommendations into the right UI lists based on category
+      for (var rec in recsList) {
+        final category = rec['category_key'].toString().toLowerCase();
+        final content = rec['content'] as Map<String, dynamic>;
+
+        final textEn = content['en']?.toString() ?? '';
+        final textTl = content['tl']?.toString() ?? '';
+
+        if (category == 'what_to_do_now' || category == 'now') {
+          whatToDoNowEn.add(textEn);
+          whatToDoNowTl.add(textTl);
+        } else if (category == 'prevention') {
+          preventionEn.add(textEn);
+          preventionTl.add(textTl);
+        } else if (category == 'when_to_escalate' || category == 'escalate') {
+          whenToEscalateEn.add(textEn);
+          whenToEscalateTl.add(textTl);
+        }
       }
-
-      whatToDoNowEn = _listLang(rec['what_to_do_now'], 'en');
-      whatToDoNowTl = _listLang(rec['what_to_do_now'], 'tl');
-
-      preventionEn = _listLang(rec['prevention'], 'en');
-      preventionTl = _listLang(rec['prevention'], 'tl');
-
-      whenToEscalateEn = _listLang(rec['when_to_escalate'], 'en');
-      whenToEscalateTl = _listLang(rec['when_to_escalate'], 'tl');
 
       _isLoadingGuide = false;
       notifyListeners();
@@ -134,44 +131,15 @@ List<String> _splitStoredString(dynamic val) {
     }
   }
 
-  void updateResults({
-    required String title,
-    required bool status,
-    required String date,
-    required Map<String, List<String>> recommendationsEn,
-    required Map<String, List<String>> recommendationsTl,
-  }) {
-    _diseaseName = title;
-    isInfected = status;
-    scanDate = date;
-
-    // Update English Lists
-    whatToDoNowEn = recommendationsEn['now'] ?? [];
-    preventionEn = recommendationsEn['prevention'] ?? [];
-    whenToEscalateEn = recommendationsEn['escalate'] ?? [];
-
-    // Update Tagalog Lists
-    whatToDoNowTl = recommendationsTl['now'] ?? [];
-    preventionTl = recommendationsTl['prevention'] ?? [];
-    whenToEscalateTl = recommendationsTl['escalate'] ?? [];
-
-    notifyListeners();
-  }
-
   void reset() {
     _diseaseName = "Scanning...";
     isInfected = false;
 
-    // Clear guide info too
     displayName = const {"en": "Unknown", "tl": "Hindi Kilala"};
     description = const {"en": "", "tl": ""};
 
-    whatToDoNowEn = [];
-    preventionEn = [];
-    whenToEscalateEn = [];
-    whatToDoNowTl = [];
-    preventionTl = [];
-    whenToEscalateTl = [];
+    whatToDoNowEn.clear(); preventionEn.clear(); whenToEscalateEn.clear();
+    whatToDoNowTl.clear(); preventionTl.clear(); whenToEscalateTl.clear();
 
     _guideError = null;
     _isLoadingGuide = false;
@@ -184,11 +152,14 @@ List<String> _splitStoredString(dynamic val) {
   // -------------------------
   String _diseaseKeyFromName(String name) {
     final n = name.trim().toLowerCase();
-    if (n.contains('black pod')) return 'black_pod_disease';
-    if (n.contains('pod borer')) return 'cacao_pod_borer';
+    if (n.contains('black pod') || n.contains('black_pod')) return 'black_pod_disease';
+    if (n.contains('pod borer') || n.contains('pod_borer')) return 'cacao_pod_borer';
     if (n.contains('mealybug')) return 'mealybug';
     if (n.contains('healthy')) return 'healthy';
-    return 'healthy';
+    if (n.contains('non cacao') || n.contains('non_cacao')) return 'non_cacao';
+    
+    // Fallback: If it's already a clean key, return it
+    return n;
   }
 
   String _severityKeyFromText(String severity) {
@@ -196,24 +167,8 @@ List<String> _splitStoredString(dynamic val) {
     if (s.contains('mild')) return 'mild';
     if (s.contains('moderate')) return 'moderate';
     if (s.contains('severe')) return 'severe';
-    return 'default';
-  }
-
-  Map<String, String> _mapLang(dynamic node) {
-    if (node is Map<String, dynamic>) {
-      return {
-        'en': node['en']?.toString() ?? '',
-        'tl': node['tl']?.toString() ?? '',
-      };
-    }
-    return const {'en': '', 'tl': ''};
-  }
-
-  List<String> _listLang(dynamic node, String lang) {
-    if (node is Map<String, dynamic>) {
-      final list = node[lang];
-      if (list is List) return list.map((e) => e.toString()).toList();
-    }
-    return const [];
+    
+    // Healthy and Non-Cacao usually default to 'default'
+    return 'default'; 
   }
 }
