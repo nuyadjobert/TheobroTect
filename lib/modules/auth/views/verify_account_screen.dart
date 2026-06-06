@@ -7,6 +7,8 @@ import '../../../core/network/client.dart';
 import '../controllers/registration_controller.dart';
 import '../models/registration_model.dart';
 import 'registration_screen.dart';
+import 'verifying_overlay.dart';
+import 'verify_success_screen.dart'; // ← new import
 
 class VerifyAccountScreen extends StatefulWidget {
   final String email;
@@ -43,6 +45,8 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final imageHeight = screenHeight < 700 ? 180.0 : 220.0;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -53,270 +57,285 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
         backgroundColor: colorScheme.surface,
         resizeToAvoidBottomInset: true,
         body: ListenableBuilder(
-          // Use ListenableBuilder to react to controller changes
           listenable: controller,
-          builder: (context, _) => SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32.0,
-                vertical: 40.0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Transform.translate(
-                          offset: const Offset(15, 0),
-                          child: Image.asset(
-                            'assets/images/theobrotect.png',
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        const Text(
-                          "TheobroTect",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: forestGreen,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          builder: (context, _) {
+            // ── Full-screen verifying overlay while loading ──
+            if (controller.isLoading) {
+              return const VerifyingOverlay();
+            }
 
-                  const SizedBox(height: 50),
+            // ── Success screen after verified ──
+            if (controller.isVerified && !controller.isNewUserRequired) {
+              return VerifySuccessScreen(
+                onContinue: () {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    (route) => false,
+                  );
+                },
+              );
+            }
 
-                  Center(
-                    child: Text(
-                      "Verify Identity",
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: forestGreen,
-                        letterSpacing: -1,
+            // ── New user: go to registration (no success screen needed) ──
+            if (controller.isNewUserRequired) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => RegistrationScreen(
+                      controller: RegistrationController(
+                        AuthService(DioClient.dio),
+                      ),
+                      model: RegistrationRequest(
+                        email: controller.email,
+                        name: '',
+                        address: '',
+                        contactNumber: '',
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "We've sent a 6-digit code to your email. Enter it below to proceed.",
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
+                );
+              });
+            }
 
-                  const SizedBox(height: 48),
+            return SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 16),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(
-                      6,
-                      (i) => _buildOtpField(context, i, colorScheme),
-                    ),
-                  ),
-
-                  const SizedBox(height: 48),
-                  Center(
-                    child: Column(
-                      children: [
-                        AnimatedBuilder(
-                          animation: controller,
-                          builder: (context, index) {
-                            return Text(
-                              "RESEND CODE IN ${controller.timerText}",
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                color: controller.secondsLeft > 0
-                                    ? colorScheme.outline
-                                    : forestGreen,
-                                letterSpacing: 1.2,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            );
-                          },
-                        ),
-                        AnimatedBuilder(
-                          animation: controller,
-                          builder: (context, index) {
-                            return TextButton(
-                              onPressed: controller.secondsLeft == 0
-                                  ? () {
-                                      controller.startTimer(200);
-                                    }
-                                  : null,
-                              style: TextButton.styleFrom(
-                                foregroundColor: forestGreen,
-                              ),
-                              child: Text(
-                                controller.secondsLeft == 0
-                                    ? "Resend New Code"
-                                    : "Didn't get a code?",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                              // ── Logo + name ──
+                              Center(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Transform.translate(
+                                      offset: const Offset(10, 0),
+                                      child: Image.asset(
+                                        'assets/images/theobrotect.png',
+                                        width: 32,
+                                        height: 32,
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                    const Text(
+                                      "TheobroTect",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                        color: forestGreen,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
 
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 64,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: controller.isLoading
-                            ? forestGreen.withAlpha(179)
-                            : forestGreen,
-                        foregroundColor: Colors.white,
-                        elevation: controller.isLoading ? 0 : 4,
-                        shadowColor: forestGreen.withAlpha(102),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      onPressed: controller.isLoading
-                          ? null
-                          : () async {
-                              final messenger = ScaffoldMessenger.of(
-                                context,
-                              ); // ✅ capture early
-                              final navigator = Navigator.of(context);
+                              const Spacer(),
 
-                              await controller.verify();
-
-                              if (!mounted) return;
-
-                              if (controller.isVerified ||
-                                  controller.isNewUserRequired) {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.verified_user_rounded,
-                                          color: Colors.white,
-                                        ),
-                                        SizedBox(width: 12),
-                                        Text("Verification Successful!"),
-                                      ],
+                              // ── Illustration image ──
+                              Center(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.asset(
+                                    'assets/images/verify_illustration.png',
+                                    width: double.infinity,
+                                    height: imageHeight,
+                                    fit: BoxFit.fitHeight,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            SizedBox(
+                                      height: imageHeight,
+                                      child: const Icon(
+                                        Icons.verified_user_outlined,
+                                        size: 80,
+                                        color: forestGreen,
+                                      ),
                                     ),
+                                  ),
+                                ),
+                              ),
+
+                              const Spacer(),
+
+                              // ── Title ──
+                              Center(
+                                child: Text(
+                                  "Verify Identity",
+                                  textAlign: TextAlign.center,
+                                  style:
+                                      theme.textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: forestGreen,
+                                    letterSpacing: -0.8,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "We've sent a 6-digit code to your email. Enter it below to proceed.",
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                  height: 1.4,
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              // ── OTP fields ──
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: List.generate(
+                                  6,
+                                  (i) =>
+                                      _buildOtpField(context, i, colorScheme),
+                                ),
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // ── Timer + resend ──
+                              Center(
+                                child: Column(
+                                  children: [
+                                    AnimatedBuilder(
+                                      animation: controller,
+                                      builder: (context, index) {
+                                        return Text(
+                                          "RESEND CODE IN ${controller.timerText}",
+                                          style: theme.textTheme.labelMedium
+                                              ?.copyWith(
+                                            color: controller.secondsLeft > 0
+                                                ? colorScheme.outline
+                                                : forestGreen,
+                                            letterSpacing: 1.2,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    AnimatedBuilder(
+                                      animation: controller,
+                                      builder: (context, index) {
+                                        return TextButton(
+                                          onPressed: controller.secondsLeft == 0
+                                              ? () => controller.startTimer(200)
+                                              : null,
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: forestGreen,
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 4),
+                                          ),
+                                          child: Text(
+                                            controller.secondsLeft == 0
+                                                ? "Resend New Code"
+                                                : "Didn't get a code?",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const Spacer(),
+
+                              // ── Verify button ──
+                              SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
                                     backgroundColor: forestGreen,
-                                    behavior: SnackBarBehavior.floating,
-                                    margin: const EdgeInsets.all(20),
+                                    foregroundColor: Colors.white,
+                                    elevation: 4,
+                                    shadowColor: forestGreen.withAlpha(102),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
                                   ),
-                                );
-                              }
+                                  onPressed: () async {
+                                    final messenger =
+                                        ScaffoldMessenger.of(context);
 
-                              if (controller.isNewUserRequired) {
-                                navigator.pushReplacement(
-                                  MaterialPageRoute(
-                                    builder: (_) => RegistrationScreen(
-                                      controller: RegistrationController(
-                                        AuthService(DioClient.dio),
-                                      ),
-                                      model: RegistrationRequest(
-                                        email: controller.email,
-                                        name: '',
-                                        address: '',
-                                        contactNumber: '',
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              } else if (controller.isVerified) {
-                                navigator.pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                    builder: (_) => const HomeScreen(),
-                                  ),
-                                  (route) => false,
-                                );
-                              } else {
-                                final msg = controller.errorMessage;
-                                if (msg != null && msg.isNotEmpty) {
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(msg),
-                                      backgroundColor: Colors.redAccent,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: controller.isLoading
-                            ? Row(
-                                key: const ValueKey('loading'),
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 16),
-                                  Text(
-                                    "VERIFYING...",
+                                    await controller.verify();
+
+                                    if (!mounted) return;
+
+                                    if (!controller.isVerified &&
+                                        !controller.isNewUserRequired) {
+                                      final msg = controller.errorMessage;
+                                      if (msg != null && msg.isNotEmpty) {
+                                        messenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text(msg),
+                                            backgroundColor: Colors.redAccent,
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: const Text(
+                                    "VERIFY",
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 2,
                                     ),
                                   ),
-                                ],
-                              )
-                            : const Text(
-                                "VERIFY",
-                                key: ValueKey('idle'),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 2,
                                 ),
                               ),
+
+                              const SizedBox(height: 8),
+
+                              // ── Back to sign in ──
+                              Center(
+                                child: TextButton.icon(
+                                  onPressed: () => Navigator.pop(context),
+                                  icon: const Icon(Icons.arrow_back_rounded,
+                                      size: 14),
+                                  label: const Text(
+                                    "BACK TO SIGN IN",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: colorScheme.outline,
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Center(
-                    child: TextButton.icon(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                      label: const Text(
-                        "BACK TO SIGN IN",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: colorScheme.outline,
-                      ),
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -328,8 +347,8 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
     ColorScheme colorScheme,
   ) {
     return Container(
-      width: 48,
-      height: 64,
+      width: 44,
+      height: 56,
       decoration: BoxDecoration(
         color: lightForest.withAlpha(77),
         borderRadius: BorderRadius.circular(12),
@@ -339,7 +358,9 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
         controller: controller.otpControllers[index],
         autofocus: index == 0,
         onChanged: (value) {
-          if (value.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
+          if (value.isNotEmpty && index < 5) {
+            FocusScope.of(context).nextFocus();
+          }
           if (value.isEmpty && index > 0) {
             FocusScope.of(context).previousFocus();
           }
@@ -347,7 +368,7 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
         style: const TextStyle(
-          fontSize: 24,
+          fontSize: 22,
           fontWeight: FontWeight.bold,
           color: forestGreen,
         ),

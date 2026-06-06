@@ -62,6 +62,8 @@ class HistoryCard extends StatelessWidget {
         // 3. Get the current user to ensure we delete the correct record
         final currentUser = await userRepo.getCurrentUser();
         if (currentUser == null) {
+            if (!context.mounted) return;
+
            _showErrorSnackbar(context, "Unable to delete: User not logged in");
            return;
         }
