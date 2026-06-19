@@ -57,7 +57,8 @@ class CacaoGuideRepository {
             );
           }
 
-          final recommendations = severityMap['recommendations'] as List<dynamic>? ?? [];
+          final recommendations =
+              severityMap['recommendations'] as List<dynamic>? ?? [];
           for (var recMap in recommendations) {
             batch.insert(
               'guide_recommendations',
@@ -79,17 +80,17 @@ class CacaoGuideRepository {
       rethrow;
     }
   }
-  Future<int> getDiseaseCount() async {
-  final database = await _dbHelper.db;
+//   Future<int> getDiseaseCount() async {
+//   final database = await _dbHelper.db;
 
-  final count = Sqflite.firstIntValue(
-    await database.rawQuery(
-      'SELECT COUNT(*) FROM guide_diseases',
-    ),
-  );
+//   final count = Sqflite.firstIntValue(
+//     await database.rawQuery(
+//       'SELECT COUNT(*) FROM guide_diseases',
+//     ),
+//   );
 
-  return count ?? 0;
-}
+//   return count ?? 0;
+// }
 
   Future<int> getDiseaseCount() async {
     final database = await _dbHelper.db;
@@ -105,8 +106,7 @@ class CacaoGuideRepository {
   Future<bool> isDatabaseEmpty() async {
     final database = await _dbHelper.db;
     final count = Sqflite.firstIntValue(
-      await database.rawQuery('SELECT COUNT(*) FROM guide_diseases')
-    );
+        await database.rawQuery('SELECT COUNT(*) FROM guide_diseases'));
     return (count ?? 0) == 0;
   }
 
@@ -133,9 +133,10 @@ class CacaoGuideRepository {
     };
   }
 
-  Future<Map<String, dynamic>?> getMonitoringPlan(String diseaseKey, String severityLevel) async {
+  Future<Map<String, dynamic>?> getMonitoringPlan(
+      String diseaseKey, String severityLevel) async {
     final database = await _dbHelper.db;
-    
+
     final rows = await database.rawQuery('''
       SELECT m.rescan_after_days, m.preferred_time_hour, m.message, m.checklist 
       FROM guide_monitoring_plans m
@@ -156,9 +157,10 @@ class CacaoGuideRepository {
     };
   }
 
-  Future<List<Map<String, dynamic>>> getRecommendations(String diseaseKey, String severityLevel) async {
+  Future<List<Map<String, dynamic>>> getRecommendations(
+      String diseaseKey, String severityLevel) async {
     final database = await _dbHelper.db;
-    
+
     final rows = await database.rawQuery('''
       SELECT r.category_key, r.content, r.sort_order 
       FROM guide_recommendations r
@@ -168,19 +170,22 @@ class CacaoGuideRepository {
       ORDER BY r.sort_order ASC
     ''', [diseaseKey, severityLevel]);
 
-    return rows.map((row) => {
-      'category_key': row['category_key'],
-      'content': json.decode(row['content'] as String),
-      'sort_order': row['sort_order'],
-    }).toList();
+    return rows
+        .map((row) => {
+              'category_key': row['category_key'],
+              'content': json.decode(row['content'] as String),
+              'sort_order': row['sort_order'],
+            })
+        .toList();
   }
 
   // ==========================================
   // 4. ML INTEGRATION: GET GUIDE BY PREDICTION
   // ==========================================
-  
+
   /// Parses the raw ML prediction string and fetches all corresponding guide data
-  Future<Map<String, dynamic>?> getGuideForPrediction(String mlPrediction) async {
+  Future<Map<String, dynamic>?> getGuideForPrediction(
+      String mlPrediction) async {
     // 1. Handle special non-disease cases
     if (mlPrediction == 'healthy' || mlPrediction == 'non_cacao') {
       return {
@@ -205,12 +210,12 @@ class CacaoGuideRepository {
     } else {
       // Fallback just in case the format doesn't match
       diseaseKey = mlPrediction;
-      severityLevel = 'unknown'; 
+      severityLevel = 'unknown';
     }
 
     // 3. Fetch the data using the parsed keys
     final diseaseInfo = await getDisease(diseaseKey);
-    
+
     if (diseaseInfo == null) {
       debugPrint('No disease info found for key: $diseaseKey');
       return null;
@@ -230,5 +235,4 @@ class CacaoGuideRepository {
       'recommendations': recommendations,
     };
   }
-
 }
