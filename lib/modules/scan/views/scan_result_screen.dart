@@ -34,11 +34,18 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     );
 
     saveController = SaveScanController();
-    controller.init();
 
+    // 1. Initialize controller and wait for completion
     controller.init().then((_) {
       if (!mounted) return;
 
+      // 2. Check for low confidence threshold FIRST
+      if (controller.error == "LOW_CONFIDENCE") {
+        _showLowConfidenceDialog();
+        return; // Stop execution: do not fetch location or build treatments
+      }
+
+      // 3. If confidence is good, proceed with location detection
       if (!controller.isNonCacao) {
         saveController.detectLocation().then((_) {
           if (!mounted) return;
@@ -48,6 +55,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         });
       }
     });
+
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -64,7 +72,44 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     super.dispose();
   }
 
-  // ─── Show the FoodPanda-style map picker ───────────────────
+  // ─── Dialog for Low Confidence (Below 70%) ───────────────────
+  void _showLowConfidenceDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Force them to click the button
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Expanded(child: Text("Unable to Identify Disease")),
+          ],
+        ),
+        content: const Text(
+          "We couldn't identify the disease clearly. This might be due to poor lighting, "
+          "blurriness, or the subject is outside the current system scope.\n\n"
+          "Please retake the photo to ensure accurate recommendations.",
+          style: TextStyle(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2D6A4F),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () {
+              Navigator.of(ctx).pop(); // Close dialog
+              Navigator.of(context).pop(); // Go back to the scanner screen
+            },
+            child: const Text("Retake Photo", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Show the map picker ───────────────────
   Future<void> _showLocationPicker() async {
     await LocationPickerSheet.show(
       context,
@@ -77,7 +122,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   Future<void> _onSave() async {
     HapticFeedback.lightImpact();
 
-    // If location still needs manual pin, show map first
     if (saveController.needsManualLocation) {
       final picked = await LocationPickerSheet.show(
         context,
@@ -114,9 +158,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                ok
-                    ? "Scan saved successfully!"
-                    : (saveController.saveError ?? "Save failed"),
+                ok ? "Scan saved successfully!" : (saveController.saveError ?? "Save failed"),
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -138,11 +180,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.black,
-            size: 20,
-          ),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -151,221 +189,253 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Scanned image ──
-            Hero(
-              tag: 'scan_image',
-              child: Container(
-                height: 240,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(25),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                  image: widget.result.imagePath != null
-                      ? DecorationImage(
-                          image: FileImage(File(widget.result.imagePath!)),
-                          fit: BoxFit.cover,
-                        )
-                      : const DecorationImage(
-                          image: AssetImage('assets/images/bp1.png'),
-                          fit: BoxFit.cover,
+      
+      // ── Using ListenableBuilder to handle Loading & Error states dynamically ──
+      body: ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) {
+          // 1. Show Loading State
+          if (controller.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF2D6A4F)),
+            );
+          }
+
+          // 2. Show Error State (e.g., LOW_CONFIDENCE)
+          if (controller.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.broken_image_rounded, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    controller.error == "LOW_CONFIDENCE"
+                        ? "Analysis blocked due to low confidence."
+                        : "An error occurred.",
+                    style: const TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // 3. Show Normal Body Content
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Scanned image ──
+                Hero(
+                  tag: 'scan_image',
+                  child: Container(
+                    height: 240,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(25),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
+                      ],
+                      image: widget.result.imagePath != null
+                          ? DecorationImage(
+                              image: FileImage(File(widget.result.imagePath!)),
+                              fit: BoxFit.cover,
+                            )
+                          : const DecorationImage(
+                              image: AssetImage('assets/images/bp1.png'),
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-            // ── Diagnosis ──
-            const Text(
-              "DIAGNOSIS",
-              style: TextStyle(
-                color: Colors.grey,
-                letterSpacing: 1.5,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              controller.diseaseName,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
-                color: Color(0xFF1B3022),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SeverityAlertCard(severity: controller.severity),
-            const SizedBox(height: 32),
-            ConfidenceMeter(confidence: controller.confidence),
-            const SizedBox(height: 32),
+                // ── Diagnosis ──
+                const Text(
+                  "DIAGNOSIS",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    letterSpacing: 1.5,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  controller.diseaseName,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1B3022),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SeverityAlertCard(severity: controller.severity),
+                const SizedBox(height: 32),
+                ConfidenceMeter(confidence: controller.confidence),
+                const SizedBox(height: 32),
 
-            // ── Location status banner ──
-            _LocationStatusBanner(
-              locationPicker: saveController.locationPicker,
-              onTap: _showLocationPicker,
-              isDisabled: controller.isNonCacao,
-            ),
-            const SizedBox(height: 24),
+                // ── Location status banner ──
+                _LocationStatusBanner(
+                  locationPicker: saveController.locationPicker,
+                  onTap: _showLocationPicker,
+                  isDisabled: controller.isNonCacao,
+                ),
+                const SizedBox(height: 24),
 
-            // ── Treatment plan ──
-            const Text(
-              "Treatment Plan",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1B3022),
-              ),
+                // ── Treatment plan ──
+                const Text(
+                  "Treatment Plan",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1B3022),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                RecommendationsPanel(controller: controller, lang: lang),
+              ],
             ),
-            const SizedBox(height: 16),
-            RecommendationsPanel(controller: controller, lang: lang),
-          ],
-        ),
+          );
+        },
       ),
 
-      // ── Bottom action bar ──
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(25),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // ── Save button ──
-            Expanded(
-              flex: 3,
-              child: ListenableBuilder(
-                listenable: Listenable.merge([controller, saveController]),
-                builder: (context, _) {
-                  final disabled =
-                      controller.isLoading ||
-                      saveController.isSaving ||
-                      controller.isNonCacao;
-                  final saved = saveController.isSaved;
+      // ── Bottom action bar (Hides if loading or low confidence) ──
+      bottomNavigationBar: ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) {
+          if (controller.isLoading || controller.error != null) {
+            return const SizedBox.shrink(); // Hide the bar completely
+          }
 
-                  return OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                        color: saved
-                            ? const Color(0xFF2D6A4F)
-                            : Colors.black.withAlpha(20),
-                        width: 1.5,
-                      ),
-                      backgroundColor: Colors.white,
-                      foregroundColor: saved
-                          ? const Color(0xFF2D6A4F)
-                          : Colors.black87,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    onPressed: disabled || saved ? null : _onSave,
-                    child: saveController.isSaving
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFF2D6A4F),
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                saved
-                                    ? Icons.bookmark_added_rounded
-                                    : Icons.bookmark_add_outlined,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  controller.isNonCacao
-                                      ? "N/A"
-                                      : saved
-                                      ? "SAVED"
-                                      : "SAVE",
-                                  overflow: TextOverflow
-                                      .ellipsis, // 🔥 prevents overflow
-                                  maxLines: 1,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ],
+          return Container(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // ── Save button ──
+                Expanded(
+                  flex: 3,
+                  child: ListenableBuilder(
+                    listenable: saveController,
+                    builder: (context, _) {
+                      final disabled = saveController.isSaving || controller.isNonCacao;
+                      final saved = saveController.isSaved;
+
+                      return OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: saved ? const Color(0xFF2D6A4F) : Colors.black.withAlpha(20),
+                            width: 1.5,
                           ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(width: 12),
-
-            // ── Scan again button ──
-            Expanded(
-              flex: 4,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF4A7C59), Color(0xFF2D6A4F)],
+                          backgroundColor: Colors.white,
+                          foregroundColor: saved ? const Color(0xFF2D6A4F) : Colors.black87,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        onPressed: disabled || saved ? null : _onSave,
+                        child: saveController.isSaving
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFF2D6A4F),
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    saved ? Icons.bookmark_added_rounded : Icons.bookmark_add_outlined,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      controller.isNonCacao
+                                          ? "N/A"
+                                          : saved
+                                              ? "SAVED"
+                                              : "SAVE",
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      );
+                    },
                   ),
                 ),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
+                const SizedBox(width: 12),
+
+                // ── Scan again button ──
+                Expanded(
+                  flex: 4,
+                  child: Container(
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(18),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4A7C59), Color(0xFF2D6A4F)],
+                      ),
                     ),
-                  ),
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "SCAN AGAIN",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        "SCAN AGAIN",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-// Location status banner — shown inline above Treatment Plan
+// Location status banner
 // ─────────────────────────────────────────────────────────────
 class _LocationStatusBanner extends StatelessWidget {
   final LocationPickerController locationPicker;
@@ -384,7 +454,7 @@ class _LocationStatusBanner extends StatelessWidget {
       listenable: locationPicker,
       builder: (context, _) {
         if (isDisabled) {
-          return _BannerTile(
+          return const _BannerTile(
             icon: Icons.block,
             color: Colors.grey,
             message: "Location not required for non-cacao scan",
@@ -394,22 +464,19 @@ class _LocationStatusBanner extends StatelessWidget {
 
         // Still detecting
         if (lp.isLoading) {
-          return _BannerTile(
+          return const _BannerTile(
             icon: Icons.gps_not_fixed,
             color: Colors.orange,
             message: "Detecting your location...",
-            trailing: const SizedBox(
+            trailing: SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.orange,
-              ),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange),
             ),
           );
         }
 
-        // Needs manual pick — tappable
+        // Needs manual pick
         if (lp.needsManualPick) {
           return GestureDetector(
             onTap: onTap,
@@ -419,11 +486,7 @@ class _LocationStatusBanner extends StatelessWidget {
               message: lp.accuracy != null
                   ? "Low GPS accuracy (±${lp.accuracy!.toStringAsFixed(0)}m) — tap to pin"
                   : "No GPS signal — tap to pin your location",
-              trailing: Icon(
-                Icons.chevron_right,
-                color: Colors.red.shade600,
-                size: 20,
-              ),
+              trailing: Icon(Icons.chevron_right, color: Colors.red.shade600, size: 20),
             ),
           );
         }
@@ -432,15 +495,11 @@ class _LocationStatusBanner extends StatelessWidget {
         if (lp.isManuallyPicked) {
           return GestureDetector(
             onTap: onTap,
-            child: _BannerTile(
+            child: const _BannerTile(
               icon: Icons.location_on,
-              color: const Color(0xFF2D6A4F),
+              color: Color(0xFF2D6A4F),
               message: "Location pinned manually — tap to adjust",
-              trailing: Icon(
-                Icons.edit_location_alt_outlined,
-                color: const Color(0xFF2D6A4F),
-                size: 18,
-              ),
+              trailing: Icon(Icons.edit_location_alt_outlined, color: Color(0xFF2D6A4F), size: 18),
             ),
           );
         }
@@ -455,11 +514,7 @@ class _LocationStatusBanner extends StatelessWidget {
             message: acc != null
                 ? "Location detected (±${acc.toStringAsFixed(0)}m) — tap to adjust"
                 : "Location detected — tap to adjust",
-            trailing: Icon(
-              Icons.edit_location_alt_outlined,
-              color: const Color(0xFF2D6A4F),
-              size: 18,
-            ),
+            trailing: const Icon(Icons.edit_location_alt_outlined, color: Color(0xFF2D6A4F), size: 18),
           ),
         );
       },
@@ -496,11 +551,7 @@ class _BannerTile extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ),
           if (trailing != null) ...[const SizedBox(width: 6), trailing!],

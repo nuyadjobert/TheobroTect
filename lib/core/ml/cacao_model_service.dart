@@ -29,7 +29,7 @@ class CacaoModelService {
   Future<void> loadModel() async {
     if (_isLoaded) return;
     _interpreter = await Interpreter.fromAsset(
-      'assets/models/mobilenetv3large_trainmodelV7.1.tflite',
+      'assets/models/mobilenetv3large_trainmodelV8.tflite',
       options: InterpreterOptions()..threads = 2,
     );
     _isLoaded = true;
@@ -56,10 +56,28 @@ class CacaoModelService {
 
     final inputTensor = _interpreter!.getInputTensor(0);
     final shape = inputTensor.shape;
-    final h = shape[1];
-    final w = shape[2];
+    final h = shape[1]; // 224
+    final w = shape[2]; // 224
 
-    final resized = img.copyResize(decoded, width: w, height: h);
+    // ✅ ADJUSTMENT 1: CENTER CROP LOGIC
+    // Find the shortest side to cut a perfect square
+    final int shortSide = min(decoded.width, decoded.height);
+
+    // Calculate center offset
+    final int offsetX = (decoded.width - shortSide) ~/ 2;
+    final int offsetY = (decoded.height - shortSide) ~/ 2;
+
+    // Crop the image into a perfect square first
+    final img.Image squareImage = img.copyCrop(
+      decoded,
+      x: offsetX,
+      y: offsetY,
+      width: shortSide,
+      height: shortSide,
+    );
+
+    // Now safely resize the square down to 224x224 without distortion
+    final resized = img.copyResize(squareImage, width: w, height: h);
 
     final input = List.generate(
       1,
@@ -95,7 +113,6 @@ class CacaoModelService {
     bestScore = max(0.0, min(1.0, bestScore));
     final bestLabel = labelsInOrder[bestIdx];
 
-    // ✅ CHANGED: Log ALL scores instead of only non_cacao alert
     debugPrint("=== RAW SCORES ===");
     for (int i = 0; i < scores.length; i++) {
       debugPrint(
