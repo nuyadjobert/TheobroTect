@@ -79,6 +79,17 @@ class CacaoGuideRepository {
       rethrow;
     }
   }
+  Future<int> getDiseaseCount() async {
+  final database = await _dbHelper.db;
+
+  final count = Sqflite.firstIntValue(
+    await database.rawQuery(
+      'SELECT COUNT(*) FROM guide_diseases',
+    ),
+  );
+
+  return count ?? 0;
+}
 
   Future<int> getDiseaseCount() async {
     final database = await _dbHelper.db;
