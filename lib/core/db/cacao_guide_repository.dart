@@ -1,5 +1,3 @@
-// File: lib/core/database/repositories/cacao_guide_repository.dart
-
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -82,6 +80,14 @@ class CacaoGuideRepository {
     }
   }
 
+  Future<int> getDiseaseCount() async {
+    final database = await _dbHelper.db;
+    final count = Sqflite.firstIntValue(
+      await database.rawQuery('SELECT COUNT(*) FROM guide_diseases'),
+    );
+    return count ?? 0;
+  }
+
   // ==========================================
   // 2. UTILITY: CHECK IF EMPTY
   // ==========================================
@@ -96,7 +102,6 @@ class CacaoGuideRepository {
   // ==========================================
   // 3. READ: GETTERS FOR THE UI
   // ==========================================
-  
   Future<Map<String, dynamic>?> getDisease(String diseaseKey) async {
     final database = await _dbHelper.db;
     final rows = await database.query(
@@ -112,7 +117,6 @@ class CacaoGuideRepository {
     return {
       'id': row['id'],
       'disease_key': row['disease_key'],
-      // Decode the TEXT back to JSON for the UI (en/tl)
       'display_name': json.decode(row['display_name'] as String),
       'description': json.decode(row['description'] as String),
     };
@@ -159,4 +163,61 @@ class CacaoGuideRepository {
       'sort_order': row['sort_order'],
     }).toList();
   }
+
+  // ==========================================
+  // 4. ML INTEGRATION: GET GUIDE BY PREDICTION
+  // ==========================================
+  
+  /// Parses the raw ML prediction string and fetches all corresponding guide data
+  Future<Map<String, dynamic>?> getGuideForPrediction(String mlPrediction) async {
+    // 1. Handle special non-disease cases
+    if (mlPrediction == 'healthy' || mlPrediction == 'non_cacao') {
+      return {
+        'status': mlPrediction,
+        'is_disease': false,
+      };
+    }
+
+    // 2. Parse the ML string to extract disease_key and severity_level
+    String diseaseKey = '';
+    String severityLevel = '';
+
+    if (mlPrediction.endsWith('_mild')) {
+      severityLevel = 'mild';
+      diseaseKey = mlPrediction.replaceAll('_mild', '');
+    } else if (mlPrediction.endsWith('_moderate')) {
+      severityLevel = 'moderate';
+      diseaseKey = mlPrediction.replaceAll('_moderate', '');
+    } else if (mlPrediction.endsWith('_severe')) {
+      severityLevel = 'severe';
+      diseaseKey = mlPrediction.replaceAll('_severe', '');
+    } else {
+      // Fallback just in case the format doesn't match
+      diseaseKey = mlPrediction;
+      severityLevel = 'unknown'; 
+    }
+
+    // 3. Fetch the data using the parsed keys
+    final diseaseInfo = await getDisease(diseaseKey);
+    
+    if (diseaseInfo == null) {
+      debugPrint('No disease info found for key: $diseaseKey');
+      return null;
+    }
+
+    final monitoringPlan = await getMonitoringPlan(diseaseKey, severityLevel);
+    final recommendations = await getRecommendations(diseaseKey, severityLevel);
+
+    // 4. Return a bundled map ready for the UI
+    return {
+      'is_disease': true,
+      'ml_prediction': mlPrediction,
+      'parsed_disease_key': diseaseKey,
+      'parsed_severity': severityLevel,
+      'disease_info': diseaseInfo,
+      'monitoring_plan': monitoringPlan,
+      'recommendations': recommendations,
+    };
+  }
+
 }

@@ -20,7 +20,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   late Animation<double> _animation;
 
   static const double _frameWidth = 300;
-  static const double _frameHeight = 600; // taller than wide = portrait pod shape
+  static const double _frameHeight = 600; 
 
   @override
   void initState() {
@@ -86,101 +86,54 @@ class _ScannerScreenState extends State<ScannerScreen>
           backgroundColor: Colors.black,
           body: Stack(
             children: [
+
+              // Inside your Stack, add the scanning frame overlay:
+// Center(
+//   child: SizedBox(
+//     width: _frameWidth,
+//     height: _frameHeight,
+//     child: Stack(
+//       children: [
+//         _buildCorner(top: 0, left: 0),
+//         _buildCorner(top: 0, right: 0),
+//         _buildCorner(bottom: 0, left: 0),
+//         _buildCorner(bottom: 0, right: 0),
+//       ],
+//     ),
+//   ),
+// ),
               // 1. Camera Preview — full screen
-              SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: double.infinity,
-                child: CameraPreview(controller.cameraController!),
-              ),
-
-              // 2. Dark Overlay with rectangular cutout
-              ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  Colors.black.withAlpha(178), // slightly darker for better contrast
-                  BlendMode.srcOut,
-                ),
-                child: Stack(
-                  children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
-                        backgroundBlendMode: BlendMode.dstOut,
-                      ),
+              ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.center,
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: controller
+                          .cameraController!.value.previewSize!.height,
+                      height:
+                          controller.cameraController!.value.previewSize!.width,
+                      child: CameraPreview(controller.cameraController!),
                     ),
-                    Center(
-                      child: Container(
-                        height: _frameHeight,
-                        width: _frameWidth,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // 3. Scanning line animation + corner brackets
-              Center(
-                child: SizedBox(
-                  height: _frameHeight,
-                  width: _frameWidth,
-                  child: Stack(
-                    children: [
-                      // Scanning line
-                      AnimatedBuilder(
-                        animation: _animation,
-                        builder: (context, child) {
-                          return Positioned(
-                            top: _animation.value * (_frameHeight - 4),
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              height: 2,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.greenAccent,
-                                    Colors.transparent,
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.greenAccent.withAlpha(128),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Corner brackets
-                      _buildCorner(top: 0, left: 0),
-                      _buildCorner(top: 0, right: 0),
-                      _buildCorner(bottom: 0, left: 0),
-                      _buildCorner(bottom: 0, right: 0),
-                    ],
                   ),
                 ),
               ),
-
               // 4. Frame size label (helps user know the crop area)
               Positioned(
-                top: MediaQuery.of(context).size.height / 2 + _frameHeight / 2 + 12,
+                top: MediaQuery.of(context).size.height / 2 +
+                    _frameHeight / 2 +
+                    12,
                 left: 0,
                 right: 0,
                 child: Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.greenAccent.withAlpha(30),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.greenAccent.withAlpha(80)),
+                      border:
+                          Border.all(color: Colors.greenAccent.withAlpha(80)),
                     ),
                     child: const Text(
                       "FIT THE CACAO POD INSIDE",
@@ -307,53 +260,53 @@ class _ScannerScreenState extends State<ScannerScreen>
     );
   }
 
-  Widget _buildCorner({
-    double? top,
-    double? bottom,
-    double? left,
-    double? right,
-  }) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
-      child: Container(
-        height: 36,
-        width: 36,
-        decoration: BoxDecoration(
-          border: Border(
-            top: top != null
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
-                : BorderSide.none,
-            bottom: bottom != null
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
-                : BorderSide.none,
-            left: left != null
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
-                : BorderSide.none,
-            right: right != null
-                ? const BorderSide(color: Colors.greenAccent, width: 4)
-                : BorderSide.none,
-          ),
-          borderRadius: BorderRadius.only(
-            topLeft: (top != null && left != null)
-                ? const Radius.circular(16)
-                : Radius.zero,
-            topRight: (top != null && right != null)
-                ? const Radius.circular(16)
-                : Radius.zero,
-            bottomLeft: (bottom != null && left != null)
-                ? const Radius.circular(16)
-                : Radius.zero,
-            bottomRight: (bottom != null && right != null)
-                ? const Radius.circular(16)
-                : Radius.zero,
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildCorner({
+  //   double? top,
+  //   double? bottom,
+  //   double? left,
+  //   double? right,
+  // }) {
+  //   return Positioned(
+  //     top: top,
+  //     bottom: bottom,
+  //     left: left,
+  //     right: right,
+  //     child: Container(
+  //       height: 36,
+  //       width: 36,
+  //       decoration: BoxDecoration(
+  //         border: Border(
+  //           top: top != null
+  //               ? const BorderSide(color: Colors.greenAccent, width: 4)
+  //               : BorderSide.none,
+  //           bottom: bottom != null
+  //               ? const BorderSide(color: Colors.greenAccent, width: 4)
+  //               : BorderSide.none,
+  //           left: left != null
+  //               ? const BorderSide(color: Colors.greenAccent, width: 4)
+  //               : BorderSide.none,
+  //           right: right != null
+  //               ? const BorderSide(color: Colors.greenAccent, width: 4)
+  //               : BorderSide.none,
+  //         ),
+  //         borderRadius: BorderRadius.only(
+  //           topLeft: (top != null && left != null)
+  //               ? const Radius.circular(16)
+  //               : Radius.zero,
+  //           topRight: (top != null && right != null)
+  //               ? const Radius.circular(16)
+  //               : Radius.zero,
+  //           bottomLeft: (bottom != null && left != null)
+  //               ? const Radius.circular(16)
+  //               : Radius.zero,
+  //           bottomRight: (bottom != null && right != null)
+  //               ? const Radius.circular(16)
+  //               : Radius.zero,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildGlassIconButton({
     required IconData icon,

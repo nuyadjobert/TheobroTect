@@ -83,6 +83,13 @@ class ScanResultController extends ChangeNotifier {
   Future<void> init() async {
     _isLoading = true;
     _error = null;
+
+    if (confidence < 0.70) {
+      _error = "LOW_CONFIDENCE";
+      _isLoading = false;
+      notifyListeners();
+      return; // Stop execution
+    }
     notifyListeners();
 
     try {

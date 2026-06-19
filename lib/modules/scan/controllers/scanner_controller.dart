@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
 class ScannerController extends ChangeNotifier {
   
   CameraController? _camera;
@@ -15,8 +14,8 @@ class ScannerController extends ChangeNotifier {
   bool _isFlashOn = false;
   bool _isAnalyzing = false;
 
-CameraController? get camera => _camera;
-CameraController? get cameraController => _camera;
+  CameraController? get camera => _camera;
+  CameraController? get cameraController => _camera;
   bool get isPermissionGranted => _isPermissionGranted;
   bool get isFlashOn => _isFlashOn;
   bool get isAnalyzing => _isAnalyzing;
@@ -50,7 +49,10 @@ CameraController? get cameraController => _camera;
 
     _camera = CameraController(
       _cameras![0],
-      ResolutionPreset.high,
+      // ✅ ADJUSTMENT 2: Changed from high to medium. 
+      // Medium is typically 480p, which is perfect since we only need 224x224.
+      // This will make capture much faster and reduce memory overhead.
+      ResolutionPreset.high, 
       enableAudio: false,
     );
 
@@ -70,71 +72,71 @@ CameraController? get cameraController => _camera;
     _isFlashOn = !_isFlashOn;
     notifyListeners();
   }
-Future<ScanResultModel?> captureAndAnalyze() async {
-  if (!isReady) return null;
-  if (_isAnalyzing) return null;
 
-  HapticFeedback.heavyImpact();
+  Future<ScanResultModel?> captureAndAnalyze() async {
+    if (!isReady) return null;
+    if (_isAnalyzing) return null;
 
-  _isAnalyzing = true;
-  notifyListeners();
+    HapticFeedback.heavyImpact();
 
-  try {
-    final XFile photo = await _camera!.takePicture();
-    final imagePath = photo.path;
-
-    final pred = await CacaoModelService().predict(imagePath);
-    final parsed = _parseLabel(pred.label);
-
-    return ScanResultModel(
-      imagePath: imagePath,
-      diseaseName: _toDisplayName(parsed.diseaseKey),
-      confidence: pred.confidence,
-      severity: _capitalize(parsed.severityKey),
-    );
-  } catch (e) {
-    return null;
-  } finally {
-    _isAnalyzing = false;
+    _isAnalyzing = true;
     notifyListeners();
+
+    try {
+      final XFile photo = await _camera!.takePicture();
+      final imagePath = photo.path;
+
+      final pred = await CacaoModelService().predict(imagePath);
+      final parsed = _parseLabel(pred.label);
+
+      return ScanResultModel(
+        imagePath: imagePath,
+        diseaseName: _toDisplayName(parsed.diseaseKey),
+        confidence: pred.confidence,
+        severity: _capitalize(parsed.severityKey),
+      );
+    } catch (e) {
+      return null;
+    } finally {
+      _isAnalyzing = false;
+      notifyListeners();
+    }
   }
-}
 
-// --- helpers ---
+  // --- helpers ---
 
-_ParsedLabel _parseLabel(String label) {
-  if (label == 'healthy') {
-    return const _ParsedLabel(diseaseKey: 'healthy', severityKey: 'default');
+  _ParsedLabel _parseLabel(String label) {
+    if (label == 'healthy') {
+      return const _ParsedLabel(diseaseKey: 'healthy', severityKey: 'default');
+    }
+    if (label == 'non_cacao') {
+      return const _ParsedLabel(diseaseKey: 'non_cacao', severityKey: 'default');
+    }
+    final idx = label.lastIndexOf('_');
+    final diseaseKey = label.substring(0, idx);
+    final severityKey = label.substring(idx + 1);
+    return _ParsedLabel(diseaseKey: diseaseKey, severityKey: severityKey);
   }
-  if (label == 'non_cacao') {
-    return const _ParsedLabel(diseaseKey: 'non_cacao', severityKey: 'default');
+
+  String _toDisplayName(String diseaseKey) {
+    switch (diseaseKey) {
+      case 'black_pod_disease':
+        return 'Black Pod Disease';
+      case 'cacao_pod_borer':
+        return 'Cacao Pod Borer';
+      case 'mealybug':
+        return 'Mealybug';
+      case 'healthy':
+        return 'Healthy';
+      case 'non_cacao':
+        return 'Non Cacao';
+      default:
+        return diseaseKey;
+    }
   }
-  final idx = label.lastIndexOf('_');
-  final diseaseKey = label.substring(0, idx);
-  final severityKey = label.substring(idx + 1);
-  return _ParsedLabel(diseaseKey: diseaseKey, severityKey: severityKey);
-}
 
-String _toDisplayName(String diseaseKey) {
-  switch (diseaseKey) {
-    case 'black_pod_disease':
-      return 'Black Pod Disease';
-    case 'cacao_pod_borer':
-      return 'Cacao Pod Borer';
-    case 'mealybug':
-      return 'Mealybug';
-    case 'healthy':
-      return 'Healthy';
-    case 'non_cacao':
-      return 'Non Cacao';
-    default:
-      return diseaseKey;
-  }
-}
-
-String _capitalize(String s) =>
-    s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
-
+  String _capitalize(String s) =>
+      s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 
   @override
   void dispose() {
