@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:cacao_apps/modules/scan/model/scan_result_model.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -19,8 +20,9 @@ class _ScannerScreenState extends State<ScannerScreen>
   late AnimationController _animationController;
   late Animation<double> _animation;
 
-  static const double _frameWidth = 300;
-  static const double _frameHeight = 600; 
+  // Adjusted dimensions to match the cacao pod aspect ratio in your design
+  static const double _frameWidth = 280;
+  static const double _frameHeight = 440;
 
   @override
   void initState() {
@@ -86,23 +88,7 @@ class _ScannerScreenState extends State<ScannerScreen>
           backgroundColor: Colors.black,
           body: Stack(
             children: [
-
-              // Inside your Stack, add the scanning frame overlay:
-// Center(
-//   child: SizedBox(
-//     width: _frameWidth,
-//     height: _frameHeight,
-//     child: Stack(
-//       children: [
-//         _buildCorner(top: 0, left: 0),
-//         _buildCorner(top: 0, right: 0),
-//         _buildCorner(bottom: 0, left: 0),
-//         _buildCorner(bottom: 0, right: 0),
-//       ],
-//     ),
-//   ),
-// ),
-              // 1. Camera Preview — full screen
+              // 1. Camera Preview — full screen (Unchanged Size/Logic)
               ClipRect(
                 child: OverflowBox(
                   alignment: Alignment.center,
@@ -118,37 +104,63 @@ class _ScannerScreenState extends State<ScannerScreen>
                   ),
                 ),
               ),
-              // 4. Frame size label (helps user know the crop area)
-              Positioned(
-                top: MediaQuery.of(context).size.height / 2 +
-                    _frameHeight / 2 +
-                    12,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.greenAccent.withAlpha(30),
-                      borderRadius: BorderRadius.circular(20),
-                      border:
-                          Border.all(color: Colors.greenAccent.withAlpha(80)),
-                    ),
-                    child: const Text(
-                      "FIT THE CACAO POD INSIDE",
-                      style: TextStyle(
-                        color: Colors.greenAccent,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
+
+              // 2. Custom Pod Scanner Overlay (Mask, Dashes, Corners, Crosshair)
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: ScannerOverlayPainter(
+                    frameWidth: _frameWidth,
+                    frameHeight: _frameHeight,
                   ),
                 ),
               ),
 
-              // 5. UI Controls (top bar + capture button)
+              // 3. Frame size label & instructions
+              Positioned(
+                top: MediaQuery.of(context).size.height / 2 +
+                    _frameHeight / 2 +
+                    24, // Spaced neatly below the frame
+                left: 0,
+                right: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0D291A), // Dark green background
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF184D32), // Subtle green border
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const Text(
+                        "FIT THE CACAO POD INSIDE",
+                        style: TextStyle(
+                          color: Color(0xFF2EFA8A), // Vibrant green text
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "↔ Keep distance: ~30cm",
+                      style: TextStyle(
+                        color: Colors.white.withAlpha(179), // 70% opacity
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 4. UI Controls (top bar + capture button)
               SafeArea(
                 child: Column(
                   children: [
@@ -164,7 +176,6 @@ class _ScannerScreenState extends State<ScannerScreen>
                             icon: Icons.close,
                             onTap: () => Navigator.pop(context),
                           ),
-                          // Title label in center
                           const Text(
                             "SCAN POD",
                             style: TextStyle(
@@ -195,7 +206,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withAlpha(128),
+                            color: Colors.white.withAlpha(77), // 30% opacity
                             width: 4,
                           ),
                         ),
@@ -221,7 +232,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                 ),
               ),
 
-              // 6. Analyzing overlay
+              // 5. Analyzing overlay
               if (controller.isAnalyzing)
                 Container(
                   color: Colors.black87,
@@ -246,7 +257,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                       Text(
                         "Identifying disease patterns",
                         style: TextStyle(
-                          color: Colors.white.withAlpha(179),
+                          color: Colors.white.withAlpha(179), // 70% opacity
                           fontSize: 12,
                         ),
                       ),
@@ -259,54 +270,6 @@ class _ScannerScreenState extends State<ScannerScreen>
       },
     );
   }
-
-  // Widget _buildCorner({
-  //   double? top,
-  //   double? bottom,
-  //   double? left,
-  //   double? right,
-  // }) {
-  //   return Positioned(
-  //     top: top,
-  //     bottom: bottom,
-  //     left: left,
-  //     right: right,
-  //     child: Container(
-  //       height: 36,
-  //       width: 36,
-  //       decoration: BoxDecoration(
-  //         border: Border(
-  //           top: top != null
-  //               ? const BorderSide(color: Colors.greenAccent, width: 4)
-  //               : BorderSide.none,
-  //           bottom: bottom != null
-  //               ? const BorderSide(color: Colors.greenAccent, width: 4)
-  //               : BorderSide.none,
-  //           left: left != null
-  //               ? const BorderSide(color: Colors.greenAccent, width: 4)
-  //               : BorderSide.none,
-  //           right: right != null
-  //               ? const BorderSide(color: Colors.greenAccent, width: 4)
-  //               : BorderSide.none,
-  //         ),
-  //         borderRadius: BorderRadius.only(
-  //           topLeft: (top != null && left != null)
-  //               ? const Radius.circular(16)
-  //               : Radius.zero,
-  //           topRight: (top != null && right != null)
-  //               ? const Radius.circular(16)
-  //               : Radius.zero,
-  //           bottomLeft: (bottom != null && left != null)
-  //               ? const Radius.circular(16)
-  //               : Radius.zero,
-  //           bottomRight: (bottom != null && right != null)
-  //               ? const Radius.circular(16)
-  //               : Radius.zero,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildGlassIconButton({
     required IconData icon,
@@ -329,4 +292,124 @@ class _ScannerScreenState extends State<ScannerScreen>
       ),
     );
   }
+}
+
+/// Custom painter to draw the dark mask, dashed pod outline, crosshairs, and corner brackets
+class ScannerOverlayPainter extends CustomPainter {
+  final double frameWidth;
+  final double frameHeight;
+
+  ScannerOverlayPainter({
+    required this.frameWidth,
+    required this.frameHeight,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double cx = size.width / 2;
+    final double cy = size.height / 2;
+    final double podRadius = 80.0; // The roundedness of the pod cutout
+
+    // 1. Draw Semi-Transparent Dark Mask
+    final bgPaint = Paint()..color = Colors.black.withAlpha(204); // 80% opacity
+    final bgPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    
+    final cutoutRect = Rect.fromCenter(
+        center: Offset(cx, cy), width: frameWidth, height: frameHeight);
+    final cutoutRRect = RRect.fromRectAndRadius(cutoutRect, Radius.circular(podRadius));
+    final cutoutPath = Path()..addRRect(cutoutRRect);
+
+    // Subtract the pod shape from the dark background
+    final overlayPath =
+        Path.combine(PathOperation.difference, bgPath, cutoutPath);
+    canvas.drawPath(overlayPath, bgPaint);
+
+    // 2. Draw Inner Dashed Border
+    final dashPaint = Paint()
+      ..color = Colors.white.withAlpha(102) // 40% opacity
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final dashPath = Path()..addRRect(cutoutRRect);
+    for (ui.PathMetric measurePath in dashPath.computeMetrics()) {
+      double distance = 0.0;
+      bool draw = true;
+      while (distance < measurePath.length) {
+        double length = draw ? 8.0 : 6.0; // 8px dash, 6px gap
+        canvas.drawPath(
+          measurePath.extractPath(distance, distance + length),
+          dashPaint,
+        );
+        distance += length;
+        draw = !draw;
+      }
+    }
+
+    // 3. Draw Center Crosshair
+    final crosshairPaint = Paint()
+      ..color = Colors.white.withAlpha(77) // 30% opacity
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    
+    const double crosshairSize = 24.0;
+    canvas.drawLine(Offset(cx - crosshairSize / 2, cy),
+        Offset(cx + crosshairSize / 2, cy), crosshairPaint);
+    canvas.drawLine(Offset(cx, cy - crosshairSize / 2),
+        Offset(cx, cy + crosshairSize / 2), crosshairPaint);
+
+    // 4. Draw Neon Green Corner Brackets
+    final cornerPaint = Paint()
+      ..color = const Color(0xFF2EFA8A) // Match the neon green from the design
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.0
+      ..strokeCap = StrokeCap.round;
+
+    final double margin = 12.0; // Distance of the corners from the inner dashed line
+    final double cornerRadius = podRadius + (margin / 2); // Expanding curve logically
+    final double cornerLength = 30.0;
+
+    final double left = cx - (frameWidth / 2) - margin;
+    final double right = cx + (frameWidth / 2) + margin;
+    final double top = cy - (frameHeight / 2) - margin;
+    final double bottom = cy + (frameHeight / 2) + margin;
+
+    // Top-Left Corner
+    Path tl = Path()
+      ..moveTo(left, top + cornerRadius + cornerLength)
+      ..lineTo(left, top + cornerRadius)
+      ..arcToPoint(Offset(left + cornerRadius, top),
+          radius: Radius.circular(cornerRadius), clockwise: true)
+      ..lineTo(left + cornerRadius + cornerLength, top);
+    canvas.drawPath(tl, cornerPaint);
+
+    // Top-Right Corner
+    Path tr = Path()
+      ..moveTo(right - cornerRadius - cornerLength, top)
+      ..lineTo(right - cornerRadius, top)
+      ..arcToPoint(Offset(right, top + cornerRadius),
+          radius: Radius.circular(cornerRadius), clockwise: true)
+      ..lineTo(right, top + cornerRadius + cornerLength);
+    canvas.drawPath(tr, cornerPaint);
+
+    // Bottom-Right Corner
+    Path br = Path()
+      ..moveTo(right, bottom - cornerRadius - cornerLength)
+      ..lineTo(right, bottom - cornerRadius)
+      ..arcToPoint(Offset(right - cornerRadius, bottom),
+          radius: Radius.circular(cornerRadius), clockwise: true)
+      ..lineTo(right - cornerRadius - cornerLength, bottom);
+    canvas.drawPath(br, cornerPaint);
+
+    // Bottom-Left Corner
+    Path bl = Path()
+      ..moveTo(left + cornerRadius + cornerLength, bottom)
+      ..lineTo(left + cornerRadius, bottom)
+      ..arcToPoint(Offset(left, bottom - cornerRadius),
+          radius: Radius.circular(cornerRadius), clockwise: true)
+      ..lineTo(left, bottom - cornerRadius - cornerLength);
+    canvas.drawPath(bl, cornerPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
