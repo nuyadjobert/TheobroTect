@@ -157,27 +157,64 @@ class CacaoGuideRepository {
     };
   }
 
+  // Future<List<Map<String, dynamic>>> getRecommendations(
+  //     String diseaseKey, String severityLevel) async {
+  //   final database = await _dbHelper.db;
+
+  //   final rows = await database.rawQuery('''
+  //     SELECT r.category_key, r.content, r.sort_order 
+  //     FROM guide_recommendations r
+  //     INNER JOIN guide_disease_severities s ON r.disease_severity_id = s.id
+  //     INNER JOIN guide_diseases d ON s.disease_id = d.id
+  //     WHERE d.disease_key = ? AND s.severity_level = ?
+  //     ORDER BY r.sort_order ASC
+  //   ''', [diseaseKey, severityLevel]);
+
+  //   return rows
+  //       .map((row) => {
+  //             'category_key': row['category_key'],
+  //             'content': json.decode(row['content'] as String),
+  //             'sort_order': row['sort_order'],
+  //           })
+  //       .toList();
+  // }
+
   Future<List<Map<String, dynamic>>> getRecommendations(
-      String diseaseKey, String severityLevel) async {
-    final database = await _dbHelper.db;
+    String diseaseKey, String severityLevel) async {
 
-    final rows = await database.rawQuery('''
-      SELECT r.category_key, r.content, r.sort_order 
-      FROM guide_recommendations r
-      INNER JOIN guide_disease_severities s ON r.disease_severity_id = s.id
-      INNER JOIN guide_diseases d ON s.disease_id = d.id
-      WHERE d.disease_key = ? AND s.severity_level = ?
-      ORDER BY r.sort_order ASC
-    ''', [diseaseKey, severityLevel]);
+  final database = await _dbHelper.db;
 
-    return rows
-        .map((row) => {
-              'category_key': row['category_key'],
-              'content': json.decode(row['content'] as String),
-              'sort_order': row['sort_order'],
-            })
-        .toList();
+  final rows = await database.rawQuery('''
+    SELECT r.category_key, r.content, r.sort_order
+    FROM guide_recommendations r
+    INNER JOIN guide_disease_severities s ON r.disease_severity_id = s.id
+    INNER JOIN guide_diseases d ON s.disease_id = d.id
+    WHERE d.disease_key = ? AND s.severity_level = ?
+    ORDER BY r.sort_order ASC
+  ''', [diseaseKey, severityLevel]);
+
+  debugPrint("========== RAW DB RECOMMENDATIONS ==========");
+
+  for (final row in rows) {
+    debugPrint("CATEGORY: ${row['category_key']}");
+    debugPrint("RAW CONTENT: ${row['content']}");
   }
+
+  debugPrint("===========================================");
+
+  return rows.map((row) {
+    final decoded = json.decode(row['content'] as String);
+
+    debugPrint("DECODED CONTENT: $decoded");
+    debugPrint("TYPE: ${decoded.runtimeType}");
+
+    return {
+      'category_key': row['category_key'],
+      'content': decoded,
+      'sort_order': row['sort_order'],
+    };
+  }).toList();
+}
 
   // ==========================================
   // 4. ML INTEGRATION: GET GUIDE BY PREDICTION

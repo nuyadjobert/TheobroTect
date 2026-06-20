@@ -1,14 +1,15 @@
 import 'package:cacao_apps/core/guide/cacao_guide_service.dart';
 import 'package:flutter/material.dart';
-
 import 'save_scan_controller.dart';
+import 'package:cacao_apps/core/db/cacao_guide_repository.dart';
+import 'package:cacao_apps/modules/scan/model/recommendation_item.dart';
 
 class ScanResultController extends ChangeNotifier {
   final String diseaseName;
   final double confidence;
   final String severity;
   final String? imagePath;
-
+  final CacaoGuideRepository _repository = CacaoGuideRepository();
   final CacaoGuideService _guide = CacaoGuideService();
 
   /// Delegate — handles all save-to-db concerns
@@ -45,17 +46,7 @@ class ScanResultController extends ChangeNotifier {
   };
   Map<String, String> description = const {"en": "", "tl": ""};
 
-  List<String> whatToDoNowEn = const [];
-  List<String> whatToDoNowTl = const [];
-
-  List<String> preventionEn = const [];
-  List<String> preventionTl = const [];
-
-  List<String> whenToEscalateEn = const [];
-  List<String> whenToEscalateTl = const [];
-
-  List<String> seekHelpEn = const [];
-  List<String> seekHelpTl = const [];
+  List<RecommendationItem> recommendations = [];
 
   int? rescanAfterDays;
   Map<String, String>? rescanMessage;
@@ -104,51 +95,73 @@ class ScanResultController extends ChangeNotifier {
       displayName = _mapLang(disease['display_name']);
       description = _mapLang(disease['description']);
 
-      final rec = await _guide.getRecommendation(
-        diseaseKey: diseaseKey,
-        severityKey: severityKey,
-      );
+      final recommendationRows =
+          await _repository.getRecommendations(diseaseKey, severityKey);
 
-      if (rec == null) {
-        throw Exception('Recommendation not found: $diseaseKey / $severityKey');
+      debugPrint("================================");
+      debugPrint("RAW RECOMMENDATIONS:");
+      debugPrint(recommendationRows.toString());
+      debugPrint("================================");
+
+      recommendations.clear();
+
+      for (final row in recommendationRows) {
+        final category = row['category_key']?.toString() ?? 'general';
+        final content = row['content'];
+
+        debugPrint("---------------");
+        debugPrint("CATEGORY: $category");
+        debugPrint("CONTENT TYPE: ${content.runtimeType}");
+        debugPrint("CONTENT VALUE: $content");
+
+        final items = _listLang(content, 'en');
+
+        debugPrint("PARSED ITEMS: $items");
+
+        recommendations.add(
+          RecommendationItem(
+            category: category,
+            content: items,
+          ),
+        );
       }
 
-      whatToDoNowEn = _listLang(rec['what_to_do_now'], 'en');
-      whatToDoNowTl = _listLang(rec['what_to_do_now'], 'tl');
+      debugPrint("========== FINAL RESULT ==========");
 
-      preventionEn = _listLang(rec['prevention'], 'en');
-      preventionTl = _listLang(rec['prevention'], 'tl');
-
-      whenToEscalateEn = _listLang(rec['when_to_escalate'], 'en');
-      whenToEscalateTl = _listLang(rec['when_to_escalate'], 'tl');
-
-      seekHelpEn = _listLang(rec['seek_help'], 'en');
-      seekHelpTl = _listLang(rec['seek_help'], 'tl');
-
-      final mp = rec['monitoring_plan'];
-      if (mp is Map<String, dynamic>) {
-        final d = mp['rescan_after_days'];
-        if (d is num) rescanAfterDays = d.toInt();
-
-        final msg = mp['message'];
-        if (msg is Map<String, dynamic>) {
-          rescanMessage = {
-            'en': msg['en']?.toString() ?? '',
-            'tl': msg['tl']?.toString() ?? '',
-          };
-        }
-      } else {
-        rescanAfterDays = null;
-        rescanMessage = null;
+      for (final rec in recommendations) {
+        debugPrint("CATEGORY: ${rec.category}");
+        debugPrint("CONTENT: ${rec.content}");
       }
 
-      _treatmentPlan = whatToDoNowEn.isNotEmpty
-          ? whatToDoNowEn
+      debugPrint("==================================");
+
+      final allItems = recommendations.expand((e) => e.content).toList();
+
+      _treatmentPlan = allItems.isNotEmpty
+          ? allItems
               .map(
-                (t) => TreatmentTask(
+                (item) => TreatmentTask(
                   icon: Icons.check_circle_outline,
-                  title: "Action",
-                  desc: t,
+                  title: "Recommendation",
+                  desc: item,
+                ),
+              )
+              .toList(growable: false)
+          : const [
+              TreatmentTask(
+                icon: Icons.visibility_outlined,
+                title: "Monitor",
+                desc: "Observe the pod and rescan after a few days.",
+              ),
+            ];
+
+      _treatmentPlan = allItems.isNotEmpty
+          ? allItems
+              .map(
+                (item) => TreatmentTask(
+                  icon: Icons.check_circle_outline,
+                  title: "Recommendation",
+                  desc: item,
                 ),
               )
               .toList(growable: false)
@@ -216,11 +229,54 @@ class ScanResultController extends ChangeNotifier {
   }
 
   List<String> _listLang(dynamic node, String lang) {
-    if (node is Map<String, dynamic>) {
-      final list = node[lang];
-      if (list is List) return list.map((e) => e.toString()).toList();
+    debugPrint("==== _listLang ====");
+    debugPrint("LANG: $lang");
+    debugPrint("NODE TYPE: ${node.runtimeType}");
+    debugPrint("NODE VALUE: $node");
+
+    final List<String> results = [];
+
+    // CASE 1
+    // Current database structure:
+    // [
+    //   {en: "...", tl: "..."},
+    //   {en: "...", tl: "..."}
+    // ]
+    if (node is List) {
+      for (final item in node) {
+        if (item is Map) {
+          final value = item[lang];
+
+          if (value != null) {
+            results.add(value.toString());
+          }
+        }
+      }
+
+      debugPrint("RETURNING LIST: $results");
+      return results;
     }
-    return const [];
+
+    // CASE 2
+    // Alternative structure:
+    // {
+    //   en: [...],
+    //   tl: [...]
+    // }
+    if (node is Map) {
+      final value = node[lang];
+
+      if (value is List) {
+        return value.map((e) => e.toString()).toList();
+      }
+
+      if (value is String) {
+        return [value];
+      }
+    }
+
+    debugPrint("RETURNING EMPTY LIST");
+    return [];
   }
 }
 
