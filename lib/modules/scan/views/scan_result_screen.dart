@@ -3,7 +3,7 @@ import 'package:cacao_apps/modules/scan/controllers/save_scan_controller.dart';
 import 'package:cacao_apps/modules/scan/controllers/location_picker_controller.dart';
 import 'package:cacao_apps/modules/scan/model/scan_result_model.dart';
 import 'package:cacao_apps/modules/scan/views/location_picker_screen.dart';
-import 'package:cacao_apps/modules/scan/widgets/recomendation_panel.dart';
+// import 'package:cacao_apps/modules/scan/widgets/recomendation_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/severity_alert_card.dart';
@@ -72,7 +72,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     super.dispose();
   }
 
-  // ─── Dialog for Low Confidence (Below 70%) ───────────────────
   void _showLowConfidenceDialog() {
     showDialog(
       context: context,
@@ -96,13 +95,15 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2D6A4F),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () {
               Navigator.of(ctx).pop(); // Close dialog
               Navigator.of(context).pop(); // Go back to the scanner screen
             },
-            child: const Text("Retake Photo", style: TextStyle(color: Colors.white)),
+            child: const Text("Retake Photo",
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -158,7 +159,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                ok ? "Scan saved successfully!" : (saveController.saveError ?? "Save failed"),
+                ok
+                    ? "Scan saved successfully!"
+                    : (saveController.saveError ?? "Save failed"),
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -180,7 +183,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -189,7 +193,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         ),
         centerTitle: true,
       ),
-      
+
       // ── Using ListenableBuilder to handle Loading & Error states dynamically ──
       body: ListenableBuilder(
         listenable: controller,
@@ -207,7 +211,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.broken_image_rounded, size: 64, color: Colors.grey),
+                  const Icon(Icons.broken_image_rounded,
+                      size: 64, color: Colors.grey),
                   const SizedBox(height: 16),
                   Text(
                     controller.error == "LOW_CONFIDENCE"
@@ -255,7 +260,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // ── Diagnosis ──
                 const Text(
                   "DIAGNOSIS",
                   style: TextStyle(
@@ -267,6 +271,15 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                 ),
                 Text(
                   controller.diseaseName,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1B3022),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  controller.description[lang] ?? "",
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
@@ -297,7 +310,33 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                RecommendationsPanel(controller: controller, lang: lang),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: controller.recommendations.map((rec) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            rec.category,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          ...rec.content.map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text("• $item"),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                )
               ],
             ),
           );
@@ -316,7 +355,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(30)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(25),
@@ -333,17 +373,21 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                   child: ListenableBuilder(
                     listenable: saveController,
                     builder: (context, _) {
-                      final disabled = saveController.isSaving || controller.isNonCacao;
+                      final disabled =
+                          saveController.isSaving || controller.isNonCacao;
                       final saved = saveController.isSaved;
 
                       return OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
-                            color: saved ? const Color(0xFF2D6A4F) : Colors.black.withAlpha(20),
+                            color: saved
+                                ? const Color(0xFF2D6A4F)
+                                : Colors.black.withAlpha(20),
                             width: 1.5,
                           ),
                           backgroundColor: Colors.white,
-                          foregroundColor: saved ? const Color(0xFF2D6A4F) : Colors.black87,
+                          foregroundColor:
+                              saved ? const Color(0xFF2D6A4F) : Colors.black87,
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
@@ -363,7 +407,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    saved ? Icons.bookmark_added_rounded : Icons.bookmark_add_outlined,
+                                    saved
+                                        ? Icons.bookmark_added_rounded
+                                        : Icons.bookmark_add_outlined,
                                     size: 22,
                                   ),
                                   const SizedBox(width: 8),
@@ -471,7 +517,8 @@ class _LocationStatusBanner extends StatelessWidget {
             trailing: SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange),
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.orange),
             ),
           );
         }
@@ -486,7 +533,8 @@ class _LocationStatusBanner extends StatelessWidget {
               message: lp.accuracy != null
                   ? "Low GPS accuracy (±${lp.accuracy!.toStringAsFixed(0)}m) — tap to pin"
                   : "No GPS signal — tap to pin your location",
-              trailing: Icon(Icons.chevron_right, color: Colors.red.shade600, size: 20),
+              trailing: Icon(Icons.chevron_right,
+                  color: Colors.red.shade600, size: 20),
             ),
           );
         }
@@ -499,7 +547,8 @@ class _LocationStatusBanner extends StatelessWidget {
               icon: Icons.location_on,
               color: Color(0xFF2D6A4F),
               message: "Location pinned manually — tap to adjust",
-              trailing: Icon(Icons.edit_location_alt_outlined, color: Color(0xFF2D6A4F), size: 18),
+              trailing: Icon(Icons.edit_location_alt_outlined,
+                  color: Color(0xFF2D6A4F), size: 18),
             ),
           );
         }
@@ -514,7 +563,8 @@ class _LocationStatusBanner extends StatelessWidget {
             message: acc != null
                 ? "Location detected (±${acc.toStringAsFixed(0)}m) — tap to adjust"
                 : "Location detected — tap to adjust",
-            trailing: const Icon(Icons.edit_location_alt_outlined, color: Color(0xFF2D6A4F), size: 18),
+            trailing: const Icon(Icons.edit_location_alt_outlined,
+                color: Color(0xFF2D6A4F), size: 18),
           ),
         );
       },
@@ -551,7 +601,8 @@ class _BannerTile extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                  color: color, fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ),
           if (trailing != null) ...[const SizedBox(width: 6), trailing!],
