@@ -2,16 +2,7 @@ import 'package:cacao_apps/core/guide/cacao_guide_service.dart';
 import 'package:flutter/material.dart';
 import 'save_scan_controller.dart';
 import 'package:cacao_apps/core/db/cacao_guide_repository.dart';
-
-class RecommendationItem {
-  final String category;
-  final List<String> content;
-
-  RecommendationItem({
-    required this.category,
-    required this.content,
-  });
-}
+import 'package:cacao_apps/modules/scan/model/recommendation_item.dart';
 
 class ScanResultController extends ChangeNotifier {
   final String diseaseName;
