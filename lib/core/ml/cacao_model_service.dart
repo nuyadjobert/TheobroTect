@@ -16,6 +16,22 @@ class CacaoModelService {
   factory CacaoModelService() => _instance;
   CacaoModelService._internal();
 
+  String getDiseaseFamily(String label) {
+  if (label.startsWith('mealybug')) {
+    return 'mealybug';
+  }
+
+  if (label.startsWith('cacao_pod_borer')) {
+    return 'cacao_pod_borer';
+  }
+
+  if (label.startsWith('black_pod_disease')) {
+    return 'black_pod_disease';
+  }
+
+  return label;
+}
+
   Interpreter? _interpreter;
   bool _isLoaded = false;
 
@@ -210,21 +226,21 @@ class CacaoModelService {
       height: h,
     );
 
-final input = List.generate(
-  1,
-  (_) => List.generate(
-    h,
-    (y) => List.generate(w, (x) {
-      final pixel = resized.getPixel(x, y);
+    final input = List.generate(
+      1,
+      (_) => List.generate(
+        h,
+        (y) => List.generate(w, (x) {
+          final pixel = resized.getPixel(x, y);
 
-      return [
-        (pixel.r / 127.5) - 1.0,
-        (pixel.g / 127.5) - 1.0,
-        (pixel.b / 127.5) - 1.0,
-      ];
-    }),
-  ),
-);
+          return [
+            pixel.r.toDouble(),
+            pixel.g.toDouble(),
+            pixel.b.toDouble(),
+          ];
+        }),
+      ),
+    );
 
     final output = [
       List.filled(labelsInOrder.length, 0.0),
@@ -233,121 +249,122 @@ final input = List.generate(
     _interpreter!.run(input, output);
 
     debugPrint("RAW OUTPUT: ${output[0]}");
-    
 
     return List<double>.from(output[0]);
   }
 
-  List<double> _softmax(List<double> logits) {
-    final maxLogit = logits.reduce(max);
+  // List<double> _softmax(List<double> logits) {
+  //   final maxLogit = logits.reduce(max);
 
-    final exps = logits
-        .map(
-          (x) => exp(x - maxLogit),
-        )
-        .toList();
+  //   final exps = logits
+  //       .map(
+  //         (x) => exp(x - maxLogit),
+  //       )
+  //       .toList();
 
-    final sum = exps.reduce(
-      (a, b) => a + b,
+  //   final sum = exps.reduce(
+  //     (a, b) => a + b,
+  //   );
+
+  //   return exps
+  //       .map(
+  //         (e) => e / sum,
+  //       )
+  //       .toList();
+  // }
+
+  // List<ModelPrediction> _findMultiLabelPredictions(
+  //   List<double> scores, {
+  //   double threshold = 0.50,
+  // }) {
+  //   final results = <ModelPrediction>[];
+
+  //   for (int i = 0; i < scores.length; i++) {
+  //     final confidence = scores[i].clamp(0.0, 1.0);
+
+  //     if (confidence >= threshold) {
+  //       results.add(
+  //         ModelPrediction(
+  //           label: labelsInOrder[i],
+  //           confidence: confidence,
+  //           index: i,
+  //         ),
+  //       );
+  //     }
+  //   }
+
+  //   // Sort by strongest confidence
+  //   results.sort((a, b) => b.confidence.compareTo(a.confidence));
+
+  //   return results;
+  // }
+
+ List<ModelPrediction> _findPrimaryAndSecondaryDisease(
+  List<ModelPrediction> cropPredictions,
+) {
+  final Map<String, ModelPrediction> strongestPerDisease = {};
+
+  for (final prediction in cropPredictions) {
+    final family = getDiseaseFamily(
+      prediction.label,
     );
 
-    return exps
-        .map(
-          (e) => e / sum,
-        )
-        .toList();
+    final existing =
+        strongestPerDisease[family];
+
+    if (
+        existing == null ||
+        prediction.confidence >
+            existing.confidence) {
+      strongestPerDisease[family] =
+          prediction;
+    }
   }
 
-  List<ModelPrediction> _findMultiLabelPredictions(
-    List<double> scores, {
-    double threshold = 0.50,
-  }) {
-    final results = <ModelPrediction>[];
+  final diseases =
+      strongestPerDisease.values.toList();
 
-    for (int i = 0; i < scores.length; i++) {
-      final confidence = scores[i].clamp(0.0, 1.0);
+  diseases.sort(
+    (a, b) => b.confidence.compareTo(
+      a.confidence,
+    ),
+  );
 
-      if (confidence >= threshold) {
-        results.add(
-          ModelPrediction(
-            label: labelsInOrder[i],
-            confidence: confidence,
-            index: i,
-          ),
-        );
-      }
-    }
+  final primary = diseases.first;
 
-    // Sort by strongest confidence
-    results.sort((a, b) => b.confidence.compareTo(a.confidence));
+  ModelPrediction? secondary;
 
-    return results;
+  if (diseases.length > 1) {
+    secondary = diseases[1];
   }
 
-  List<ModelPrediction> _findPrimaryAndSecondaryDisease(
-    List<ModelPrediction> cropPredictions,
-  ) {
-    cropPredictions.sort(
-      (a, b) => b.confidence.compareTo(a.confidence),
-    );
+  debugPrint("");
+  debugPrint(
+    "===== FINAL DECISION =====",
+  );
 
-    final primary = cropPredictions.first;
+  debugPrint(
+    "PRIMARY DISEASE => "
+    "${primary.label} "
+    "${(primary.confidence * 100).toStringAsFixed(2)}%",
+  );
 
-    final Map<String, List<double>> diseaseVotes = {};
-
-    for (final prediction in cropPredictions) {
-      if (prediction.label == primary.label) {
-        continue;
-      }
-
-      diseaseVotes.putIfAbsent(
-        prediction.label,
-        () => [],
-      );
-
-      diseaseVotes[prediction.label]!.add(
-        prediction.confidence,
-      );
-    }
-
-    ModelPrediction? secondary;
-
-    diseaseVotes.forEach((label, confidences) {
-      final voteCount = confidences.length;
-
-      final avgConfidence =
-          confidences.reduce((a, b) => a + b) / confidences.length;
-
-      if (voteCount >= 2 && avgConfidence >= 0.60 && secondary == null) {
-        secondary = ModelPrediction(
-          label: label,
-          confidence: avgConfidence,
-          index: labelsInOrder.indexOf(label),
-        );
-      }
-    });
-
-    debugPrint("");
-    debugPrint("===== FINAL DECISION =====");
-
+  if (secondary != null) {
     debugPrint(
-      "PRIMARY DISEASE => "
-      "${primary.label} "
-      "${(primary.confidence * 100).toStringAsFixed(2)}%",
+      "SECONDARY DISEASE => "
+      "${secondary.label} "
+      "${(secondary.confidence * 100).toStringAsFixed(2)}%",
     );
-
-    if (secondary != null) {
-      debugPrint(
-        "POSSIBLE CO-EXISTING DISEASE => "
-        "${secondary!.label} "
-        "${(secondary!.confidence * 100).toStringAsFixed(2)}%",
-      );
-    }
-
-    debugPrint("========== INFERENCE END ==========");
-
-    return secondary == null ? [primary] : [primary, secondary!];
   }
+
+  debugPrint(
+    "========== INFERENCE END ==========",
+  );
+
+  return secondary == null
+      ? [primary]
+      : [primary, secondary];
+}
 
   Future<List<ModelPrediction>> _runMultiCropInference(
     List<img.Image> crops,
