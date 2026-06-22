@@ -13,8 +13,12 @@ import '../widgets/treatment_plan_section.dart';
 import '../widgets/scan_result_bottom_bar.dart';
 
 class ScanResultScreen extends StatefulWidget {
-  final ScanResultModel result;
-  const ScanResultScreen({super.key, required this.result});
+ final List<ScanResultModel> results;
+
+const ScanResultScreen({
+  super.key,
+  required this.results,
+});
 
   @override
   State<ScanResultScreen> createState() => _ScanResultScreenState();
@@ -28,12 +32,12 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   void initState() {
     super.initState();
 
-    controller = ScanResultController(
-      diseaseName: widget.result.diseaseName,
-      confidence: widget.result.confidence,
-      severity: widget.result.severity,
-      imagePath: widget.result.imagePath,
-    );
+    // controller = ScanResultController(
+    //   diseaseName: widget.result.diseaseName,
+    //   confidence: widget.result.confidence,
+    //   severity: widget.result.severity,
+    //   imagePath: widget.result.imagePath,
+    // );
 
     saveController = SaveScanController();
 
@@ -211,7 +215,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ScanResultHeader(imagePath: widget.result.imagePath),
+          // ScanResultHeader(imagePath: widget.result.imagePath),
           const SizedBox(height: 24),
           DiagnosisSection(
             diseaseName: controller.diseaseName,

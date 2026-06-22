@@ -73,20 +73,26 @@ class ScannerController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<ScanResultModel?> captureAndAnalyze() async {
-    if (!isReady) return null;
-    if (_isAnalyzing) return null;
+Future<List<ScanResultModel>?> captureAndAnalyze() async {
+  if (!isReady) return null;
+  if (_isAnalyzing) return null;
 
-    HapticFeedback.heavyImpact();
+  HapticFeedback.heavyImpact();
 
-    _isAnalyzing = true;
-    notifyListeners();
+  _isAnalyzing = true;
+  notifyListeners();
 
-    try {
-      final XFile photo = await _camera!.takePicture();
-      final imagePath = photo.path;
+  try {
+    final XFile photo = await _camera!.takePicture();
+    final imagePath = photo.path;
 
-      final pred = await CacaoModelService().predict(imagePath);
+    // ✅ NOW RETURNS MULTIPLE PREDICTIONS
+    final predictions = await CacaoModelService().predict(imagePath);
+
+    if (predictions.isEmpty) return null;
+
+    // Convert ALL predictions into UI models
+    final results = predictions.map((pred) {
       final parsed = _parseLabel(pred.label);
 
       return ScanResultModel(
@@ -95,13 +101,16 @@ class ScannerController extends ChangeNotifier {
         confidence: pred.confidence,
         severity: _capitalize(parsed.severityKey),
       );
-    } catch (e) {
-      return null;
-    } finally {
-      _isAnalyzing = false;
-      notifyListeners();
-    }
+    }).toList();
+
+    return results;
+  } catch (e) {
+    return null;
+  } finally {
+    _isAnalyzing = false;
+    notifyListeners();
   }
+}
 
   // --- helpers ---
 

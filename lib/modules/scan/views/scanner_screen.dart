@@ -49,24 +49,23 @@ class _ScannerScreenState extends State<ScannerScreen>
     super.dispose();
   }
 
-  Future<void> _onCapture() async {
-    final results = await controller.captureAndAnalyze();
-    if (!mounted || results == null) return;
+ Future<void> _onCapture() async {
+  final results = await controller.captureAndAnalyze();
 
-    final result = ScanResultModel(
-      diseaseName: results.diseaseName,
-      confidence: results.confidence,
-      severity: results.severity,
-      imagePath: results.imagePath,
-    );
+  if (!mounted || results == null || results.isEmpty) return;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ScanResultScreen(result: result),
+  // Sort by confidence (IMPORTANT for UI clarity)
+  results.sort((a, b) => b.confidence.compareTo(a.confidence));
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ScanResultScreen(
+        results: results, // ✅ pass full list
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
