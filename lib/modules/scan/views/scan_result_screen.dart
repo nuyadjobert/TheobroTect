@@ -13,12 +13,12 @@ import '../widgets/treatment_plan_section.dart';
 import '../widgets/scan_result_bottom_bar.dart';
 
 class ScanResultScreen extends StatefulWidget {
- final List<ScanResultModel> results;
+  final List<ScanResultModel> results;
 
-const ScanResultScreen({
-  super.key,
-  required this.results,
-});
+  const ScanResultScreen({
+    super.key,
+    required this.results,
+  });
 
   @override
   State<ScanResultScreen> createState() => _ScanResultScreenState();
@@ -28,16 +28,29 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   late final ScanResultController controller;
   late final SaveScanController saveController;
 
-  @override
+@override
   void initState() {
     super.initState();
 
-    // controller = ScanResultController(
-    //   diseaseName: widget.result.diseaseName,
-    //   confidence: widget.result.confidence,
-    //   severity: widget.result.severity,
-    //   imagePath: widget.result.imagePath,
-    // );
+    // 1. Grab the primary disease (Index 0)
+    final primary = widget.results[0];
+    
+    // 2. Check if a secondary disease exists
+    final hasSecondary = widget.results.length > 1;
+    final secondary = hasSecondary ? widget.results[1] : null;
+
+    // 3. Initialize the controller using the split data
+    controller = ScanResultController(
+      imagePath: primary.imagePath,
+      diseaseName: primary.diseaseName,
+      confidence: primary.confidence,
+      severity: primary.severity,
+      
+      // ✅ FIX: Now safely pulling from the secondary item in the list
+      secondaryDiseaseName: secondary?.diseaseName,
+      secondaryConfidence: secondary?.confidence,
+      secondarySeverity: secondary?.severity,
+    );
 
     saveController = SaveScanController();
 
@@ -130,7 +143,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                ok ? "Scan saved successfully!" : (saveController.saveError ?? "Save failed"),
+                ok
+                    ? "Scan saved successfully!"
+                    : (saveController.saveError ?? "Save failed"),
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -152,7 +167,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -185,54 +201,136 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context, String lang) {
-    if (controller.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF2D6A4F)),
-      );
-    }
+Widget _buildBody(BuildContext context, String lang) {
+  if (controller.isLoading) {
+    return const Center(
+      child: CircularProgressIndicator(color: Color(0xFF2D6A4F)),
+    );
+  }
 
-    if (controller.error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.broken_image_rounded, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              controller.error == "LOW_CONFIDENCE"
-                  ? "Analysis blocked due to low confidence."
-                  : "An error occurred.",
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+  if (controller.error != null) {
+    return Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // ScanResultHeader(imagePath: widget.result.imagePath),
-          const SizedBox(height: 24),
-          DiagnosisSection(
-            diseaseName: controller.diseaseName,
-            description: controller.description[lang] ?? "",
-            severity: controller.severity,
-            confidence: controller.confidence,
+          const Icon(Icons.broken_image_rounded, size: 64, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+            controller.error == "LOW_CONFIDENCE"
+                ? "Analysis blocked due to low confidence."
+                : "An error occurred.",
+            style: const TextStyle(color: Colors.grey, fontSize: 16),
           ),
-          const SizedBox(height: 32),
-          LocationStatusBanner(
-            locationPicker: saveController.locationPicker,
-            onTap: _showLocationPicker,
-            isDisabled: controller.isNonCacao,
-          ),
-          const SizedBox(height: 24),
-          TreatmentPlanSection(recommendations: controller.recommendations),
         ],
       ),
     );
   }
+
+  // Fallback to raw names if localized strings are missing
+  final primaryTitle = controller.displayName[lang] ?? controller.diseaseName;
+  final secondaryTitle = controller.secondaryDisplayName[lang] ?? controller.secondaryDiseaseName ?? "";
+
+  return SingleChildScrollView(
+    padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // --- SCAN HEADER IMAGE ---
+        // ScanResultHeader(imagePath: widget.result.imagePath),
+        const SizedBox(height: 16),
+
+        // ─── PRIMARY DIAGNOSIS SECTION ───
+        _buildSectionHeader(
+          label: lang == "tl" ? "PANGUNAHING SURI" : "PRIMARY DIAGNOSIS",
+          icon: Icons.gpp_maybe_rounded,
+          color: const Color(0xFF2D6A4F),
+        ),
+        const SizedBox(height: 8),
+        DiagnosisSection(
+          diseaseName: primaryTitle, // 👈 Fixed: Using localized display name map
+          description: controller.description[lang] ?? "",
+          severity: controller.severity,
+          confidence: controller.confidence,
+        ),
+
+        // ─── SECONDARY DIAGNOSIS SECTION (Conditional) ───
+      if (controller.hasSecondaryDisease) ...[       // 👈 CHANGE THIS LINE
+          const SizedBox(height: 32),
+          _buildSectionHeader(
+            label: lang == "tl" ? "TALAANG PAGKAKAKILANLAN" : "SECONDARY DETECTION",
+            icon: Icons.layers_outlined,
+            color: Colors.blueGrey.shade700,
+          ),
+          const SizedBox(height: 8),
+          
+          // Styled as a sub-card to visually sit lower in importance
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.blueGrey.shade100, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Stack(
+                children: [
+                  // Subtle left border accent color
+                  Positioned(
+                    left: 0, top: 0, bottom: 0, width: 6,
+                    child: Container(color: Colors.blueGrey.shade300),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 16, 22, 20),
+                    child: DiagnosisSection(
+                      diseaseName: secondaryTitle, // 👈 Fixed: Localized
+                      description: controller.secondaryDescription[lang] ?? "",
+                      severity: controller.secondarySeverity ?? "",
+                      confidence: controller.secondaryConfidence ?? 0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 32),
+        // --- METADATA & ACTIONS ---
+        LocationStatusBanner(
+          locationPicker: saveController.locationPicker,
+          onTap: _showLocationPicker,
+          isDisabled: controller.isNonCacao,
+        ),
+        const SizedBox(height: 24),
+        TreatmentPlanSection(recommendations: controller.recommendations),
+      ],
+    ),
+  );
+}
+
+// Helper utility widget to keep body code exceptionally clean
+Widget _buildSectionHeader({required String label, required IconData icon, required Color color}) {
+  return Row(
+    children: [
+      Icon(icon, size: 14, color: color),
+      const SizedBox(width: 6),
+      Text(
+        label,
+        style: TextStyle(
+          color: color,
+          letterSpacing: 1.2,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ],
+  );
+}
 }

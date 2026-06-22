@@ -9,6 +9,9 @@ class ScanResultController extends ChangeNotifier {
   final double confidence;
   final String severity;
   final String? imagePath;
+  final String? secondaryDiseaseName;
+  final double? secondaryConfidence;
+  final String? secondarySeverity;
   final CacaoGuideRepository _repository = CacaoGuideRepository();
   final CacaoGuideService _guide = CacaoGuideService();
 
@@ -19,8 +22,28 @@ class ScanResultController extends ChangeNotifier {
     required this.diseaseName,
     required this.confidence,
     required this.severity,
+    this.secondaryDiseaseName,
+    this.secondaryConfidence,
+    this.secondarySeverity,
     this.imagePath,
   });
+
+  bool get hasSecondaryDisease {
+    if (secondaryDiseaseName == null) return false;
+    final name = secondaryDiseaseName!.trim().toLowerCase();
+    if (name.isEmpty || name == 'none' || name == 'null') return false;
+    return true;
+  }
+
+  Map<String, String> secondaryDisplayName = {
+    "en": "",
+    "tl": "",
+  };
+
+  Map<String, String> secondaryDescription = {
+    "en": "",
+    "tl": "",
+  };
 
   // -------------------------
   // UI state
@@ -68,12 +91,20 @@ class ScanResultController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // -------------------------
+// -------------------------
   // Init: load guide data from JSON
   // -------------------------
   Future<void> init() async {
     _isLoading = true;
     _error = null;
+
+    // ─── NEW LOGGING BLOCK FOR SECONDARY DISEASE ───
+    debugPrint("📱 ==== SECONDARY DETECTION LOGS ====");
+    debugPrint("Raw secondaryDiseaseName: '$secondaryDiseaseName'");
+    debugPrint("Raw secondaryConfidence: $secondaryConfidence");
+    debugPrint("Raw secondarySeverity: '$secondarySeverity'");
+    debugPrint("hasSecondaryDisease evaluates to: $hasSecondaryDisease");
+    debugPrint("=======================================");
 
     if (confidence < 0.70) {
       _error = "LOW_CONFIDENCE";
@@ -88,20 +119,57 @@ class ScanResultController extends ChangeNotifier {
       severityKey = _severityKeyFromText(severity);
 
       final disease = await _guide.getDisease(diseaseKey);
+
       if (disease == null) {
-        throw Exception('Disease not found in guide: $diseaseKey');
+        throw Exception(
+          'Disease not found in guide: $diseaseKey',
+        );
       }
 
-      displayName = _mapLang(disease['display_name']);
-      description = _mapLang(disease['description']);
+      displayName = _mapLang(
+        disease['display_name'],
+      );
+
+      description = _mapLang(
+        disease['description'],
+      );
+
+      // ==========================
+      // LOAD SECONDARY DISEASE
+      // ==========================
+      
+      // 👈 FIXED: Now using the hasSecondaryDisease getter here too!
+      if (hasSecondaryDisease) { 
+        debugPrint("🔄 Loading secondary disease data from JSON...");
+        
+        final secondaryDiseaseKey = _diseaseKeyFromName(
+          secondaryDiseaseName!,
+        );
+
+        final secondaryDisease = await _guide.getDisease(
+          secondaryDiseaseKey,
+        );
+
+        if (secondaryDisease != null) {
+          secondaryDisplayName = _mapLang(
+            secondaryDisease['display_name'],
+          );
+
+          secondaryDescription = _mapLang(
+            secondaryDisease['description'],
+          );
+          debugPrint("✅ Secondary disease loaded successfully!");
+        } else {
+          debugPrint("⚠️ Secondary disease key '$secondaryDiseaseKey' not found in JSON guide.");
+        }
+      } else {
+        debugPrint("⏭️ Skipping secondary disease load (No valid secondary detected).");
+      }
 
       final recommendationRows =
           await _repository.getRecommendations(diseaseKey, severityKey);
 
-      debugPrint("================================");
-      debugPrint("RAW RECOMMENDATIONS:");
-      debugPrint(recommendationRows.toString());
-      debugPrint("================================");
+      // ... [The rest of your init() code for recommendations stays exactly the same] ...
 
       recommendations.clear();
 
@@ -109,14 +177,7 @@ class ScanResultController extends ChangeNotifier {
         final category = row['category_key']?.toString() ?? 'general';
         final content = row['content'];
 
-        debugPrint("---------------");
-        debugPrint("CATEGORY: $category");
-        debugPrint("CONTENT TYPE: ${content.runtimeType}");
-        debugPrint("CONTENT VALUE: $content");
-
         final items = _listLang(content, 'en');
-
-        debugPrint("PARSED ITEMS: $items");
 
         recommendations.add(
           RecommendationItem(
@@ -126,34 +187,7 @@ class ScanResultController extends ChangeNotifier {
         );
       }
 
-      debugPrint("========== FINAL RESULT ==========");
-
-      for (final rec in recommendations) {
-        debugPrint("CATEGORY: ${rec.category}");
-        debugPrint("CONTENT: ${rec.content}");
-      }
-
-      debugPrint("==================================");
-
       final allItems = recommendations.expand((e) => e.content).toList();
-
-      _treatmentPlan = allItems.isNotEmpty
-          ? allItems
-              .map(
-                (item) => TreatmentTask(
-                  icon: Icons.check_circle_outline,
-                  title: "Recommendation",
-                  desc: item,
-                ),
-              )
-              .toList(growable: false)
-          : const [
-              TreatmentTask(
-                icon: Icons.visibility_outlined,
-                title: "Monitor",
-                desc: "Observe the pod and rescan after a few days.",
-              ),
-            ];
 
       _treatmentPlan = allItems.isNotEmpty
           ? allItems
@@ -181,7 +215,6 @@ class ScanResultController extends ChangeNotifier {
       notifyListeners();
     }
   }
-
   // -------------------------
   // Save — delegates to SaveScanController
   // -------------------------

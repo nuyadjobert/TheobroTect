@@ -253,52 +253,6 @@ class CacaoModelService {
     return List<double>.from(output[0]);
   }
 
-  // List<double> _softmax(List<double> logits) {
-  //   final maxLogit = logits.reduce(max);
-
-  //   final exps = logits
-  //       .map(
-  //         (x) => exp(x - maxLogit),
-  //       )
-  //       .toList();
-
-  //   final sum = exps.reduce(
-  //     (a, b) => a + b,
-  //   );
-
-  //   return exps
-  //       .map(
-  //         (e) => e / sum,
-  //       )
-  //       .toList();
-  // }
-
-  // List<ModelPrediction> _findMultiLabelPredictions(
-  //   List<double> scores, {
-  //   double threshold = 0.50,
-  // }) {
-  //   final results = <ModelPrediction>[];
-
-  //   for (int i = 0; i < scores.length; i++) {
-  //     final confidence = scores[i].clamp(0.0, 1.0);
-
-  //     if (confidence >= threshold) {
-  //       results.add(
-  //         ModelPrediction(
-  //           label: labelsInOrder[i],
-  //           confidence: confidence,
-  //           index: i,
-  //         ),
-  //       );
-  //     }
-  //   }
-
-  //   // Sort by strongest confidence
-  //   results.sort((a, b) => b.confidence.compareTo(a.confidence));
-
-  //   return results;
-  // }
-
  List<ModelPrediction> _findPrimaryAndSecondaryDisease(
   List<ModelPrediction> cropPredictions,
 ) {
@@ -365,8 +319,7 @@ class CacaoModelService {
       ? [primary]
       : [primary, secondary];
 }
-
-  Future<List<ModelPrediction>> _runMultiCropInference(
+Future<List<ModelPrediction>> _runMultiCropInference(
     List<img.Image> crops,
   ) async {
     final cropNames = [
@@ -381,14 +334,30 @@ class CacaoModelService {
     for (int i = 0; i < crops.length; i++) {
       final scores = _runInference(crops[i]);
 
-      final prediction = _findBestPrediction(scores);
+      // 1. Find the absolute winner for this crop
+      final primaryPrediction = _findBestPrediction(scores);
+      cropPredictions.add(primaryPrediction);
 
-      cropPredictions.add(prediction);
+      // 2. 👉 NEW: Also find the runner-up for this crop if it has decent confidence
+      final sortedIndices = List.generate(scores.length, (idx) => idx)
+        ..sort((a, b) => scores[b].compareTo(scores[a]));
+      
+      int runnerUpIdx = sortedIndices[1];
+      double runnerUpScore = scores[runnerUpIdx];
+
+      // If the second-highest disease has a confidence over 15%, count it!
+      if (runnerUpScore > 0.15) {
+        cropPredictions.add(ModelPrediction(
+          label: labelsInOrder[runnerUpIdx],
+          confidence: runnerUpScore,
+          index: runnerUpIdx,
+        ));
+      }
 
       logPrediction(
         stage: cropNames[i],
-        label: prediction.label,
-        confidence: prediction.confidence,
+        label: primaryPrediction.label,
+        confidence: primaryPrediction.confidence,
       );
     }
 
