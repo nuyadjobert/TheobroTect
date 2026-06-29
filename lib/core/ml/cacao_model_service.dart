@@ -52,7 +52,7 @@ class CacaoModelService {
   Future<void> loadModel() async {
     if (_isLoaded) return;
     _interpreter = await Interpreter.fromAsset(
-      'assets/models/mobilenetv3large_trainmodelV8.tflite',
+      'assets/models/mobilenetv3large_retrain_V2.tflite',
       options: InterpreterOptions()..threads = 2,
     );
     _isLoaded = true;
