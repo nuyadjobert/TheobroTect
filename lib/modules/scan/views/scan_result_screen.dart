@@ -34,6 +34,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     final primary = widget.results[0];
     final hasSecondary = widget.results.length > 1;
     final secondary = hasSecondary ? widget.results[1] : null;
+  
 
     controller = ScanResultController(
       imagePath: primary.imagePath,
@@ -86,6 +87,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         );
         return;
       }
+
       if (controller.error == "LOW_CONFIDENCE") {
         LowConfidenceDialog.show(
           context,

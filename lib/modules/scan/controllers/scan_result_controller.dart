@@ -27,19 +27,14 @@ class ScanResultController extends ChangeNotifier {
     this.imagePath,
   });
 
-bool get hasSecondaryDisease {
+  bool get hasSecondaryDisease {
     if (secondaryDiseaseName == null) return false;
     final name = secondaryDiseaseName!.trim().toLowerCase();
     if (name.isEmpty || name == 'none' || name == 'null') return false;
-    
-    // Checks if the PRIMARY confidence is too low to bother showing a secondary
+
     if (confidence < 0.75) return false;
+    if (secondaryConfidence != null && secondaryConfidence! < 0.75) return false;
 
-    // 🟢 NEW: Check if the SECONDARY confidence is too low
-    // Currently set to 70% (0.70), adjust this number as needed.
-    if (secondaryConfidence != null && secondaryConfidence! < 0.70) return false;
-
-    // Checks if the pod is overwhelmingly healthy
     final primaryDisease = _diseaseKeyFromName(diseaseName);
     if (primaryDisease == 'healthy' && confidence >= 0.90) return false;
 
@@ -93,15 +88,20 @@ bool get hasSecondaryDisease {
     debugPrint("hasSecondaryDisease evaluates to: $hasSecondaryDisease");
     debugPrint("=======================================");
 
-    // Determine the primary disease key immediately
     diseaseKey = _diseaseKeyFromName(diseaseName);
 
-    // RULE 3: Check for non_cacao and trigger an alert state
     if (diseaseKey == 'non_cacao') {
       _error = "NON_CACAO";
       _isLoading = false;
       notifyListeners();
       return; // Stop execution
+    }
+
+    if (hasHighNonCacaoConfidence) {
+      _error = "NON_CACAO";
+      _isLoading = false;
+      notifyListeners();
+      return;
     }
 
     if (confidence < 0.70) {
@@ -114,9 +114,7 @@ bool get hasSecondaryDisease {
 
     try {
       severityKey = _severityKeyFromText(severity);
-
       final disease = await _guide.getDisease(diseaseKey);
-
       if (disease == null) {
         throw Exception(
           'Disease not found in guide: $diseaseKey',
@@ -131,9 +129,9 @@ bool get hasSecondaryDisease {
         disease['description'],
       );
 
-      if (hasSecondaryDisease) { 
+      if (hasSecondaryDisease) {
         debugPrint("🔄 Loading secondary disease data from JSON...");
-        
+
         final secondaryDiseaseKey = _diseaseKeyFromName(
           secondaryDiseaseName!,
         );
@@ -152,10 +150,12 @@ bool get hasSecondaryDisease {
           );
           debugPrint("✅ Secondary disease loaded successfully!");
         } else {
-          debugPrint("⚠️ Secondary disease key '$secondaryDiseaseKey' not found in JSON guide.");
+          debugPrint(
+              "⚠️ Secondary disease key '$secondaryDiseaseKey' not found in JSON guide.");
         }
       } else {
-        debugPrint("⏭️ Skipping secondary disease load (No valid secondary detected).");
+        debugPrint(
+            "⏭️ Skipping secondary disease load (No valid secondary detected).");
       }
 
       final recommendationRows =
@@ -204,6 +204,20 @@ bool get hasSecondaryDisease {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  bool get hasHighNonCacaoConfidence {
+    // Primary
+    if (diseaseKey == 'non_cacao' && confidence >= 0.50) {
+      return true;
+    }
+
+    // Secondary
+    final secondaryKey = secondaryDiseaseName != null
+        ? _diseaseKeyFromName(secondaryDiseaseName!)
+        : '';
+
+    return secondaryKey == 'non_cacao' && (secondaryConfidence ?? 0.0) >= 0.50;
   }
 
   Future<bool> saveScanRecord({bool smsEnabled = false}) {
