@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'save_scan_controller.dart';
 import 'package:cacao_apps/core/db/cacao_guide_repository.dart';
 import 'package:cacao_apps/modules/scan/model/recommendation_item.dart';
+import 'package:cacao_apps/modules/scan/model/treatment_task.dart';
 
 class ScanResultController extends ChangeNotifier {
   final String diseaseName;
@@ -14,8 +15,6 @@ class ScanResultController extends ChangeNotifier {
   final String? secondarySeverity;
   final CacaoGuideRepository _repository = CacaoGuideRepository();
   final CacaoGuideService _guide = CacaoGuideService();
-
-  /// Delegate — handles all save-to-db concerns
   final SaveScanController saveScan = SaveScanController();
 
   ScanResultController({
@@ -28,10 +27,22 @@ class ScanResultController extends ChangeNotifier {
     this.imagePath,
   });
 
-  bool get hasSecondaryDisease {
+bool get hasSecondaryDisease {
     if (secondaryDiseaseName == null) return false;
     final name = secondaryDiseaseName!.trim().toLowerCase();
     if (name.isEmpty || name == 'none' || name == 'null') return false;
+    
+    // Checks if the PRIMARY confidence is too low to bother showing a secondary
+    if (confidence < 0.75) return false;
+
+    // 🟢 NEW: Check if the SECONDARY confidence is too low
+    // Currently set to 70% (0.70), adjust this number as needed.
+    if (secondaryConfidence != null && secondaryConfidence! < 0.70) return false;
+
+    // Checks if the pod is overwhelmingly healthy
+    final primaryDisease = _diseaseKeyFromName(diseaseName);
+    if (primaryDisease == 'healthy' && confidence >= 0.90) return false;
+
     return true;
   }
 
@@ -45,24 +56,13 @@ class ScanResultController extends ChangeNotifier {
     "tl": "",
   };
 
-  // -------------------------
-  // UI state
-  // -------------------------
   bool _isLoading = true;
   String? _error;
-
   bool get isLoading => _isLoading;
   String? get error => _error;
-
-  // -------------------------
-  // Keys derived from UI inputs
-  // -------------------------
   late final String diseaseKey;
   late final String severityKey;
 
-  // -------------------------
-  // Loaded from JSON
-  // -------------------------
   Map<String, String> displayName = const {
     "en": "Unknown",
     "tl": "Hindi Kilala",
@@ -70,41 +70,39 @@ class ScanResultController extends ChangeNotifier {
   Map<String, String> description = const {"en": "", "tl": ""};
 
   List<RecommendationItem> recommendations = [];
-
   int? rescanAfterDays;
   Map<String, String>? rescanMessage;
-
-  // -------------------------
-  // Treatment Plan (UI tiles)
-  // -------------------------
   List<TreatmentTask> _treatmentPlan = const [];
   List<TreatmentTask> get treatmentPlan => _treatmentPlan;
-
-  // -------------------------
-  // Bookmark (derived from save state)
-  // -------------------------
   bool get isBookmarked => saveScan.isSaved;
   bool get isNonCacao => diseaseKey == 'non_cacao';
 
   void toggleBookmark() {
-    // Bookmark is now driven by saveScan.isSaved — call saveScanRecord() to save
+    // saveScan.toggleSaveRecord();
     notifyListeners();
   }
 
-// -------------------------
-  // Init: load guide data from JSON
-  // -------------------------
   Future<void> init() async {
     _isLoading = true;
     _error = null;
 
-    // ─── NEW LOGGING BLOCK FOR SECONDARY DISEASE ───
     debugPrint("📱 ==== SECONDARY DETECTION LOGS ====");
     debugPrint("Raw secondaryDiseaseName: '$secondaryDiseaseName'");
     debugPrint("Raw secondaryConfidence: $secondaryConfidence");
     debugPrint("Raw secondarySeverity: '$secondarySeverity'");
     debugPrint("hasSecondaryDisease evaluates to: $hasSecondaryDisease");
     debugPrint("=======================================");
+
+    // Determine the primary disease key immediately
+    diseaseKey = _diseaseKeyFromName(diseaseName);
+
+    // RULE 3: Check for non_cacao and trigger an alert state
+    if (diseaseKey == 'non_cacao') {
+      _error = "NON_CACAO";
+      _isLoading = false;
+      notifyListeners();
+      return; // Stop execution
+    }
 
     if (confidence < 0.70) {
       _error = "LOW_CONFIDENCE";
@@ -115,7 +113,6 @@ class ScanResultController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      diseaseKey = _diseaseKeyFromName(diseaseName);
       severityKey = _severityKeyFromText(severity);
 
       final disease = await _guide.getDisease(diseaseKey);
@@ -134,11 +131,6 @@ class ScanResultController extends ChangeNotifier {
         disease['description'],
       );
 
-      // ==========================
-      // LOAD SECONDARY DISEASE
-      // ==========================
-      
-      // 👈 FIXED: Now using the hasSecondaryDisease getter here too!
       if (hasSecondaryDisease) { 
         debugPrint("🔄 Loading secondary disease data from JSON...");
         
@@ -168,8 +160,6 @@ class ScanResultController extends ChangeNotifier {
 
       final recommendationRows =
           await _repository.getRecommendations(diseaseKey, severityKey);
-
-      // ... [The rest of your init() code for recommendations stays exactly the same] ...
 
       recommendations.clear();
 
@@ -215,9 +205,7 @@ class ScanResultController extends ChangeNotifier {
       notifyListeners();
     }
   }
-  // -------------------------
-  // Save — delegates to SaveScanController
-  // -------------------------
+
   Future<bool> saveScanRecord({bool smsEnabled = false}) {
     return saveScan.saveScanRecord(
       diseaseKey: diseaseKey,
@@ -230,9 +218,6 @@ class ScanResultController extends ChangeNotifier {
     );
   }
 
-  // -------------------------
-  // Helpers
-  // -------------------------
   String _diseaseKeyFromName(String name) {
     final n = name.trim().toLowerCase();
     if (n.contains('black pod')) return 'black_pod_disease';
@@ -268,13 +253,6 @@ class ScanResultController extends ChangeNotifier {
     debugPrint("NODE VALUE: $node");
 
     final List<String> results = [];
-
-    // CASE 1
-    // Current database structure:
-    // [
-    //   {en: "...", tl: "..."},
-    //   {en: "...", tl: "..."}
-    // ]
     if (node is List) {
       for (final item in node) {
         if (item is Map) {
@@ -290,12 +268,6 @@ class ScanResultController extends ChangeNotifier {
       return results;
     }
 
-    // CASE 2
-    // Alternative structure:
-    // {
-    //   en: [...],
-    //   tl: [...]
-    // }
     if (node is Map) {
       final value = node[lang];
 
@@ -311,16 +283,4 @@ class ScanResultController extends ChangeNotifier {
     debugPrint("RETURNING EMPTY LIST");
     return [];
   }
-}
-
-class TreatmentTask {
-  final IconData icon;
-  final String title;
-  final String desc;
-
-  const TreatmentTask({
-    required this.icon,
-    required this.title,
-    required this.desc,
-  });
 }

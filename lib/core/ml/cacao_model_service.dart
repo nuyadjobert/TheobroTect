@@ -17,20 +17,20 @@ class CacaoModelService {
   CacaoModelService._internal();
 
   String getDiseaseFamily(String label) {
-  if (label.startsWith('mealybug')) {
-    return 'mealybug';
-  }
+    if (label.startsWith('mealybug')) {
+      return 'mealybug';
+    }
 
-  if (label.startsWith('cacao_pod_borer')) {
-    return 'cacao_pod_borer';
-  }
+    if (label.startsWith('cacao_pod_borer')) {
+      return 'cacao_pod_borer';
+    }
 
-  if (label.startsWith('black_pod_disease')) {
-    return 'black_pod_disease';
-  }
+    if (label.startsWith('black_pod_disease')) {
+      return 'black_pod_disease';
+    }
 
-  return label;
-}
+    return label;
+  }
 
   Interpreter? _interpreter;
   bool _isLoaded = false;
@@ -253,73 +253,66 @@ class CacaoModelService {
     return List<double>.from(output[0]);
   }
 
- List<ModelPrediction> _findPrimaryAndSecondaryDisease(
-  List<ModelPrediction> cropPredictions,
-) {
-  final Map<String, ModelPrediction> strongestPerDisease = {};
+  List<ModelPrediction> _findPrimaryAndSecondaryDisease(
+    List<ModelPrediction> cropPredictions,
+  ) {
+    final Map<String, ModelPrediction> strongestPerDisease = {};
 
-  for (final prediction in cropPredictions) {
-    final family = getDiseaseFamily(
-      prediction.label,
-    );
+    for (final prediction in cropPredictions) {
+      final family = getDiseaseFamily(
+        prediction.label,
+      );
 
-    final existing =
-        strongestPerDisease[family];
+      final existing = strongestPerDisease[family];
 
-    if (
-        existing == null ||
-        prediction.confidence >
-            existing.confidence) {
-      strongestPerDisease[family] =
-          prediction;
+      if (existing == null || prediction.confidence > existing.confidence) {
+        strongestPerDisease[family] = prediction;
+      }
     }
-  }
 
-  final diseases =
-      strongestPerDisease.values.toList();
+    final diseases = strongestPerDisease.values.toList();
 
-  diseases.sort(
-    (a, b) => b.confidence.compareTo(
-      a.confidence,
-    ),
-  );
-
-  final primary = diseases.first;
-
-  ModelPrediction? secondary;
-
-  if (diseases.length > 1) {
-    secondary = diseases[1];
-  }
-
-  debugPrint("");
-  debugPrint(
-    "===== FINAL DECISION =====",
-  );
-
-  debugPrint(
-    "PRIMARY DISEASE => "
-    "${primary.label} "
-    "${(primary.confidence * 100).toStringAsFixed(2)}%",
-  );
-
-  if (secondary != null) {
-    debugPrint(
-      "SECONDARY DISEASE => "
-      "${secondary.label} "
-      "${(secondary.confidence * 100).toStringAsFixed(2)}%",
+    diseases.sort(
+      (a, b) => b.confidence.compareTo(
+        a.confidence,
+      ),
     );
+
+    final primary = diseases.first;
+
+    ModelPrediction? secondary;
+
+    if (diseases.length > 1) {
+      secondary = diseases[1];
+    }
+
+    debugPrint("");
+    debugPrint(
+      "===== FINAL DECISION =====",
+    );
+
+    debugPrint(
+      "PRIMARY DISEASE => "
+      "${primary.label} "
+      "${(primary.confidence * 100).toStringAsFixed(2)}%",
+    );
+
+    if (secondary != null) {
+      debugPrint(
+        "SECONDARY DISEASE => "
+        "${secondary.label} "
+        "${(secondary.confidence * 100).toStringAsFixed(2)}%",
+      );
+    }
+
+    debugPrint(
+      "========== INFERENCE END ==========",
+    );
+
+    return secondary == null ? [primary] : [primary, secondary];
   }
 
-  debugPrint(
-    "========== INFERENCE END ==========",
-  );
-
-  return secondary == null
-      ? [primary]
-      : [primary, secondary];
-}
-Future<List<ModelPrediction>> _runMultiCropInference(
+  Future<List<ModelPrediction>> _runMultiCropInference(
     List<img.Image> crops,
   ) async {
     final cropNames = [
@@ -341,7 +334,7 @@ Future<List<ModelPrediction>> _runMultiCropInference(
       // 2. 👉 NEW: Also find the runner-up for this crop if it has decent confidence
       final sortedIndices = List.generate(scores.length, (idx) => idx)
         ..sort((a, b) => scores[b].compareTo(scores[a]));
-      
+
       int runnerUpIdx = sortedIndices[1];
       double runnerUpScore = scores[runnerUpIdx];
 
