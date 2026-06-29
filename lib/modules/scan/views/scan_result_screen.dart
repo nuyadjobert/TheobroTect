@@ -34,7 +34,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     final primary = widget.results[0];
     final hasSecondary = widget.results.length > 1;
     final secondary = hasSecondary ? widget.results[1] : null;
-  
 
     controller = ScanResultController(
       imagePath: primary.imagePath,
@@ -269,8 +268,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- SCAN HEADER IMAGE ---
-          // ScanResultHeader(imagePath: widget.result.imagePath),
+          ScanResultHeader(
+            imagePath: controller.imagePath,
+          ),
           const SizedBox(height: 16),
 
           // ─── PRIMARY DIAGNOSIS SECTION ───
@@ -288,7 +288,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             confidence: controller.confidence,
           ),
 
-          // ─── SECONDARY DIAGNOSIS SECTION (Conditional) ───
           if (controller.hasSecondaryDisease) ...[
             // 👈 CHANGE THIS LINE
             const SizedBox(height: 32),

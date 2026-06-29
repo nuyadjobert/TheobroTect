@@ -20,27 +20,55 @@ class DiagnosisSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ─── DIAGNOSIS CATEGORY TAG ───
-        Text(
-          "DIAGNOSIS",
-          style: TextStyle(
-            color: const Color(0xFF1B3022).withAlpha(153),
-            letterSpacing: 1.5,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-
-        // ─── DISEASE TITLE ───
-        Text(
-          diseaseName,
-          style: const TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF1B3022),
-            letterSpacing: -0.5,
-          ),
+        // ─── DISEASE TITLE & SEVERITY BADGE ───
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                diseaseName,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800, 
+                  color: Color(0xFF1B3022),
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF1F1), // Very light red background
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: const Color(0xFFFFCDCD), // Soft red outline
+                  width: 1.2,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error, // Solid circle with white exclamation mark
+                    color: Color(0xFFEF4444), // Vibrant red matching the image
+                    size: 16,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    severity,
+                    style: const TextStyle(
+                      color: Color(0xFFEF4444),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 18),
 
@@ -104,12 +132,10 @@ class DiagnosisSection extends StatelessWidget {
                     description,
                     style: const TextStyle(
                       fontSize: 14,
-                      height:
-                          1.5, // Injects crucial breathing room between lines
+                      height: 1.5, // Injects crucial breathing room between lines
                       letterSpacing: 0.2,
                       fontWeight: FontWeight.w500,
-                      color: Color(
-                          0xFF2E3E33), // Softer, deeply legible deep green-charcoal
+                      color: Color(0xFF2E3E33), // Softer, deeply legible deep green-charcoal
                     ),
                   ),
                 ],
