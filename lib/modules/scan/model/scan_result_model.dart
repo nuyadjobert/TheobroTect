@@ -4,10 +4,18 @@ class ScanResultModel {
   final String severity;
   final String? imagePath;
 
-  const ScanResultModel({
+  final String? secondaryDiseaseName;
+  final double? secondaryConfidence;
+  final String? secondarySeverity;
+
+  ScanResultModel({
     required this.diseaseName,
     required this.confidence,
     required this.severity,
     this.imagePath,
+
+    this.secondaryDiseaseName,
+    this.secondaryConfidence,
+    this.secondarySeverity,
   });
 }

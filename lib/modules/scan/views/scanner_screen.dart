@@ -49,24 +49,61 @@ class _ScannerScreenState extends State<ScannerScreen>
     super.dispose();
   }
 
-  Future<void> _onCapture() async {
-    final results = await controller.captureAndAnalyze();
-    if (!mounted || results == null) return;
+ Future<void> _onCapture() async {
+  final results = await controller.captureAndAnalyze();
 
-    final result = ScanResultModel(
-      diseaseName: results.diseaseName,
-      confidence: results.confidence,
-      severity: results.severity,
-      imagePath: results.imagePath,
-    );
+  if (!mounted || results == null || results.isEmpty) return;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ScanResultScreen(result: result),
+  // Sort by confidence (IMPORTANT for UI clarity)
+  results.sort((a, b) => b.confidence.compareTo(a.confidence));
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ScanResultScreen(
+        results: results, // ✅ pass full list
       ),
-    );
-  }
+    ),
+  );
+}
+
+// // Inside your Camera Screen UI...
+// Future<void> _onCapture() async {
+//   // 1. Call your ScannerController (using the exact variable name 'controller')
+//   final results = await controller.captureAndAnalyze();
+
+//   if (results != null && results.isNotEmpty) {
+    
+//     // Optional: Sort by confidence to guarantee the highest score is always primary
+//     results.sort((a, b) => b.confidence.compareTo(a.confidence));
+
+//     // 2. Safely grab the primary disease (Index 0)
+//     final primary = results[0];
+    
+//     // 3. Safely check if a secondary disease exists (Index 1)
+//     final hasSecondary = results.length > 1;
+
+//     // 4. Navigate to the Result Screen
+//     if (!mounted) return;
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (context) => ScanResultScreen(
+//           // --- PRIMARY ---
+//           imagePath: primary.imagePath,
+//           diseaseName: primary.diseaseName,
+//           confidence: primary.confidence,
+//           severity: primary.severity,
+          
+//           // --- SECONDARY (No string quotes!) ---
+//           secondaryDiseaseName: hasSecondary ? results[1].diseaseName : null,
+//           secondaryConfidence: hasSecondary ? results[1].confidence : null,
+//           secondarySeverity: hasSecondary ? results[1].severity : null,
+//         ),
+//       ),
+//     );
+//   }
+// }
 
   @override
   Widget build(BuildContext context) {

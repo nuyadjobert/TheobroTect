@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/Jayson/Desktop/App Development/TheobroTect/linux"
+  "cmake.sourceDirectory": "C:/Users/Jayson/Desktop/App Development/TheobroTect/linux",
+  "dart.flutterSdkPath": ".fvm/versions/3.41.0"
 }

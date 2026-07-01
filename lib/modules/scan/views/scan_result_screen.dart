@@ -13,8 +13,12 @@ import '../widgets/treatment_plan_section.dart';
 import '../widgets/scan_result_bottom_bar.dart';
 
 class ScanResultScreen extends StatefulWidget {
-  final ScanResultModel result;
-  const ScanResultScreen({super.key, required this.result});
+  final List<ScanResultModel> results;
+
+  const ScanResultScreen({
+    super.key,
+    required this.results,
+  });
 
   @override
   State<ScanResultScreen> createState() => _ScanResultScreenState();
@@ -27,18 +31,61 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   @override
   void initState() {
     super.initState();
+    final primary = widget.results[0];
+    final hasSecondary = widget.results.length > 1;
+    final secondary = hasSecondary ? widget.results[1] : null;
 
     controller = ScanResultController(
-      diseaseName: widget.result.diseaseName,
-      confidence: widget.result.confidence,
-      severity: widget.result.severity,
-      imagePath: widget.result.imagePath,
+      imagePath: primary.imagePath,
+      diseaseName: primary.diseaseName,
+      confidence: primary.confidence,
+      severity: primary.severity,
+      secondaryDiseaseName: secondary?.diseaseName,
+      secondaryConfidence: secondary?.confidence,
+      secondarySeverity: secondary?.severity,
     );
 
     saveController = SaveScanController();
 
     controller.init().then((_) {
       if (!mounted) return;
+
+      if (controller.error == "NON_CACAO") {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text("Scan Unsuccessful"),
+            content: const Text(
+              "Please retake the scanning.\n\n"
+              "Before scanning:\n"
+              "✓ Scan only one cacao pod\n"
+              "✓ Keep the pod in the center\n"
+              "✓ Move closer to the pod\n"
+              "✓ Use good lighting\n",
+            ),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2D6A4F),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                },
+                child: const Text("Retake Photo",
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
 
       if (controller.error == "LOW_CONFIDENCE") {
         LowConfidenceDialog.show(
@@ -126,7 +173,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                ok ? "Scan saved successfully!" : (saveController.saveError ?? "Save failed"),
+                ok
+                    ? "Scan saved successfully!"
+                    : (saveController.saveError ?? "Save failed"),
                 style: const TextStyle(color: Colors.white),
               ),
             ),
@@ -148,7 +197,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -193,7 +243,8 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.broken_image_rounded, size: 64, color: Colors.grey),
+            const Icon(Icons.broken_image_rounded,
+                size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
               controller.error == "LOW_CONFIDENCE"
@@ -206,20 +257,93 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
       );
     }
 
+    // Fallback to raw names if localized strings are missing
+    final primaryTitle = controller.displayName[lang] ?? controller.diseaseName;
+    final secondaryTitle = controller.secondaryDisplayName[lang] ??
+        controller.secondaryDiseaseName ??
+        "";
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ScanResultHeader(imagePath: widget.result.imagePath),
-          const SizedBox(height: 24),
+          ScanResultHeader(
+            imagePath: controller.imagePath,
+          ),
+          const SizedBox(height: 16),
+
+          // ─── PRIMARY DIAGNOSIS SECTION ───
+          _buildSectionHeader(
+            label: lang == "tl" ? "PANGUNAHING SURI" : "PRIMARY DIAGNOSIS",
+            icon: Icons.gpp_maybe_rounded,
+            color: const Color(0xFF2D6A4F),
+          ),
+          const SizedBox(height: 8),
           DiagnosisSection(
-            diseaseName: controller.diseaseName,
+            diseaseName:
+                primaryTitle, // 👈 Fixed: Using localized display name map
             description: controller.description[lang] ?? "",
             severity: controller.severity,
             confidence: controller.confidence,
           ),
+
+          if (controller.hasSecondaryDisease) ...[
+            // 👈 CHANGE THIS LINE
+            const SizedBox(height: 32),
+            _buildSectionHeader(
+              label: lang == "tl"
+                  ? "TALAANG PAGKAKAKILANLAN"
+                  : "SECONDARY DETECTION",
+              icon: Icons.layers_outlined,
+              color: Colors.blueGrey.shade700,
+            ),
+            const SizedBox(height: 8),
+
+            // Styled as a sub-card to visually sit lower in importance
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.blueGrey.shade100, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(51), // 0.02 * 255 ≈ 51
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Stack(
+                  children: [
+                    // Subtle left border accent color
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 6,
+                      child: Container(color: Colors.blueGrey.shade300),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 16, 22, 20),
+                      child: DiagnosisSection(
+                        diseaseName: secondaryTitle, // 👈 Fixed: Localized
+                        description:
+                            controller.secondaryDescription[lang] ?? "",
+                        severity: controller.secondarySeverity ?? "",
+                        confidence: controller.secondaryConfidence ?? 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
           const SizedBox(height: 32),
+          // --- METADATA & ACTIONS ---
           LocationStatusBanner(
             locationPicker: saveController.locationPicker,
             onTap: _showLocationPicker,
@@ -229,6 +353,26 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
           TreatmentPlanSection(recommendations: controller.recommendations),
         ],
       ),
+    );
+  }
+
+// Helper utility widget to keep body code exceptionally clean
+  Widget _buildSectionHeader(
+      {required String label, required IconData icon, required Color color}) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            letterSpacing: 1.2,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }

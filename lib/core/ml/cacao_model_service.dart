@@ -3,11 +3,34 @@ import 'dart:math';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flutter/foundation.dart';
+import '../model/prediction.model.dart';
+
+enum ConfidenceLevel {
+  low,
+  medium,
+  high,
+}
 
 class CacaoModelService {
   static final CacaoModelService _instance = CacaoModelService._internal();
   factory CacaoModelService() => _instance;
   CacaoModelService._internal();
+
+  String getDiseaseFamily(String label) {
+    if (label.startsWith('mealybug')) {
+      return 'mealybug';
+    }
+
+    if (label.startsWith('cacao_pod_borer')) {
+      return 'cacao_pod_borer';
+    }
+
+    if (label.startsWith('black_pod_disease')) {
+      return 'black_pod_disease';
+    }
+
+    return label;
+  }
 
   Interpreter? _interpreter;
   bool _isLoaded = false;
@@ -29,7 +52,7 @@ class CacaoModelService {
   Future<void> loadModel() async {
     if (_isLoaded) return;
     _interpreter = await Interpreter.fromAsset(
-      'assets/models/mobilenetv3large_trainmodelV8.tflite',
+      'assets/models/mobilenetv3large_retrain_V4.tflite',
       options: InterpreterOptions()..threads = 2,
     );
     _isLoaded = true;
@@ -43,32 +66,114 @@ class CacaoModelService {
     debugPrint("  Output type : ${outputTensor.type}");
   }
 
-  Future<ModelPrediction> predict(String imagePath) async {
+  ConfidenceLevel getConfidenceLevel(double confidence) {
+    if (confidence >= 0.90) {
+      return ConfidenceLevel.high;
+    } else if (confidence >= 0.60) {
+      return ConfidenceLevel.medium;
+    } else {
+      return ConfidenceLevel.low;
+    }
+  }
+
+  void logPrediction({
+    required String stage,
+    required String label,
+    required double confidence,
+  }) {
+    final percent = (confidence * 100).toStringAsFixed(2);
+    final level = getConfidenceLevel(confidence);
+
+    String status;
+
+    switch (level) {
+      case ConfidenceLevel.high:
+        status = "HIGH CONFIDENCE";
+        break;
+      case ConfidenceLevel.medium:
+        status = "MEDIUM (AMBIGUOUS)";
+        break;
+      case ConfidenceLevel.low:
+        status = "LOW CONFIDENCE";
+        break;
+    }
+
+    debugPrint(
+      "[$stage] => $label | $percent% | $status",
+    );
+  }
+
+  Future<List<ModelPrediction>> predict(String imagePath) async {
     if (!_isLoaded || _interpreter == null) {
       throw StateError('Model not loaded. Call loadModel() first.');
     }
 
     final bytes = await File(imagePath).readAsBytes();
     final decoded = img.decodeImage(bytes);
+
     if (decoded == null) {
       throw Exception('Failed to decode image.');
     }
 
-    final inputTensor = _interpreter!.getInputTensor(0);
-    final shape = inputTensor.shape;
-    final h = shape[1]; // 224
-    final w = shape[2]; // 224
+    final crops = _createCrops(decoded);
 
-    // ✅ ADJUSTMENT 1: CENTER CROP LOGIC
-    // Find the shortest side to cut a perfect square
+    // Full image prediction
+    final fullScores = _runInference(crops.first);
+    final singlePrediction = _findBestPrediction(fullScores);
+
+    debugPrint("========== INFERENCE START ==========");
+
+    logPrediction(
+      stage: "FULL IMAGE",
+      label: singlePrediction.label,
+      confidence: singlePrediction.confidence,
+    );
+
+    final level = getConfidenceLevel(
+      singlePrediction.confidence,
+    );
+
+    if (level == ConfidenceLevel.high) {
+      debugPrint(
+        "DECISION => HIGH CONFIDENCE, SKIP MULTI-CROP",
+      );
+
+      debugPrint(
+        "========== INFERENCE END ==========",
+      );
+
+      return [singlePrediction];
+    }
+
+    if (level == ConfidenceLevel.medium) {
+      debugPrint(
+        "DECISION => MEDIUM CONFIDENCE",
+      );
+
+      debugPrint(
+        "ACTION => MULTI-CROP INFERENCE",
+      );
+    } else {
+      debugPrint(
+        "DECISION => LOW CONFIDENCE",
+      );
+
+      debugPrint(
+        "ACTION => MULTI-CROP INFERENCE",
+      );
+    }
+
+    return _runMultiCropInference(crops);
+  }
+
+  List<img.Image> _createCrops(img.Image decoded) {
     final int shortSide = min(decoded.width, decoded.height);
 
-    // Calculate center offset
     final int offsetX = (decoded.width - shortSide) ~/ 2;
+
     final int offsetY = (decoded.height - shortSide) ~/ 2;
 
-    // Crop the image into a perfect square first
-    final img.Image squareImage = img.copyCrop(
+    final img.Image fullCrop = img.copyCrop(
       decoded,
       x: offsetX,
       y: offsetY,
@@ -76,8 +181,50 @@ class CacaoModelService {
       height: shortSide,
     );
 
-    // Now safely resize the square down to 224x224 without distortion
-    final resized = img.copyResize(squareImage, width: w, height: h);
+    final img.Image centerCrop = img.copyCrop(
+      fullCrop,
+      x: shortSide ~/ 4,
+      y: shortSide ~/ 4,
+      width: shortSide ~/ 2,
+      height: shortSide ~/ 2,
+    );
+
+    final img.Image leftCrop = img.copyCrop(
+      fullCrop,
+      x: 0,
+      y: 0,
+      width: shortSide ~/ 2,
+      height: shortSide,
+    );
+
+    final img.Image rightCrop = img.copyCrop(
+      fullCrop,
+      x: shortSide ~/ 2,
+      y: 0,
+      width: shortSide ~/ 2,
+      height: shortSide,
+    );
+
+    return [
+      fullCrop,
+      centerCrop,
+      leftCrop,
+      rightCrop,
+    ];
+  }
+
+  List<double> _runInference(img.Image image) {
+    final inputTensor = _interpreter!.getInputTensor(0);
+    final shape = inputTensor.shape;
+
+    final int h = shape[1];
+    final int w = shape[2];
+
+    final resized = img.copyResize(
+      image,
+      width: w,
+      height: h,
+    );
 
     final input = List.generate(
       1,
@@ -85,21 +232,136 @@ class CacaoModelService {
         h,
         (y) => List.generate(w, (x) {
           final pixel = resized.getPixel(x, y);
+
           return [
-            pixel.r.toDouble(),  // raw 0–255
-            pixel.g.toDouble(),  // raw 0–255
-            pixel.b.toDouble(),  // raw 0–255
+            pixel.r.toDouble(),
+            pixel.g.toDouble(),
+            pixel.b.toDouble(),
           ];
         }),
       ),
     );
 
-    final numLabels = labelsInOrder.length;
-    final output = List.generate(1, (_) => List.filled(numLabels, 0.0));
+    final output = [
+      List.filled(labelsInOrder.length, 0.0),
+    ];
 
     _interpreter!.run(input, output);
 
-    final scores = output[0];
+    debugPrint("RAW OUTPUT: ${output[0]}");
+
+    return List<double>.from(output[0]);
+  }
+
+  List<ModelPrediction> _findPrimaryAndSecondaryDisease(
+    List<ModelPrediction> cropPredictions,
+  ) {
+    final Map<String, ModelPrediction> strongestPerDisease = {};
+
+    for (final prediction in cropPredictions) {
+      final family = getDiseaseFamily(
+        prediction.label,
+      );
+
+      final existing = strongestPerDisease[family];
+
+      if (existing == null || prediction.confidence > existing.confidence) {
+        strongestPerDisease[family] = prediction;
+      }
+    }
+
+    final diseases = strongestPerDisease.values.toList();
+
+    diseases.sort(
+      (a, b) => b.confidence.compareTo(
+        a.confidence,
+      ),
+    );
+
+    final primary = diseases.first;
+
+    ModelPrediction? secondary;
+
+    if (diseases.length > 1) {
+      secondary = diseases[1];
+    }
+
+    debugPrint("");
+    debugPrint(
+      "===== FINAL DECISION =====",
+    );
+
+    debugPrint(
+      "PRIMARY DISEASE => "
+      "${primary.label} "
+      "${(primary.confidence * 100).toStringAsFixed(2)}%",
+    );
+
+    if (secondary != null) {
+      debugPrint(
+        "SECONDARY DISEASE => "
+        "${secondary.label} "
+        "${(secondary.confidence * 100).toStringAsFixed(2)}%",
+      );
+    }
+
+    debugPrint(
+      "========== INFERENCE END ==========",
+    );
+
+    return secondary == null ? [primary] : [primary, secondary];
+  }
+
+  Future<List<ModelPrediction>> _runMultiCropInference(
+    List<img.Image> crops,
+  ) async {
+    final cropNames = [
+      'FULL CROP',
+      'CENTER CROP',
+      'LEFT CROP',
+      'RIGHT CROP',
+    ];
+
+    final cropPredictions = <ModelPrediction>[];
+
+    for (int i = 0; i < crops.length; i++) {
+      final scores = _runInference(crops[i]);
+
+      // 1. Find the absolute winner for this crop
+      final primaryPrediction = _findBestPrediction(scores);
+      cropPredictions.add(primaryPrediction);
+
+      // 2. 👉 NEW: Also find the runner-up for this crop if it has decent confidence
+      final sortedIndices = List.generate(scores.length, (idx) => idx)
+        ..sort((a, b) => scores[b].compareTo(scores[a]));
+
+      int runnerUpIdx = sortedIndices[1];
+      double runnerUpScore = scores[runnerUpIdx];
+
+      // If the second-highest disease has a confidence over 15%, count it!
+      if (runnerUpScore > 0.15) {
+        cropPredictions.add(ModelPrediction(
+          label: labelsInOrder[runnerUpIdx],
+          confidence: runnerUpScore,
+          index: runnerUpIdx,
+        ));
+      }
+
+      logPrediction(
+        stage: cropNames[i],
+        label: primaryPrediction.label,
+        confidence: primaryPrediction.confidence,
+      );
+    }
+
+    return _findPrimaryAndSecondaryDisease(
+      cropPredictions,
+    );
+  }
+
+  ModelPrediction _findBestPrediction(
+    List<double> scores,
+  ) {
     int bestIdx = 0;
     double bestScore = scores[0];
 
@@ -110,37 +372,10 @@ class CacaoModelService {
       }
     }
 
-    bestScore = max(0.0, min(1.0, bestScore));
-    final bestLabel = labelsInOrder[bestIdx];
-
-    debugPrint("=== RAW SCORES ===");
-    for (int i = 0; i < scores.length; i++) {
-      debugPrint(
-        "  [$i] ${labelsInOrder[i]}: ${(scores[i] * 100).toStringAsFixed(2)}%",
-      );
-    }
-    debugPrint(
-      "=== BEST: $bestLabel @ ${(bestScore * 100).toStringAsFixed(1)}% ===",
-    );
-
     return ModelPrediction(
-      label: bestLabel,
+      label: labelsInOrder[bestIdx],
       confidence: bestScore,
       index: bestIdx,
     );
   }
-}
-
-class ModelPrediction {
-  final String label;
-  final double confidence;
-  final int index;
-
-  ModelPrediction({
-    required this.label,
-    required this.confidence,
-    required this.index,
-  });
-
-  bool get isNonCacao => label == "non_cacao";
 }
