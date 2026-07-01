@@ -1,0 +1,19 @@
+FROM ghcr.io/cirruslabs/flutter:3.41.0
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pubspec.yaml .
+COPY pubspec.lock .
+
+# Install dependencies
+RUN flutter pub get
+
+# Copy the project
+COPY . .
+
+# Expose Flutter's default web port (optional)
+EXPOSE 8080
+
+# Default command for development
+CMD ["flutter", "run"]
