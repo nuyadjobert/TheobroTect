@@ -1,23 +1,23 @@
-# version: "3.9"
+version: "3.9"
 
-# services:
-#   flutter:
-#     build: .
-#     container_name: cacao_flutter
+services:
+  flutter:
+    build: .
+    container_name: cacao_flutter
 
-#     working_dir: /workspace
+    working_dir: /workspace
 
-#     volumes:
-#       - .:/workspace
-#       - flutter_pub_cache:/root/.pub-cache
-#       - gradle_cache:/root/.gradle
+    volumes:
+      - .:/workspace
+      - flutter_pub_cache:/root/.pub-cache
+      - gradle_cache:/root/.gradle
 
-#     stdin_open: true
-#     tty: true
+    stdin_open: true
+    tty: true
 
-#     ports:
-#       - "5037:5037"
+    ports:
+      - "5037:5037"
 
-# volumes:
-#   flutter_pub_cache:
-#   gradle_cache:
+volumes:
+  flutter_pub_cache:
+  gradle_cache:
