@@ -50,15 +50,23 @@ class MasteryDetailScreen extends StatefulWidget {
 class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
   late YoutubePlayerController _controller;
   late List<Lesson> activeLessons;
+  int _currentIndex = 0; // tracks which lesson is currently loaded in the player
+  late Set<int> _completedIndices; // tracks which lessons have been fully watched
 
   @override
   void initState() {
     super.initState();
-    
+
     activeLessons = courseDataMap[widget.title] ?? courseDataMap["Soil Fertility Secrets"]!;
 
+    // Seed completed set from any lessons already marked isCompleted in the data.
+    _completedIndices = {
+      for (int i = 0; i < activeLessons.length; i++)
+        if (activeLessons[i].isCompleted) i,
+    };
+
     final String? videoId = YoutubePlayer.convertUrlToId(activeLessons[0].videoUrl);
-    
+
     _controller = YoutubePlayerController(
       initialVideoId: videoId ?? '',
       flags: const YoutubePlayerFlags(
@@ -67,12 +75,28 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
         disableDragSeek: false,
       ),
     );
+
+    // Watch for the video reaching its end to auto-mark the lesson complete.
+    _controller.addListener(_onPlayerStateChanged);
   }
 
-  void _onLessonTap(String url) {
+  void _onPlayerStateChanged() {
+    if (_controller.value.playerState == PlayerState.ended) {
+      if (!_completedIndices.contains(_currentIndex)) {
+        setState(() {
+          _completedIndices.add(_currentIndex);
+        });
+      }
+    }
+  }
+
+  void _onLessonTap(int index, String url) {
     final videoId = YoutubePlayer.convertUrlToId(url);
     if (videoId != null) {
       _controller.load(videoId);
+      setState(() {
+        _currentIndex = index; // update which tile shows as "active"
+      });
     }
   }
 
@@ -84,6 +108,7 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
 
   @override
   void dispose() {
+    _controller.removeListener(_onPlayerStateChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -105,23 +130,29 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
             children: [
               CustomScrollView(
                 slivers: [
-                  // FIXED: Safe Area and Back Button Pushing
                   SliverAppBar(
                     expandedHeight: 320,
                     pinned: true,
                     elevation: 0,
                     backgroundColor: Colors.white,
-                    leading: Padding(
-                      padding: const EdgeInsets.only(left: 12, top: 8),
-                      child: CircleAvatar(
-                        backgroundColor: Colors.white.withAlpha(230), // 0.9 * 255 = 230
-                        child: const BackButton(color: Colors.black),
+                    // Wrapped in its own SafeArea so the back button always
+                    // clears the status bar correctly on every device.
+                    leading: SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 12, top: 8),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.white.withAlpha(230), // 0.9 * 255 = 230
+                          child: const BackButton(color: Colors.black),
+                        ),
                       ),
                     ),
                     flexibleSpace: FlexibleSpaceBar(
                       background: SafeArea(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 50, 16, 10),
+                          // Top padding tied to the actual toolbar height (+ buffer)
+                          // so the video never sits underneath the back button,
+                          // regardless of device status bar height.
+                          padding: EdgeInsets.fromLTRB(16, kToolbarHeight + 14, 16, 10),
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(24),
@@ -144,11 +175,11 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("COURSE", 
-                            style: TextStyle(color: widget.themeColor, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 12)),
+                          Text("COURSE",
+                              style: TextStyle(color: widget.themeColor, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 12)),
                           const SizedBox(height: 8),
-                          Text(widget.title, 
-                            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1B3022))),
+                          Text(widget.title,
+                              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1B3022))),
                           const SizedBox(height: 10),
                           const Row(
                             children: [
@@ -167,7 +198,11 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildLessonTile(index + 1, activeLessons[index]),
+                        (context, index) => _buildLessonTile(
+                          index,
+                          activeLessons[index],
+                          isCompleted: _completedIndices.contains(index),
+                        ),
                         childCount: activeLessons.length,
                       ),
                     ),
@@ -183,38 +218,61 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
     );
   }
 
-  Widget _buildLessonTile(int number, Lesson lesson) {
+  Widget _buildLessonTile(int index, Lesson lesson, {required bool isCompleted}) {
+    final bool isActive = index == _currentIndex;
+
     return InkWell(
-      onTap: () => _onLessonTap(lesson.videoUrl),
+      onTap: () => _onLessonTap(index, lesson.videoUrl),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F9F8),
+          color: isActive ? widget.themeColor.withAlpha(20) : const Color(0xFFF8F9F8),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade100),
+          border: Border.all(
+            color: isActive ? widget.themeColor.withAlpha(80) : Colors.grey.shade100,
+          ),
         ),
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: lesson.isCompleted ? const Color(0xFF2D6A4F) : Colors.white,
+              backgroundColor: isCompleted ? const Color(0xFF2D6A4F) : Colors.white,
               radius: 18,
-              child: lesson.isCompleted 
-                ? const Icon(Icons.check, color: Colors.white, size: 16)
-                : Text("$number", style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 12)),
+              child: isCompleted
+                  ? const Icon(Icons.check, color: Colors.white, size: 16)
+                  : Text(
+                      "${index + 1}",
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(lesson.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(
+                    lesson.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: isActive ? widget.themeColor : Colors.black,
+                    ),
+                  ),
                   Text(lesson.duration, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
                 ],
               ),
             ),
-            Icon(Icons.play_circle_fill, color: widget.themeColor, size: 30),
+            // Icon reflects whether this lesson is the one currently loaded.
+            Icon(
+              isActive ? Icons.pause_circle_filled : Icons.play_circle_fill,
+              color: widget.themeColor,
+              size: 30,
+            ),
           ],
         ),
       ),
@@ -234,8 +292,8 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             elevation: 4,
           ),
-          child: const Text("Farming Technique's", 
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          child: const Text("Farming Technique's",
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
         ),
       ),
     );
