@@ -1,14 +1,21 @@
 import 'package:cacao_apps/core/db/user_repository.dart';
 import 'package:flutter/material.dart';
+import '/core/services/notification_service.dart';
 
+import '../../../core/db/scan_repository.dart';
 import '../services/scan_repository.dart';
 import 'location_picker_controller.dart';
 
 class SaveScanController extends ChangeNotifier {
+  final ScanRepositoryServices _scanRepoServices = ScanRepositoryServices();
+
   final ScanRepository _scanRepo = ScanRepository();
 
+  late final LocalNotificationService _notificationService =
+      LocalNotificationService(_scanRepo);
+
   final LocationPickerController locationPicker = LocationPickerController();
-  final UserRepository userRepository =UserRepository();
+  final UserRepository userRepository = UserRepository();
 
   bool _isSaving = false;
   String? _saveError;
@@ -68,11 +75,13 @@ class SaveScanController extends ChangeNotifier {
       final userId = u.userId;
       final now = DateTime.now();
       final loc = locationPicker.toLocationMap();
-      final nextScanAt = rescanAfterDays != null
-          ? now.add(Duration(days: rescanAfterDays))
-          : null;
+      final effectiveRescanDays = rescanAfterDays ?? 1;
 
-      final localId = await _scanRepo.insertScan(
+      final nextScanAt = now.add(
+        Duration(days: effectiveRescanDays),
+      );
+
+      final localId = await _scanRepoServices.insertScan(
         userId: userId,
         diseaseKey: diseaseKey,
         severityKey: severityKey,
@@ -102,7 +111,21 @@ class SaveScanController extends ChangeNotifier {
         updatedAt: null,
       );
 
-      final saved = await _scanRepo.getScanByLocalId(localId);
+      debugPrint('Disease: $diseaseKey');
+      debugPrint('Severity: $severityKey');
+      debugPrint('rescanAfterDays = $rescanAfterDays');
+      debugPrint('nextScanAt = $nextScanAt');
+
+      await _notificationService.scheduleNotification(
+        localId: localId,
+        userId: userId,
+        diseaseKey: diseaseKey,
+        severityKey: severityKey,
+        scannedAt: now,
+        nextScanAt: nextScanAt,
+      );
+
+      final saved = await _scanRepoServices.getScanByLocalId(localId);
       debugPrint('Saved scan row: $saved');
       debugPrint("Logged user: ${u.userId} | ${u.name} | ${u.email}");
 

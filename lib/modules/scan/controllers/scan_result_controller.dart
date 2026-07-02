@@ -33,7 +33,8 @@ class ScanResultController extends ChangeNotifier {
     if (name.isEmpty || name == 'none' || name == 'null') return false;
 
     if (confidence < 0.75) return false;
-    if (secondaryConfidence != null && secondaryConfidence! < 0.75) return false;
+    if (secondaryConfidence != null && secondaryConfidence! < 0.75)
+      return false;
 
     final primaryDisease = _diseaseKeyFromName(diseaseName);
     if (primaryDisease == 'healthy' && confidence >= 0.90) return false;
@@ -119,6 +120,27 @@ class ScanResultController extends ChangeNotifier {
         throw Exception(
           'Disease not found in guide: $diseaseKey',
         );
+      }
+      final monitoringPlan = await _repository.getMonitoringPlan(
+        diseaseKey,
+        severityKey,
+      );
+
+      if (monitoringPlan != null) {
+        rescanAfterDays = monitoringPlan['rescan_after_days'] as int?;
+
+        rescanMessage = Map<String, String>.from(
+          monitoringPlan['message'] as Map,
+        );
+
+        debugPrint('========== Monitoring Plan ==========');
+        debugPrint('Disease: $diseaseKey');
+        debugPrint('Severity: $severityKey');
+        debugPrint('Rescan After: $rescanAfterDays');
+        debugPrint('Preferred Hour: ${monitoringPlan['preferred_time_hour']}');
+        debugPrint('=====================================');
+      } else {
+        debugPrint('No monitoring plan found for $diseaseKey / $severityKey');
       }
 
       displayName = _mapLang(

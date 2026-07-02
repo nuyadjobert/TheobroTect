@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cacao_apps/core/services/notification_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cacao_apps/core/db/user_repository.dart';
@@ -11,11 +12,15 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:cacao_apps/core/db/database_helper.dart';
 
 class HomeController {
- bool _isResourcesLoaded = false;
+  bool _isResourcesLoaded = false;
   String? userName;
   final SyncTrigger _syncTrigger = SyncTrigger();
-  
+
   final CacaoGuideRepository _guideRepo = CacaoGuideRepository();
+  final ScanRepository _scanRepository = ScanRepository();
+
+  late final LocalNotificationService _notificationService =
+      LocalNotificationService(_scanRepository);
   late final GuideSyncService _guideSyncService;
 
   HomeController() {
@@ -25,13 +30,10 @@ class HomeController {
     );
   }
 
-  // =========================================
-  // NEW: Debug method to fetch data and toast
-  // =========================================
   Future<void> showDatabaseDebugToast() async {
     try {
       final db = await DatabaseHelper().db;
-      final rawData = await db.query('guide_diseases'); 
+      final rawData = await db.query('guide_diseases');
 
       if (rawData.isEmpty) {
         Fluttertoast.showToast(msg: "Database is empty!");
@@ -51,12 +53,6 @@ class HomeController {
     }
   }
 
-  // final GuideSyncService _guideSyncService = GuideSyncService(
-  //   dio: DioClient.dio,
-  //   guideRepository: CacaoGuideRepository(),
-  // );
-
-  // Moved disease data from View to Controller
   final List<Map<String, dynamic>> diseaseData = [
     {
       "image": "assets/images/pb_bg.png",
@@ -164,6 +160,10 @@ class HomeController {
     final ScanRepository scanRepository = ScanRepository();
     final user = await userRepository.getCurrentUser();
 
+    if (user != null) {
+      await _notificationService.scheduleUserNotifications(user.userId);
+    }
+
     if (user == null) {
       debugPrint("❌ [HOME] No user found");
       return;
@@ -185,25 +185,23 @@ class HomeController {
     try {
       debugPrint('Starting guide data sync...');
       final syncSuccess = await _guideSyncService.fetchUpdatesFromServer();
-      
+
       debugPrint('Guide sync result: $syncSuccess');
 
       // If sync was successful, run our test to read from SQLite
       if (syncSuccess) {
         await _verifyLocalDatabase();
-        
-        await showDatabaseDebugToast();
-      
-      }
 
+        await showDatabaseDebugToast();
+      }
     } catch (e) {
       debugPrint('Guide sync failed: $e');
     }
   }
 
- Future<void> _verifyLocalDatabase() async {
+  Future<void> _verifyLocalDatabase() async {
     debugPrint('\n--- 🧪 TESTING LOCAL DATABASE SAVE ---');
-    
+
     // 1. Check total count
     final count = await _guideRepo.getDiseaseCount();
     debugPrint('Total diseases in SQLite: $count');
@@ -221,26 +219,29 @@ class HomeController {
     // 3. Loop through every disease found in the database
     for (var row in rawDiseases) {
       final String diseaseKey = row['disease_key'] as String;
-      
+
       // Use your repository to get the properly formatted (JSON decoded) data
       final diseaseData = await _guideRepo.getDisease(diseaseKey);
 
       if (diseaseData != null) {
         debugPrint('\n✅ Successfully found: $diseaseKey');
-        debugPrint('   Display Name (EN): ${diseaseData['display_name']['en']}');
-        debugPrint('   Display Name (TL): ${diseaseData['display_name']['tl']}');
-        
+        debugPrint(
+            '   Display Name (EN): ${diseaseData['display_name']['en']}');
+        debugPrint(
+            '   Display Name (TL): ${diseaseData['display_name']['tl']}');
+
         // Optional: Test fetching recommendations for this specific disease
-        final mildRecs = await _guideRepo.getRecommendations(diseaseKey, 'mild');
-        debugPrint('   Found ${mildRecs.length} "mild" recommendation categories.');
+        final mildRecs =
+            await _guideRepo.getRecommendations(diseaseKey, 'mild');
+        debugPrint(
+            '   Found ${mildRecs.length} "mild" recommendation categories.');
       } else {
         debugPrint('\n❌ FAILED: Could not decode data for $diseaseKey.');
       }
     }
-    
+
     debugPrint('\n--------------------------------------\n');
   }
- 
 
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -279,7 +280,4 @@ class HomeController {
       await Future.delayed(const Duration(milliseconds: 1200));
   Future<void> _fetchEducationalContent() async =>
       await Future.delayed(const Duration(milliseconds: 1000));
-
-
-
 }

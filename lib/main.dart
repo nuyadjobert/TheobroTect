@@ -9,17 +9,19 @@ import 'dart:async';
 
 import 'core/network/client.dart';
 import 'core/storage/token_storage.dart';
-import 'core/services/notification_service.dart';
 import 'modules/notifications/views/notification_screen.dart';
 import 'modules/auth/controllers/registration_controller.dart';
 import 'modules/auth/models/registration_model.dart';
 import 'core/config/app_config.dart';
 import 'core/db/database_helper.dart';
+import 'core/services/notification_service.dart';
+import 'core/db/scan_repository.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 late final RegistrationController controller;
 late final RegistrationRequest model;
+late LocalNotificationService notificationService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +40,11 @@ void main() async {
   final dbHelper = DatabaseHelper();
   await dbHelper.db;
 
-  await NotificationService.instance.init();
+  final scanRepository = ScanRepository();
+
+// Create the notification service
+  notificationService = LocalNotificationService(scanRepository);
+  await notificationService.initialize();
 
   final authService = AuthService(DioClient.dio);
   controller = RegistrationController(authService);

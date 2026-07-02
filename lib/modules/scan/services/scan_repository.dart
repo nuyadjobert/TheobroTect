@@ -2,11 +2,11 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/db/database_helper.dart';
 
-class ScanRepository {
+class ScanRepositoryServices {
  final DatabaseHelper _dbHelper;
   final Uuid _uuid;
 
-  ScanRepository({DatabaseHelper? dbHelper, Uuid? uuid})
+  ScanRepositoryServices({DatabaseHelper? dbHelper, Uuid? uuid})
       : _dbHelper = dbHelper ?? DatabaseHelper(),
         _uuid = uuid ?? const Uuid();
 

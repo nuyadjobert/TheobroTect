@@ -93,4 +93,24 @@ class ScanRepository {
       whereArgs: [localId, userId],
     );
   }
+
+    Future<List<Map<String, dynamic>>> getPendingNotifications(
+    String userId,
+  ) async {
+    final database = await _dbHelper.db;
+
+    return await database.query(
+      'scan_history',
+      columns: [
+        'local_id',
+        'next_scan_at',
+        'notif_local_id',
+        'disease_key',
+        'severity_key',
+        'scanned_at',
+      ],
+      where: 'user_id = ? AND next_scan_at IS NOT NULL',
+      whereArgs: [userId],
+    );
+  }
 }

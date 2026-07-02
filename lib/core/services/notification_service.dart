@@ -1,171 +1,155 @@
+import '/core/db/scan_repository.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'dart:convert';
-import '../../main.dart';
 
-class NotificationService {
-  NotificationService._internal();
+class LocalNotificationService {
+  final ScanRepository repository;
+  LocalNotificationService(this.repository);
 
-  static final NotificationService instance =
-      NotificationService._internal();
-
-  final FlutterLocalNotificationsPlugin _plugin =
+  final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
-  bool _initialized = false;
-
-  Future<void> init() async {
-    if (_initialized) return;
-
+  Future<void> initialize() async {
     tz.initializeTimeZones();
 
-    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
-
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
+    final timezone = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(
+      tz.getLocation(timezone.identifier),
     );
+
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const settings = InitializationSettings(
       android: androidSettings,
-      iOS: iosSettings,
     );
 
-    await _plugin.initialize(
+    await _notifications.initialize(
       settings: settings,
-      onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
+      onDidReceiveNotificationResponse: onNotificationTap,
     );
 
-    _initialized = true;
+    await requestPermission();
   }
 
-  void _onDidReceiveNotificationResponse(NotificationResponse response) {
-    final payload = response.payload;
+  Future<void> requestPermission() async {
+    final android = _notifications.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
 
-    if (payload != null) {
-     final data = jsonDecode(payload) as Map<String, dynamic>;
-  final type = data['type'];
-
-  if (type == 'scan_reminder') {
-    navigatorKey.currentState?.pushNamed('/notification');
+    await android?.requestNotificationsPermission();
+    await android?.requestExactAlarmsPermission();
   }
+
+  void onNotificationTap(NotificationResponse response) {
+    // Later:
+    // Navigate to Scan History
+    // or open the Scan screen.
+  }
+  Future<void> cancelNotification(String localId) async {
+    await _notifications.cancel(
+      id: localId.hashCode,
+    );
+  }
+
+  Future<void> scheduleUserNotifications(String userId) async {
+    final scans = await repository.getPendingNotifications(userId);
+
+    for (final scan in scans) {
+      final localId = scan['local_id'] as String;
+      final diseaseKey = scan['disease_key'] as String;
+      final severityKey = scan['severity_key'] as String;
+
+      final nextScanAt = DateTime.parse(
+        scan['next_scan_at'] as String,
+      );
+
+      // Skip expired reminders.
+      if (!nextScanAt.isAfter(DateTime.now())) {
+        continue;
+      }
+
+      final notificationId = localId.hashCode;
+
+      final title = buildNotificationTitle();
+
+      final body = buildNotificationBody(
+        diseaseKey: diseaseKey,
+        severityKey: severityKey,
+      );
+
+      await _notifications.zonedSchedule(
+        id: notificationId,
+        title: title,
+        body: body,
+        scheduledDate: tz.TZDateTime.from(nextScanAt, tz.local),
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'scan_reminders',
+            'Scan Reminders',
+            channelDescription:
+                'Reminder to perform follow-up cacao disease scans.',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: localId,
+      );
     }
   }
 
-  Future<void> requestPermissions() async {
-    await init();
-
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
-
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestExactAlarmsPermission();
-
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-  }
-
-  Future<void> showInstantNotification({
-    required int notificationId,
-    required String title,
-    required String body,
-    String? payload,
+  Future<void> scheduleNotification({
+    required String localId,
+    required String userId,
+    required String diseaseKey,
+    required String severityKey,
+    required DateTime scannedAt,
+    required DateTime? nextScanAt,
   }) async {
-    await init();
+    if (nextScanAt == null) return;
 
-    const androidDetails = AndroidNotificationDetails(
-      'scan_reminders',
-      'Scan Reminders',
-      channelDescription: 'Notifications for cacao scan follow-up reminders',
-      importance: Importance.max,
-      priority: Priority.high,
+    if (!nextScanAt.isAfter(DateTime.now())) return;
+
+    final notificationId = localId.hashCode;
+
+    final title = buildNotificationTitle();
+
+    final body = buildNotificationBody(
+      diseaseKey: diseaseKey,
+      severityKey: severityKey,
     );
-
-    const iosDetails = DarwinNotificationDetails();
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _plugin.show(
+    await _notifications.zonedSchedule(
       id: notificationId,
       title: title,
       body: body,
-      notificationDetails: details,
-      payload: payload,
-    );
-  }
-
-  Future<void> scheduleReminder({
-    required int notificationId,
-    required DateTime scheduledAt,
-    required String title,
-    required String body,
-    String? payload,
-  }) async {
-    await init();
-
-    final now = DateTime.now();
-    final safeDate =
-        scheduledAt.isBefore(now) ? now.add(const Duration(seconds: 5)) : scheduledAt;
-
-    final tzScheduledAt = tz.TZDateTime.from(safeDate, tz.local);
-
-    const androidDetails = AndroidNotificationDetails(
-      'scan_reminders',
-      'Scan Reminders',
-      channelDescription: 'Notifications for cacao scan follow-up reminders',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
-
-    const iosDetails = DarwinNotificationDetails();
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _plugin.zonedSchedule(
-      id: notificationId,
-      title: title,
-      body: body,
-      scheduledDate: tzScheduledAt,
-      notificationDetails: details,
-      payload: payload,
+      scheduledDate: tz.TZDateTime.from(nextScanAt, tz.local),
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'scan_reminders',
+          'Scan Reminders',
+          channelDescription:
+              'Reminder to perform follow-up cacao disease scans.',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+      ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: localId,
     );
   }
 
-  Future<void> cancelReminder(int notificationId) async {
-    await init();
-    await _plugin.cancel(id: notificationId);
+  String buildNotificationTitle() {
+    return '🌿 Time to Check Your Cacao Pod';
   }
 
-  Future<void> cancelAllReminders() async {
-    await init();
-    await _plugin.cancelAll();
-  }
-
-  Future<List<PendingNotificationRequest>> pendingReminders() async {
-    await init();
-    return _plugin.pendingNotificationRequests();
+  String buildNotificationBody({
+    required String diseaseKey,
+    required String severityKey,
+  }) {
+    return 'Your scheduled follow-up scan is due today.\n'
+        'Last result: $diseaseKey ($severityKey).\n'
+        'Scan the same pod to see whether its condition has improved or worsened.';
   }
 }
