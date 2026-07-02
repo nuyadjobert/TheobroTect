@@ -5,7 +5,6 @@ import '../widgets/management_sheet.dart';
 import '../widgets/mastery_detail_screen.dart';
 import '../models/guide_model.dart';
 
-
 class _GuideCategory {
   final IconData icon;
   final String label; // short text shown under the circle icon
@@ -142,7 +141,6 @@ class LearnHubScreen extends StatelessWidget {
                   _buildSectionHeader(
                     context,
                     title: "Management Guides",
-                    onViewAll: () => _showAllCategories(context),
                   ),
                   const SizedBox(height: 16),
                   _buildCategoryRow(context),
@@ -197,8 +195,8 @@ class LearnHubScreen extends StatelessWidget {
                   children: [
                     const Text(
                       "All Management Guides",
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(sheetContext),
@@ -210,9 +208,13 @@ class LearnHubScreen extends StatelessWidget {
                 ..._allCategories.map((category) {
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: category.bg,
+                    leading: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: category.bg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Icon(category.icon,
                           color: const Color(0xFF2D6A4F), size: 20),
                     ),
@@ -367,36 +369,47 @@ class LearnHubScreen extends StatelessWidget {
     );
   }
 
-  
   Widget _buildCategoryRow(BuildContext context) {
-    final visible = _allCategories.take(3).toList();
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: visible.map((category) {
-        return GestureDetector(
-          onTap: () => _openGuideSheet(context, category),
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: category.bg,
-                child: Icon(category.icon,
-                    color: const Color(0xFF2D6A4F), size: 24),
+    return SizedBox(
+      height: 110,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _allCategories.length,
+        itemBuilder: (context, index) {
+          final category = _allCategories[index];
+          return Padding(
+            padding: EdgeInsets.only(
+              right: index == _allCategories.length - 1 ? 0 : 16,
+            ),
+            child: GestureDetector(
+              onTap: () => _openGuideSheet(context, category),
+              child: Column(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: category.bg,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Icon(category.icon,
+                        color: const Color(0xFF2D6A4F), size: 32),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    category.label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1B3022),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                category.label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1B3022),
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+            ),
+          );
+        },
+      ),
     );
   }
 

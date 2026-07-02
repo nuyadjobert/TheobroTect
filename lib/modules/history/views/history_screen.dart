@@ -5,6 +5,8 @@ import '../widgets/history_filter.dart';
 import '../widgets/scan_details.dart';
 import '../controllers/scan_result_controller.dart';
 import '../../../core/sync/sync_trigger.dart';
+import '../widgets/empty_state.dart';
+import 'package:flutter/services.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -34,274 +36,274 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1B3022),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-        title: const Text(
-          "Scan History",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-            onPressed: () => setState(() {}),
-          ),
-        ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            Brightness.light, // white icons, since your bg is dark green
+        systemNavigationBarColor: Color(0xFFFBFDFB),
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 10),
-          HistoryFilter(
-            selectedFilter: _controller.activeFilter,
-            onFilterSelected: (val) =>
-                setState(() => _controller.setActiveFilter(val)),
-            selectedDate: _controller.selectedDate,
-            onDateSelected: (date) =>
-                setState(() => _controller.setSelectedDate(date)),
-          ),
-          _buildSearchBar(),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.only(top: 10),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFBFDFB),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-              ),
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _controller.getHistory(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF1B3022),
-                      ),
-                    );
-                  }
-
-                  // --- START FILTERING LOGIC ---
-                  final rawData = snapshot.data ?? [];
-                  final filteredData = rawData.where((item) {
-                    final searchText = _searchController.text.toLowerCase();
-
-                    // Determine status for this item
-                    String itemStatus;
-                    if (item['is_treated'] == 1 ||
-                        item['status'] == 'treated') {
-                      itemStatus = 'treated';
-                    } else if (item['severity_key'] == 'default' ||
-                        item['disease_key'] == 'healthy') {
-                      itemStatus = 'healthy';
-                    } else {
-                      itemStatus = 'infected';
-                    }
-
-                    final title = item['disease_key']
-                        .toString()
-                        .replaceAll('_', ' ')
-                        .toLowerCase();
-                    final date = item['created_at'].toString().toLowerCase();
-
-                    // Search matches disease name, status, or date
-                    bool matchesSearch = title.contains(searchText) ||
-                        itemStatus.contains(searchText) ||
-                        date.contains(searchText);
-
-                    // ✅ Date filter — match by year, month, day
-                    bool matchesDate = true;
-                    if (_controller.selectedDate != null) {
-                      try {
-                        final itemDate =
-                            DateTime.parse(item['created_at'].toString());
-                        final selected = _controller.selectedDate!;
-                        matchesDate = itemDate.year == selected.year &&
-                            itemDate.month == selected.month &&
-                            itemDate.day == selected.day;
-                      } catch (_) {
-                        matchesDate = false;
-                      }
-                    }
-                    bool matchesFilter = true;
-                    if (_controller.activeFilter == "Healthy") {
-                      matchesFilter = item['severity_key'] == 'default' ||
-                          item['disease_key'] == 'healthy';
-                    } else if (_controller.activeFilter == "Infected") {
-                      matchesFilter = item['severity_key'] != 'default' &&
-                          item['disease_key'] != 'healthy';
-                    } else if (_controller.activeFilter == "Treated") {
-                      // Adjust 'is_treated' to match your actual database column name
-                      matchesFilter = item['is_treated'] == 1 ||
-                          item['status'] == 'treated';
-                    }
-
-                    return matchesSearch && matchesFilter && matchesDate;
-                  }).toList();
-
-                  if (filteredData.isEmpty) {
-                    return _buildEmptyState();
-                  }
-                  // --- END FILTERING LOGIC ---
-
-                  return GridView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 20,
-                    ),
-                    physics: const BouncingScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 15,
-                      mainAxisSpacing: 15,
-                      childAspectRatio: 0.68,
-                    ),
-                    itemCount: filteredData.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredData[index];
-
-                      // Logic to determine display status
-                      String displayStatus;
-                      if (item['is_treated'] == 1 ||
-                          item['status'] == 'treated') {
-                        displayStatus = 'Treated';
-                      } else if (item['severity_key'] == 'default' ||
-                          item['disease_key'] == 'healthy') {
-                        displayStatus = 'Healthy';
-                      } else {
-                        displayStatus = 'Infected';
-                      }
-
-                      final Map<String, dynamic> formattedData = {
-                        "id": item['local_id'],
-                        "title": item['disease_key']
-                            .toString()
-                            .replaceAll('_', ' ')
-                            .toUpperCase(),
-                        "date": item['created_at'],
-                        "confidence":
-                            (item['confidence'] * 100).toStringAsFixed(1),
-                        "status": displayStatus,
-                        "image": item['image_path'],
-                        "isLocalFile": true,
-                        "what_to_do_now_en": item['what_to_do_now_en'],
-                        "prevention_en": item['prevention_en'],
-                        "when_to_escalate_en": item['when_to_escalate_en'],
-                        "what_to_do_now_tl": item['what_to_do_now_tl'],
-                        "prevention_tl": item['prevention_tl'],
-                        "when_to_escalate_tl": item['when_to_escalate_tl'],
-                      };
-
-                      return HistoryCard(
-                        data: formattedData,
-                        controller: _scanResultController,
-                        onTap: () async {
-                          _scanResultController.setInputs(
-                            diseaseName: formattedData['title'],
-                            severity:
-                                item['severity_key']?.toString() ?? 'default',
-                          );
-
-                          final hasGuideData =
-                              item['what_to_do_now_en'] != null &&
-                                  item['what_to_do_now_en']
-                                      .toString()
-                                      .trim()
-                                      .isNotEmpty;
-
-                          if (hasGuideData) {
-                            _scanResultController.loadFromHistory(item);
-                          } else {
-                            await _scanResultController.initGuide();
-                          }
-
-                          if (!context.mounted) return;
-                          ScanDetailsSheet.show(
-                            context,
-                            formattedData,
-                            _scanResultController,
-                          );
-                        },
-                        onDeleteComplete: () => setState(() {}),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-      
-       // 1. Keep only one location (endFloat keeps it on the right)
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(
-          bottom: 96, // approximately 1 inch
-          right: 16,
-        ),
-        // 2. This must be 'child', not 'floatingActionButton'
-        child: FloatingActionButton.extended(
-          // Disable the button if it's already syncing
-          onPressed: _isSyncing
-              ? null
-              : () async {
-                  setState(() {
-                    _isSyncing = true;
-                  });
-
-                  // Call your new public method
-                  final success = await _syncTrigger.forceSync();
-
-                  if (!context.mounted) return;
-
-                  // Show a snackbar based on the result
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? "Sync completed successfully!"
-                            : "No pending data to sync.",
-                      ),
-                      backgroundColor: success ? Colors.green : Colors.orange,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-
-                  setState(() {
-                    _isSyncing = false;
-                  });
-
-                  // Optional: Refresh the UI if the sync updated the database
-                  if (success) {
-                    setState(() {}); // This forces FutureBuilder to rebuild
-                  }
-                },
-          // Change color to grey when disabled/syncing
-          backgroundColor: _isSyncing ? Colors.grey[600] : Colors.green,
-          // Swap the icon for a loading spinner
-          icon: _isSyncing
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                  ),
-                )
-              : const Icon(Icons.sync_rounded, color: Colors.white),
-          // Update the text
-          label: Text(
-            _isSyncing ? "Syncing..." : "Sync Data",
-            style: const TextStyle(
+      child: Scaffold(
+        backgroundColor: const Color(0xFF1B3022),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF1B3022),
+          elevation: 0,
+          centerTitle: false,
+          title: const Text(
+            "Scan History",
+            style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+              onPressed: () => setState(() {}),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          top: true,
+          bottom: false,
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              HistoryFilter(
+                selectedFilter: _controller.activeFilter,
+                onFilterSelected: (val) =>
+                    setState(() => _controller.setActiveFilter(val)),
+                selectedDate: _controller.selectedDate,
+                onDateSelected: (date) =>
+                    setState(() => _controller.setSelectedDate(date)),
+              ),
+              _buildSearchBar(),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.only(top: 10),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBFDFB),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _controller.getHistory(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF1B3022),
+                          ),
+                        );
+                      }
+
+                      final rawData = snapshot.data ?? [];
+                      final filteredData = rawData.where((item) {
+                        final searchText = _searchController.text.toLowerCase();
+
+                        String itemStatus;
+                        if (item['is_treated'] == 1 ||
+                            item['status'] == 'treated') {
+                          itemStatus = 'treated';
+                        } else if (item['severity_key'] == 'default' ||
+                            item['disease_key'] == 'healthy') {
+                          itemStatus = 'healthy';
+                        } else {
+                          itemStatus = 'infected';
+                        }
+
+                        final title = item['disease_key']
+                            .toString()
+                            .replaceAll('_', ' ')
+                            .toLowerCase();
+                        final date =
+                            item['created_at'].toString().toLowerCase();
+
+                        bool matchesSearch = title.contains(searchText) ||
+                            itemStatus.contains(searchText) ||
+                            date.contains(searchText);
+
+                        bool matchesDate = true;
+                        if (_controller.selectedDate != null) {
+                          try {
+                            final itemDate =
+                                DateTime.parse(item['created_at'].toString());
+                            final selected = _controller.selectedDate!;
+                            matchesDate = itemDate.year == selected.year &&
+                                itemDate.month == selected.month &&
+                                itemDate.day == selected.day;
+                          } catch (_) {
+                            matchesDate = false;
+                          }
+                        }
+                        bool matchesFilter = true;
+                        if (_controller.activeFilter == "Healthy") {
+                          matchesFilter = item['severity_key'] == 'default' ||
+                              item['disease_key'] == 'healthy';
+                        } else if (_controller.activeFilter == "Infected") {
+                          matchesFilter = item['severity_key'] != 'default' &&
+                              item['disease_key'] != 'healthy';
+                        } else if (_controller.activeFilter == "Treated") {
+                          matchesFilter = item['is_treated'] == 1 ||
+                              item['status'] == 'treated';
+                        }
+
+                        return matchesSearch && matchesFilter && matchesDate;
+                      }).toList();
+
+                      if (filteredData.isEmpty) {
+                        return _buildEmptyState();
+                      }
+
+                      return GridView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 20,
+                        ),
+                        physics: const BouncingScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 15,
+                          mainAxisSpacing: 15,
+                          childAspectRatio: 0.68,
+                        ),
+                        itemCount: filteredData.length,
+                        itemBuilder: (context, index) {
+                          final item = filteredData[index];
+
+                          String displayStatus;
+                          if (item['is_treated'] == 1 ||
+                              item['status'] == 'treated') {
+                            displayStatus = 'Treated';
+                          } else if (item['severity_key'] == 'default' ||
+                              item['disease_key'] == 'healthy') {
+                            displayStatus = 'Healthy';
+                          } else {
+                            displayStatus = 'Infected';
+                          }
+
+                          final Map<String, dynamic> formattedData = {
+                            "id": item['local_id'],
+                            "title": item['disease_key']
+                                .toString()
+                                .replaceAll('_', ' ')
+                                .toUpperCase(),
+                            "date": item['created_at'],
+                            "confidence":
+                                (item['confidence'] * 100).toStringAsFixed(1),
+                            "status": displayStatus,
+                            "image": item['image_path'],
+                            "isLocalFile": true,
+                            "what_to_do_now_en": item['what_to_do_now_en'],
+                            "prevention_en": item['prevention_en'],
+                            "when_to_escalate_en": item['when_to_escalate_en'],
+                            "what_to_do_now_tl": item['what_to_do_now_tl'],
+                            "prevention_tl": item['prevention_tl'],
+                            "when_to_escalate_tl": item['when_to_escalate_tl'],
+                          };
+
+                          return HistoryCard(
+                            data: formattedData,
+                            controller: _scanResultController,
+                            onTap: () async {
+                              _scanResultController.setInputs(
+                                diseaseName: formattedData['title'],
+                                severity: item['severity_key']?.toString() ??
+                                    'default',
+                              );
+
+                              final hasGuideData =
+                                  item['what_to_do_now_en'] != null &&
+                                      item['what_to_do_now_en']
+                                          .toString()
+                                          .trim()
+                                          .isNotEmpty;
+
+                              if (hasGuideData) {
+                                _scanResultController.loadFromHistory(item);
+                              } else {
+                                await _scanResultController.initGuide();
+                              }
+
+                              if (!context.mounted) return;
+                              ScanDetailsSheet.show(
+                                context,
+                                formattedData,
+                                _scanResultController,
+                              );
+                            },
+                            onDeleteComplete: () => setState(() {}),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(
+            bottom: 96,
+            right: 16,
+          ),
+          child: FloatingActionButton.extended(
+            onPressed: _isSyncing
+                ? null
+                : () async {
+                    setState(() {
+                      _isSyncing = true;
+                    });
+
+                    final success = await _syncTrigger.forceSync();
+
+                    if (!context.mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success
+                              ? "Sync completed successfully!"
+                              : "No pending data to sync.",
+                        ),
+                        backgroundColor: success
+                            ? const Color(0xFF1B3022)
+                            : const Color(0xFF8A6D3B),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+
+                    setState(() {
+                      _isSyncing = false;
+                    });
+
+                    if (success) {
+                      setState(() {});
+                    }
+                  },
+            backgroundColor:
+                _isSyncing ? const Color(0xFF6B7C72) : const Color(0xFF1B3022),
+            icon: _isSyncing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : const Icon(Icons.sync_rounded, color: Colors.white),
+            label: Text(
+              _isSyncing ? "Syncing..." : "Sync Data",
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -315,10 +317,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment:
-              CrossAxisAlignment.center, // Centers the text horizontally
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[300]),
+            const FloatingGhost(),
             const SizedBox(height: 16),
             const Text(
               "No cacao pods found",
@@ -333,7 +334,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Text(
               _controller.activeFilter == "All Scans"
                   ? "Try scanning some cacao pods first!"
-                  : "No items match the '${_controller.activeFilter}' filter.", // Fixed "Instance of"
+                  : "No items match the '${_controller.activeFilter}' filter.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[500]),
             ),
