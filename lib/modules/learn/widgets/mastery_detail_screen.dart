@@ -16,8 +16,7 @@ class Lesson {
   });
 }
 
-// --- MASTER DATA MAP ---
-// This stores all your courses in one place
+
 final Map<String, List<Lesson>> courseDataMap = {
   "Soil Fertility Secrets": [
     Lesson(title: "Understanding Soil pH", duration: "12:56", isCompleted: true, videoUrl: "https://www.youtube.com/watch?v=Izdgz-HBxlE"),
@@ -136,12 +135,11 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                     elevation: 0,
                     backgroundColor: Colors.white,
                     // Wrapped in its own SafeArea so the back button always
-                    // clears the status bar correctly on every device.
                     leading: SafeArea(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 12, top: 8),
                         child: CircleAvatar(
-                          backgroundColor: Colors.white.withAlpha(230), // 0.9 * 255 = 230
+                          backgroundColor: Colors.white.withAlpha(230), 
                           child: const BackButton(color: Colors.black),
                         ),
                       ),
@@ -149,9 +147,7 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                     flexibleSpace: FlexibleSpaceBar(
                       background: SafeArea(
                         child: Padding(
-                          // Top padding tied to the actual toolbar height (+ buffer)
-                          // so the video never sits underneath the back button,
-                          // regardless of device status bar height.
+                         
                           padding: EdgeInsets.fromLTRB(16, kToolbarHeight + 14, 16, 10),
                           child: Container(
                             decoration: BoxDecoration(

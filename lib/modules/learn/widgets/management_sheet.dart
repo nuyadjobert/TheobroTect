@@ -1,4 +1,4 @@
-  import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/guide_model.dart';
 
 class ManagementSheet extends StatefulWidget {
@@ -17,9 +17,10 @@ class _ManagementSheetState extends State<ManagementSheet> {
   @override
   Widget build(BuildContext context) {
     if (widget.steps.isEmpty) return const SizedBox();
-    
+
     final step = widget.steps[currentStep];
     final bool isLastStep = currentStep == widget.steps.length - 1;
+    final bool isFirstStep = currentStep == 0;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -54,30 +55,57 @@ class _ManagementSheetState extends State<ManagementSheet> {
             child: Icon(step.icon, size: 36, color: const Color(0xFF2D6A4F)),
           ),
           const SizedBox(height: 24),
-          Text("Step ${currentStep + 1}: ${step.title}", 
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text("Step ${currentStep + 1}: ${step.title}",
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          Text(step.description, textAlign: TextAlign.center, 
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600, height: 1.5)),
+          Text(step.description,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600, height: 1.5)),
           const SizedBox(height: 40),
-          // Navigation Button
-          SizedBox(
-            width: double.infinity,
-            height: 55,
-            child: ElevatedButton(
-              onPressed: () {
-                if (isLastStep){ Navigator.pop(context);
-                }
-                else {setState(() => currentStep++);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2D6A4F),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+
+          // Navigation Buttons (Previous + Next)
+          Row(
+            children: [
+              if (!isFirstStep) ...[
+                Expanded(
+                  child: SizedBox(
+                    height: 55,
+                    child: OutlinedButton(
+                      onPressed: () => setState(() => currentStep--),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFF2D6A4F)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text(
+                        "Previous",
+                        style: TextStyle(color: Color(0xFF2D6A4F), fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: SizedBox(
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (isLastStep) {
+                        Navigator.pop(context);
+                      } else {
+                        setState(() => currentStep++);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2D6A4F),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text(isLastStep ? "Got it!" : "Next Step",
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
               ),
-              child: Text(isLastStep ? "Got it!" : "Next Step", 
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
+            ],
           ),
         ],
       ),

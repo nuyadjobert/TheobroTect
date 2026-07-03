@@ -4,7 +4,9 @@ class PreventionTipCard extends StatelessWidget {
   final String label;
   final String message;
   final IconData icon;
-  final String imageUrl;
+  final String buttonLabel;
+  final VoidCallback? onTap;
+  final String characterAsset;
 
   const PreventionTipCard({
     super.key,
@@ -12,32 +14,37 @@ class PreventionTipCard extends StatelessWidget {
     this.message =
         "Sterilize your pruning tools before moving between trees.",
     this.icon = Icons.sanitizer_rounded,
-    this.imageUrl = "https://loremflickr.com/300/300/farmer,pruning,tools",
+    this.buttonLabel = "Got it",
+    this.onTap,
+    this.characterAsset = "assets/images/img_overlap.png",
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2D6A4F), Color(0xFF4A7C59)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2D6A4F).withAlpha(77),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
+    return Padding(
+     
+      padding: const EdgeInsets.only(top: 34),
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Expanded(
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 20, 128, 20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2D6A4F), Color(0xFF4A7C59)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2D6A4F).withAlpha(77),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -60,43 +67,49 @@ class PreventionTipCard extends StatelessWidget {
                     height: 1.3,
                   ),
                 ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: onTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, color: const Color(0xFF2D6A4F), size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          buttonLabel,
+                          style: const TextStyle(
+                            color: Color(0xFF2D6A4F),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          // image with a small icon badge overlaid, like the banner reference
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  imageUrl,
-                  width: 90,
-                  height: 90,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 90,
-                    height: 90,
-                    color: Colors.white.withAlpha(51),
-                    child: Icon(icon, color: Colors.white, size: 28),
-                  ),
-                ),
+          Positioned(
+            top: -30,
+            right: -26,
+            child: SizedBox(
+              width: 210,
+              height: 156,
+              child: Image.asset(
+                characterAsset,
+                fit: BoxFit.contain,
+                alignment: Alignment.topRight,
+                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
               ),
-              Positioned(
-                bottom: -8,
-                right: -8,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2D6A4F),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: Icon(icon, color: Colors.white, size: 16),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),

@@ -3,12 +3,13 @@ import '../widgets/guide_card.dart';
 import '../widgets/prevention_tip_card.dart';
 import '../widgets/management_sheet.dart';
 import '../widgets/mastery_detail_screen.dart';
+import '../widgets/tip_complete_dialog.dart';
 import '../models/guide_model.dart';
 
 class _GuideCategory {
   final IconData icon;
-  final String label; // short text shown under the circle icon
-  final String lookupKey; // key into ManagementData.content
+  final String label; 
+  final String lookupKey; 
   final Color bg;
 
   const _GuideCategory({
@@ -38,11 +39,15 @@ class _MasteryCourse {
   });
 }
 
-class LearnHubScreen extends StatelessWidget {
+class LearnHubScreen extends StatefulWidget {
   const LearnHubScreen({super.key});
 
-  // Full set of Management Guide categories. Only the first 3 show in the
-  // compact row; "View all" reveals the complete list.
+  @override
+  State<LearnHubScreen> createState() => _LearnHubScreenState();
+}
+
+class _LearnHubScreenState extends State<LearnHubScreen> {
+ 
   static const List<_GuideCategory> _allCategories = [
     _GuideCategory(
       icon: Icons.agriculture_rounded,
@@ -68,6 +73,12 @@ class LearnHubScreen extends StatelessWidget {
       lookupKey: "Storage Basics",
       bg: Color(0xFFF3E5F5),
     ),
+    _GuideCategory(
+      icon: Icons.bug_report_outlined,
+      label: "Pest Control",
+      lookupKey: "Pest Control",
+      bg: Color(0xFFFDE8E8),
+    ),
   ];
 
   // Full set of Mastery Courses. Image keywords are chosen to match each
@@ -78,7 +89,7 @@ class LearnHubScreen extends StatelessWidget {
       title: "Soil Fertility Secrets",
       duration: "8 min",
       themeColor: Colors.brown,
-      imageUrl: "https://loremflickr.com/400/300/soil,fertility,farm",
+      imageUrl: "https://loremflickr.com/400/300/soil,fertility,farm?lock=101",
       rating: "4.8",
       enrollment: "65",
     ),
@@ -86,7 +97,7 @@ class LearnHubScreen extends StatelessWidget {
       title: "Rainy Season Care",
       duration: "5 min",
       themeColor: Colors.blue,
-      imageUrl: "https://loremflickr.com/400/300/rain,crops,field",
+      imageUrl: "https://loremflickr.com/400/300/rain,crops,field?lock=102",
       rating: "4.7",
       enrollment: "40",
     ),
@@ -94,11 +105,57 @@ class LearnHubScreen extends StatelessWidget {
       title: "Organic Compost",
       duration: "12 min",
       themeColor: Colors.green,
-      imageUrl: "https://loremflickr.com/400/300/compost,organic,farm",
+      imageUrl: "https://loremflickr.com/400/300/compost,organic,farm?lock=103",
       rating: "4.9",
       enrollment: "112",
     ),
   ];
+
+  final ScrollController _courseScrollController = ScrollController();
+  final ScrollController _categoryScrollController = ScrollController();
+  double _courseScrollProgress = 0;
+  double _categoryScrollProgress = 0;
+
+  bool _tipCompletedToday = false;
+
+  void _handleGotIt() {
+    setState(() => _tipCompletedToday = true);
+    showTipCompletedDialog(context);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _courseScrollController.addListener(_onCourseScroll);
+    _categoryScrollController.addListener(_onCategoryScroll);
+  }
+
+  @override
+  void dispose() {
+    _courseScrollController.removeListener(_onCourseScroll);
+    _courseScrollController.dispose();
+    _categoryScrollController.removeListener(_onCategoryScroll);
+    _categoryScrollController.dispose();
+    super.dispose();
+  }
+
+  void _onCourseScroll() {
+    final maxExtent = _courseScrollController.position.maxScrollExtent;
+    setState(() {
+      _courseScrollProgress = maxExtent > 0
+          ? (_courseScrollController.offset / maxExtent).clamp(0.0, 1.0)
+          : 0;
+    });
+  }
+
+  void _onCategoryScroll() {
+    final maxExtent = _categoryScrollController.position.maxScrollExtent;
+    setState(() {
+      _categoryScrollProgress = maxExtent > 0
+          ? (_categoryScrollController.offset / maxExtent).clamp(0.0, 1.0)
+          : 0;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,14 +183,19 @@ class LearnHubScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
+                 
+                  const SizedBox(height: 4),
 
                   // --> Sterilize Pruning Tools ----
-                  const PreventionTipCard(
+                  PreventionTipCard(
                     label: "TODAY'S ACTION",
                     message:
                         "Sterilize your pruning tools before moving between trees.",
-                    icon: Icons.sanitizer_rounded,
+                    icon: _tipCompletedToday
+                        ? Icons.check_circle_rounded
+                        : Icons.sanitizer_rounded,
+                    buttonLabel: _tipCompletedToday ? "Done for today" : "Got it",
+                    onTap: _tipCompletedToday ? null : _handleGotIt,
                   ),
                   const SizedBox(height: 32),
 
@@ -141,9 +203,15 @@ class LearnHubScreen extends StatelessWidget {
                   _buildSectionHeader(
                     context,
                     title: "Management Guides",
+                    onViewAll: () => _showAllCategories(context),
                   ),
                   const SizedBox(height: 16),
                   _buildCategoryRow(context),
+                  const SizedBox(height: 12),
+                  _buildScrollIndicator(
+                    itemCount: _allCategories.length,
+                    progress: _categoryScrollProgress,
+                  ),
                   const SizedBox(height: 32),
 
                   // "Mastery Courses" ----
@@ -154,6 +222,11 @@ class LearnHubScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildHorizontalGuides(context),
+                  const SizedBox(height: 12),
+                  _buildScrollIndicator(
+                    itemCount: _allCourses.length,
+                    progress: _courseScrollProgress,
+                  ),
                   const SizedBox(height: 10),
                   Text(
                     "${_allCourses.length} courses available",
@@ -249,6 +322,92 @@ class LearnHubScreen extends StatelessWidget {
     );
   }
 
+  // "View all" for Management Guide categories -> bottom sheet grid
+  void _showAllCategories(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "All Management Guides (${_allCategories.length})",
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  child: ListView.separated(
+                    itemCount: _allCategories.length,
+                    separatorBuilder: (context, index) => Divider(
+                      height: 1,
+                      color: Colors.grey.shade200,
+                    ),
+                    itemBuilder: (context, index) {
+                      final category = _allCategories[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          _openGuideSheet(context, category);
+                        },
+                        leading: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.grey.shade200,
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(category.icon,
+                              color: const Color(0xFF2D6A4F), size: 24),
+                        ),
+                        title: Text(
+                          category.label,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1B3022),
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: Color(0xFF6B8F71),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _openGuideSheet(BuildContext context, _GuideCategory category) {
     final steps = ManagementData.content[category.lookupKey] ?? [];
     if (steps.isEmpty) {
@@ -304,10 +463,12 @@ class LearnHubScreen extends StatelessWidget {
     );
   }
 
+  
   Widget _buildCategoryRow(BuildContext context) {
     return SizedBox(
       height: 110,
       child: ListView.builder(
+        controller: _categoryScrollController,
         scrollDirection: Axis.horizontal,
         itemCount: _allCategories.length,
         itemBuilder: (context, index) {
@@ -324,8 +485,19 @@ class LearnHubScreen extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: category.bg,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.grey.shade200,
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(10),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Icon(category.icon,
                         color: const Color(0xFF2D6A4F), size: 32),
@@ -353,6 +525,7 @@ class LearnHubScreen extends StatelessWidget {
     return SizedBox(
       height: 220,
       child: ListView.builder(
+        controller: _courseScrollController,
         scrollDirection: Axis.horizontal,
         itemCount: _allCourses.length,
         itemBuilder: (context, index) {
@@ -376,6 +549,33 @@ class LearnHubScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  
+  Widget _buildScrollIndicator({
+    required int itemCount,
+    required double progress,
+  }) {
+    final dotCount = itemCount;
+    final activeIndex =
+        (progress * (dotCount - 1)).round().clamp(0, dotCount - 1);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(dotCount, (i) {
+        final isActive = i == activeIndex;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: isActive ? 20 : 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: isActive ? const Color(0xFF2D6A4F) : Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(10),
+          ),
+        );
+      }),
     );
   }
 }
