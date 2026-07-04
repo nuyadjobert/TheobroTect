@@ -1,7 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/help_center_screen.dart';
 import '../widgets/about_screen.dart';
+import '../widgets/photo_search.dart';
 import 'package:cacao_apps/modules/auth/login_factory.dart';
 import '../controllers/settings_controller.dart';
 import '../../../theme/theme_controller.dart';
@@ -15,8 +20,109 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  static const _prefsKey = 'profile_photo_path';
+  static const _storedFileName = 'profile_photo.jpg';
+
   bool _isNotifEnabled = true;
   final SettingsController _controller = SettingsController();
+  final ImagePicker _picker = ImagePicker();
+
+  // Persisted profile photo. Loaded from SharedPreferences in initState and
+  // written back to disk + prefs every time it changes.
+  File? _profileImage;
+  bool _loadingImage = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPersistedImage();
+  }
+
+  Future<void> _loadPersistedImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedPath = prefs.getString(_prefsKey);
+    if (storedPath != null && await File(storedPath).exists()) {
+      if (!mounted) return;
+      setState(() {
+        _profileImage = File(storedPath);
+        _loadingImage = false;
+      });
+    } else {
+      if (!mounted) return;
+      setState(() => _loadingImage = false);
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        imageQuality: 85,
+      );
+      if (picked == null) return; // user cancelled
+
+      // Copy out of the OS's temp/cache location into a stable spot inside
+      // the app's own documents directory, so it isn't cleared by the OS
+      // and survives app restarts.
+      final docsDir = await getApplicationDocumentsDirectory();
+      final savedPath = '${docsDir.path}/$_storedFileName';
+      final targetFile = File(savedPath);
+
+      
+      await FileImage(targetFile).evict();
+
+      final savedFile = await File(picked.path).copy(savedPath);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefsKey, savedFile.path);
+
+      if (!mounted) return;
+      setState(() => _profileImage = savedFile);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Couldn't open ${source == ImageSource.camera ? 'camera' : 'gallery'}: $e")),
+      );
+    }
+  }
+
+  Future<void> _removeImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedPath = prefs.getString(_prefsKey);
+    if (storedPath != null) {
+      final file = File(storedPath);
+      // Same cache-eviction reasoning as in _pickImage: clear the stale
+      // entry for this path so a future re-add doesn't show leftover bytes.
+      await FileImage(file).evict();
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+    await prefs.remove(_prefsKey);
+    if (!mounted) return;
+    setState(() => _profileImage = null);
+  }
+
+  Future<void> _handlePhotoTap() async {
+    final action = await showPhotoSourceSheet(
+      context,
+      hasExistingPhoto: _profileImage != null,
+    );
+    if (action == null) return; // dismissed without choosing
+
+    switch (action) {
+      case PhotoSourceAction.camera:
+        await _pickImage(ImageSource.camera);
+        break;
+      case PhotoSourceAction.gallery:
+        await _pickImage(ImageSource.gallery);
+        break;
+      case PhotoSourceAction.remove:
+        await _removeImage();
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,20 +193,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: CircleAvatar(
                 radius: 44,
                 backgroundColor: AppColors.forestMid.withAlpha(38),
-                child: Icon(Icons.person_rounded, color: textPrimary.withAlpha(180), size: 46),
+                backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                child: _profileImage == null
+                    ? Icon(Icons.person_rounded, color: textPrimary.withAlpha(180), size: 46)
+                    : null,
               ),
             ),
             Positioned(
               bottom: 0,
               right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.forestMid,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: bg, width: 2),
+              child: GestureDetector(
+                onTap: _handlePhotoTap,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.forestMid,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: bg, width: 2),
+                  ),
+                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 14),
                 ),
-                child: const Icon(Icons.edit_rounded, color: Colors.white, size: 14),
               ),
             ),
           ],
