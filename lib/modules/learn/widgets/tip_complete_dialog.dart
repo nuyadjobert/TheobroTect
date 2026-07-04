@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 
 Future<void> showTipCompletedDialog(
   BuildContext context, {
@@ -33,8 +34,16 @@ class TipCompletedDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final dialogBg = isDark ? AppColors.nightCard : Colors.white;
+    final iconCircleBg = isDark ? const Color(0xFF2D6A4F).withAlpha(45) : const Color(0xFFDCEDE1);
+    final iconColor = isDark ? AppColors.forestLight : const Color(0xFF2D6A4F);
+    final titleColor = isDark ? Colors.white : const Color(0xFF1B3022);
+    final messageColor = isDark ? Colors.white70 : Colors.grey.shade600;
+
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: dialogBg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
       ),
@@ -46,13 +55,13 @@ class TipCompletedDialog extends StatelessWidget {
             Container(
               width: 64,
               height: 64,
-              decoration: const BoxDecoration(
-                color: Color(0xFFDCEDE1),
+              decoration: BoxDecoration(
+                color: iconCircleBg,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.check_rounded,
-                color: Color(0xFF2D6A4F),
+                color: iconColor,
                 size: 36,
               ),
             ),
@@ -60,10 +69,10 @@ class TipCompletedDialog extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF1B3022),
+                color: titleColor,
               ),
             ),
             const SizedBox(height: 8),
@@ -72,7 +81,7 @@ class TipCompletedDialog extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.grey.shade600,
+                color: messageColor,
                 height: 1.4,
               ),
             ),

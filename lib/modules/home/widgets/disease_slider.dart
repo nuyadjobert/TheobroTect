@@ -25,7 +25,7 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
     // initialPage: 1 makes the 2nd card the center on opening
     // viewportFraction 0.82-0.85 ensures side cards are partially visible
     _pageController = PageController(
-      viewportFraction: 0.82, 
+      viewportFraction: 0.82,
       initialPage: 1,
     );
   }
@@ -49,18 +49,19 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
               setState(() => _activePage = index);
             },
             itemBuilder: (context, index) {
-              return _buildRectangleCard(index);
+              return _buildRectangleCard(context, index);
             },
           ),
         ),
         const SizedBox(height: 12),
-        _buildIndicator(),
+        _buildIndicator(context),
       ],
     );
   }
 
-  Widget _buildRectangleCard(int index) {
+  Widget _buildRectangleCard(BuildContext context, int index) {
     bool isActive = index == _activePage;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () => widget.onDiseaseTap(index),
@@ -70,13 +71,15 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
         margin: EdgeInsets.symmetric(
           horizontal: 8,
           // Side cards shrink slightly vertically to emphasize the center card
-          vertical: isActive ? 0 : 12, 
+          vertical: isActive ? 0 : 12,
         ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16), // Less rounding for a "rectangular" look
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(isActive ? 51 : 13), // 0.2 * 255 = 51, 0.05 * 255 = 13
+              // Shadows read fine on light backgrounds but disappear into a dark
+              // scaffold, so lean on opacity + a touch more blur in dark mode.
+              color: Colors.black.withAlpha(isDark ? (isActive ? 90 : 40) : (isActive ? 51 : 13)),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -92,7 +95,7 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
                 widget.diseaseData[index]["image"]!,
                 fit: BoxFit.cover,
               ),
-              
+
               // 2. Linear Gradient Overlay
               Container(
                 decoration: BoxDecoration(
@@ -127,8 +130,8 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
                     Text(
                       widget.diseaseData[index]["title"]!.toUpperCase(),
                       style: const TextStyle(
-                        color: Colors.white, 
-                        fontSize: 16, 
+                        color: Colors.white,
+                        fontSize: 16,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.5,
                       ),
@@ -153,6 +156,8 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
   }
 
   Widget _buildBadge() {
+    // Image cards always have a dark gradient overlay underneath this badge
+    // regardless of app theme, so the light-on-glass look stays as-is.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -167,7 +172,11 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
     );
   }
 
-  Widget _buildIndicator() {
+  Widget _buildIndicator(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inactiveColor = isDark ? Colors.white24 : Colors.grey.withAlpha(77);
+    final activeColor = isDark ? Colors.greenAccent.shade400 : Colors.green;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(widget.diseaseData.length, (index) {
@@ -177,7 +186,7 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
           height: 4,
           width: _activePage == index ? 18 : 6,
           decoration: BoxDecoration(
-            color: _activePage == index ? Colors.green : Colors.grey.withAlpha(77),
+            color: _activePage == index ? activeColor : inactiveColor,
             borderRadius: BorderRadius.circular(2),
           ),
         );

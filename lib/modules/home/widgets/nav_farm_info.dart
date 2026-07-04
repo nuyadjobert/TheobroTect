@@ -7,16 +7,21 @@ class NavFarmInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-        final UserRepository userRepository=UserRepository();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark ? Colors.white54 : Colors.grey;
+    final iconColor = isDark ? const Color(0xFF74C69D) : const Color(0xFF2D6A4F);
+    final textColor = isDark ? Colors.white : const Color(0xFF1B3022);
+
+    final UserRepository userRepository = UserRepository();
 
     return FutureBuilder<LocalUser?>(
       future: userRepository.getCurrentUser(),
       builder: (context, snapshot) {
         // 🔄 Loading state
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.all(20),
-            child: Text("Loading...", style: TextStyle(color: Colors.grey)),
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text("Loading...", style: TextStyle(color: labelColor)),
           );
         }
 
@@ -37,17 +42,17 @@ class NavFarmInfo extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "FARM PROFILE",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: labelColor,
                   letterSpacing: 1.2,
                 ),
               ),
               const SizedBox(height: 12),
-              _buildInfoRow(Icons.location_on_rounded, location),
+              _buildInfoRow(Icons.location_on_rounded, location, iconColor, textColor),
               const SizedBox(height: 8),
             ],
           ),
@@ -56,14 +61,19 @@ class NavFarmInfo extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(
+    IconData icon,
+    String text,
+    Color iconColor,
+    Color textColor,
+  ) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF2D6A4F)),
+        Icon(icon, size: 18, color: iconColor),
         const SizedBox(width: 12),
         Text(
           text,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF1B3022)),
+          style: TextStyle(fontSize: 14, color: textColor),
         ),
       ],
     );

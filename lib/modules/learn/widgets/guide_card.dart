@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 
 class GuideCard extends StatelessWidget {
   final String title;
@@ -22,15 +23,22 @@ class GuideCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.nightCard : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF1B3022);
+    final ratingTextColor = isDark ? Colors.white60 : Colors.black54;
+
     return Container(
       width: 170,
       margin: const EdgeInsets.only(right: 16, bottom: 10, top: 5),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: themeColor.withAlpha(30), // 0.12 * 255 = 30
+            color: isDark
+                ? Colors.black.withAlpha(90)
+                : themeColor.withAlpha(30), // 0.12 * 255 = 30
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -134,9 +142,9 @@ class GuideCard extends StatelessWidget {
                               enrollment != null
                                   ? "$rating ($enrollment Enrolled)"
                                   : rating!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10.5,
-                                color: Colors.black54,
+                                color: ratingTextColor,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -148,10 +156,10 @@ class GuideCard extends StatelessWidget {
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 14,
-                          color: Color(0xFF1B3022),
+                          color: titleColor,
                           height: 1.2,
                         ),
                       ),

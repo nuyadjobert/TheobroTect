@@ -7,6 +7,7 @@ import '../controllers/scan_result_controller.dart';
 import '../../../core/sync/sync_trigger.dart';
 import '../widgets/empty_state.dart';
 import 'package:flutter/services.dart';
+import '../../../theme/app_theme.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -36,18 +37,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Header stays forest-dark in both modes — it's already dark themed.
+    final headerBg = AppColors.forestDark;
+    final contentBg = isDark ? AppColors.nightBg : const Color(0xFFFBFDFB);
+    final searchFill = isDark ? AppColors.nightCard : Colors.white;
+    final textPrimary = isDark ? Colors.white : AppColors.forestDark;
+    final textSecondary = isDark ? Colors.white60 : Colors.grey[500];
+    final hintColor = isDark ? Colors.white38 : Colors.grey[400];
+    final iconMuted = isDark ? Colors.white54 : Colors.grey;
+    final progressColor = isDark ? AppColors.forestLight : AppColors.forestDark;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness:
-            Brightness.light, // white icons, since your bg is dark green
-        systemNavigationBarColor: Color(0xFFFBFDFB),
-        systemNavigationBarIconBrightness: Brightness.dark,
+            Brightness.light, // white icons, since header bg is dark green
+        systemNavigationBarColor: contentBg,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFF1B3022),
+        backgroundColor: headerBg,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF1B3022),
+          backgroundColor: headerBg,
           elevation: 0,
           centerTitle: false,
           title: const Text(
@@ -79,22 +92,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 onDateSelected: (date) =>
                     setState(() => _controller.setSelectedDate(date)),
               ),
-              _buildSearchBar(),
+              _buildSearchBar(searchFill, textPrimary, hintColor, iconMuted),
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.only(top: 10),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFBFDFB),
+                  decoration: BoxDecoration(
+                    color: contentBg,
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(30)),
+                        const BorderRadius.vertical(top: Radius.circular(30)),
                   ),
                   child: FutureBuilder<List<Map<String, dynamic>>>(
                     future: _controller.getHistory(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
+                        return Center(
                           child: CircularProgressIndicator(
-                            color: Color(0xFF1B3022),
+                            color: progressColor,
                           ),
                         );
                       }
@@ -154,7 +167,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       }).toList();
 
                       if (filteredData.isEmpty) {
-                        return _buildEmptyState();
+                        return _buildEmptyState(textPrimary, textSecondary);
                       }
 
                       return GridView.builder(
@@ -311,7 +324,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(Color textPrimary, Color? textSecondary) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -321,11 +334,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: [
             const FloatingGhost(),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               "No cacao pods found",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF1B3022),
+                color: textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -336,7 +349,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ? "Try scanning some cacao pods first!"
                   : "No items match the '${_controller.activeFilter}' filter.",
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[500]),
+              style: TextStyle(color: textSecondary),
             ),
           ],
         ),
@@ -344,19 +357,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(
+    Color fillColor,
+    Color textColor,
+    Color? hintColor,
+    Color iconColor,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
       child: TextField(
         controller: _searchController,
-        style: const TextStyle(color: Colors.black87),
+        style: TextStyle(color: textColor),
         decoration: InputDecoration(
           hintText: "Search scans...",
-          hintStyle: TextStyle(color: Colors.grey[400]),
-          prefixIcon: const Icon(Icons.mic, color: Colors.grey),
-          suffixIcon: const Icon(Icons.search, color: Colors.grey),
+          hintStyle: TextStyle(color: hintColor),
+          prefixIcon: Icon(Icons.mic, color: iconColor),
+          suffixIcon: Icon(Icons.search, color: iconColor),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: fillColor,
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),

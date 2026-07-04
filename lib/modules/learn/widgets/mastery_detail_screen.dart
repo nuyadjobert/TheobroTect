@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import '../../../theme/app_theme.dart';
 
 // --- DATA MODEL ---
 class Lesson {
@@ -114,6 +115,14 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final scaffoldBg = isDark ? AppColors.nightBg : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF1B3022);
+    final subTextColor = isDark ? Colors.white60 : Colors.black54;
+    final backButtonBg = isDark ? AppColors.nightCard.withAlpha(230) : Colors.white.withAlpha(230);
+    final backButtonIconColor = isDark ? Colors.white : Colors.black;
+
     return YoutubePlayerBuilder(
       player: YoutubePlayer(
         controller: _controller,
@@ -124,7 +133,7 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
       ),
       builder: (context, player) {
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: scaffoldBg,
           body: Stack(
             children: [
               CustomScrollView(
@@ -133,14 +142,14 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                     expandedHeight: 320,
                     pinned: true,
                     elevation: 0,
-                    backgroundColor: Colors.white,
+                    backgroundColor: scaffoldBg,
                     // Wrapped in its own SafeArea so the back button always
                     leading: SafeArea(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 12, top: 8),
                         child: CircleAvatar(
-                          backgroundColor: Colors.white.withAlpha(230), 
-                          child: const BackButton(color: Colors.black),
+                          backgroundColor: backButtonBg,
+                          child: BackButton(color: backButtonIconColor),
                         ),
                       ),
                     ),
@@ -152,7 +161,12 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(24),
-                              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 15)],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isDark ? Colors.black45 : Colors.black12,
+                                  blurRadius: 15,
+                                ),
+                              ],
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(24),
@@ -175,13 +189,13 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                               style: TextStyle(color: widget.themeColor, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 12)),
                           const SizedBox(height: 8),
                           Text(widget.title,
-                              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1B3022))),
+                              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: titleColor)),
                           const SizedBox(height: 10),
-                          const Row(
+                          Row(
                             children: [
-                              Icon(Icons.star_rounded, color: Colors.amber, size: 20),
-                              SizedBox(width: 4),
-                              Text("4.9 Mastery Rating", style: TextStyle(color: Colors.black54, fontSize: 14)),
+                              const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+                              const SizedBox(width: 4),
+                              Text("4.9 Mastery Rating", style: TextStyle(color: subTextColor, fontSize: 14)),
                             ],
                           ),
                         ],
@@ -198,6 +212,7 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                           index,
                           activeLessons[index],
                           isCompleted: _completedIndices.contains(index),
+                          isDark: isDark,
                         ),
                         childCount: activeLessons.length,
                       ),
@@ -214,8 +229,20 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
     );
   }
 
-  Widget _buildLessonTile(int index, Lesson lesson, {required bool isCompleted}) {
+  Widget _buildLessonTile(
+    int index,
+    Lesson lesson, {
+    required bool isCompleted,
+    required bool isDark,
+  }) {
     final bool isActive = index == _currentIndex;
+
+    final inactiveTileBg = isDark ? AppColors.nightCard : const Color(0xFFF8F9F8);
+    final inactiveTileBorder = isDark ? Colors.white12 : Colors.grey.shade100;
+    final indexAvatarBg = isDark ? AppColors.nightBg : Colors.white;
+    final indexTextColor = isDark ? Colors.white60 : Colors.black54;
+    final titleTextColor = isDark ? Colors.white : Colors.black;
+    final durationTextColor = isDark ? Colors.white54 : Colors.grey.shade500;
 
     return InkWell(
       onTap: () => _onLessonTap(index, lesson.videoUrl),
@@ -224,23 +251,23 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isActive ? widget.themeColor.withAlpha(20) : const Color(0xFFF8F9F8),
+          color: isActive ? widget.themeColor.withAlpha(20) : inactiveTileBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isActive ? widget.themeColor.withAlpha(80) : Colors.grey.shade100,
+            color: isActive ? widget.themeColor.withAlpha(80) : inactiveTileBorder,
           ),
         ),
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: isCompleted ? const Color(0xFF2D6A4F) : Colors.white,
+              backgroundColor: isCompleted ? const Color(0xFF2D6A4F) : indexAvatarBg,
               radius: 18,
               child: isCompleted
                   ? const Icon(Icons.check, color: Colors.white, size: 16)
                   : Text(
                       "${index + 1}",
-                      style: const TextStyle(
-                        color: Colors.black54,
+                      style: TextStyle(
+                        color: indexTextColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -256,10 +283,10 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: isActive ? widget.themeColor : Colors.black,
+                      color: isActive ? widget.themeColor : titleTextColor,
                     ),
                   ),
-                  Text(lesson.duration, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                  Text(lesson.duration, style: TextStyle(color: durationTextColor, fontSize: 12)),
                 ],
               ),
             ),

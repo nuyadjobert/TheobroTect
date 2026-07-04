@@ -5,11 +5,12 @@ import '../widgets/management_sheet.dart';
 import '../widgets/mastery_detail_screen.dart';
 import '../widgets/tip_complete_dialog.dart';
 import '../models/guide_model.dart';
+import '../../../theme/app_theme.dart';
 
 class _GuideCategory {
   final IconData icon;
-  final String label; 
-  final String lookupKey; 
+  final String label;
+  final String lookupKey;
   final Color bg;
 
   const _GuideCategory({
@@ -47,7 +48,6 @@ class LearnHubScreen extends StatefulWidget {
 }
 
 class _LearnHubScreenState extends State<LearnHubScreen> {
- 
   static const List<_GuideCategory> _allCategories = [
     _GuideCategory(
       icon: Icons.agriculture_rounded,
@@ -159,20 +159,29 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.nightBg : AppColors.creamBg;
+    final cardBg = isDark ? AppColors.nightCard : AppColors.creamCard;
+    final textPrimary = isDark ? Colors.white : AppColors.forestDark;
+    final textSecondary = isDark ? Colors.white60 : Colors.grey.shade600;
+    final divider = isDark ? AppColors.nightDivider : Colors.grey.shade200;
+    final accent = isDark ? AppColors.forestLight : AppColors.forestMid;
+    final muted = isDark ? AppColors.forestLight.withAlpha(200) : const Color(0xFF6B8F71);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FBF9),
+      backgroundColor: bg,
       body: CustomScrollView(
         slivers: [
-          const SliverAppBar(
+          SliverAppBar(
             expandedHeight: 100,
             floating: true,
-            backgroundColor: Color(0xFFF9FBF9),
+            backgroundColor: bg,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               title: Text("Knowledge Hub",
                   style: TextStyle(
-                      color: Color(0xFF1B3022),
+                      color: textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 20)),
             ),
@@ -183,7 +192,6 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                 
                   const SizedBox(height: 4),
 
                   // --> Sterilize Pruning Tools ----
@@ -203,14 +211,18 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                   _buildSectionHeader(
                     context,
                     title: "Management Guides",
-                    onViewAll: () => _showAllCategories(context),
+                    textPrimary: textPrimary,
+                    muted: muted,
+                    onViewAll: () => _showAllCategories(context, cardBg, textPrimary, divider, accent, muted),
                   ),
                   const SizedBox(height: 16),
-                  _buildCategoryRow(context),
+                  _buildCategoryRow(context, cardBg, divider, accent, textPrimary),
                   const SizedBox(height: 12),
                   _buildScrollIndicator(
                     itemCount: _allCategories.length,
                     progress: _categoryScrollProgress,
+                    accent: accent,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 32),
 
@@ -218,7 +230,9 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                   _buildSectionHeader(
                     context,
                     title: "Mastery Courses",
-                    onViewAll: () => _showAllCourses(context),
+                    textPrimary: textPrimary,
+                    muted: muted,
+                    onViewAll: () => _showAllCourses(context, cardBg, textPrimary),
                   ),
                   const SizedBox(height: 16),
                   _buildHorizontalGuides(context),
@@ -226,13 +240,15 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                   _buildScrollIndicator(
                     itemCount: _allCourses.length,
                     progress: _courseScrollProgress,
+                    accent: accent,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 10),
                   Text(
                     "${_allCourses.length} courses available",
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey.shade600,
+                      color: textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -247,11 +263,11 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
   }
 
   // "View all" for Mastery Courses -> bottom sheet with a scrollable grid
-  void _showAllCourses(BuildContext context) {
+  void _showAllCourses(BuildContext context, Color cardBg, Color textPrimary) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: cardBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -268,12 +284,12 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                   children: [
                     Text(
                       "All Mastery Courses (${_allCourses.length})",
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(sheetContext),
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close, color: textPrimary),
                     ),
                   ],
                 ),
@@ -323,11 +339,18 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
   }
 
   // "View all" for Management Guide categories -> bottom sheet grid
-  void _showAllCategories(BuildContext context) {
+  void _showAllCategories(
+    BuildContext context,
+    Color cardBg,
+    Color textPrimary,
+    Color divider,
+    Color accent,
+    Color muted,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: cardBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -344,12 +367,12 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                   children: [
                     Text(
                       "All Management Guides (${_allCategories.length})",
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(sheetContext),
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close, color: textPrimary),
                     ),
                   ],
                 ),
@@ -360,7 +383,7 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                     itemCount: _allCategories.length,
                     separatorBuilder: (context, index) => Divider(
                       height: 1,
-                      color: Colors.grey.shade200,
+                      color: divider,
                     ),
                     itemBuilder: (context, index) {
                       final category = _allCategories[index];
@@ -368,33 +391,32 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                         contentPadding: EdgeInsets.zero,
                         onTap: () {
                           Navigator.pop(sheetContext);
-                          _openGuideSheet(context, category);
+                          _openGuideSheet(context, category, cardBg, textPrimary);
                         },
                         leading: Container(
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: cardBg,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: Colors.grey.shade200,
+                              color: divider,
                               width: 1,
                             ),
                           ),
-                          child: Icon(category.icon,
-                              color: const Color(0xFF2D6A4F), size: 24),
+                          child: Icon(category.icon, color: accent, size: 24),
                         ),
                         title: Text(
                           category.label,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1B3022),
+                            color: textPrimary,
                           ),
                         ),
-                        trailing: const Icon(
+                        trailing: Icon(
                           Icons.chevron_right,
-                          color: Color(0xFF6B8F71),
+                          color: muted,
                         ),
                       );
                     },
@@ -408,7 +430,12 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
     );
   }
 
-  void _openGuideSheet(BuildContext context, _GuideCategory category) {
+  void _openGuideSheet(
+    BuildContext context,
+    _GuideCategory category,
+    Color cardBg,
+    Color textPrimary,
+  ) {
     final steps = ManagementData.content[category.lookupKey] ?? [];
     if (steps.isEmpty) {
       debugPrint(
@@ -428,6 +455,8 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
   Widget _buildSectionHeader(
     BuildContext context, {
     required String title,
+    required Color textPrimary,
+    required Color muted,
     VoidCallback? onViewAll,
   }) {
     return Row(
@@ -435,27 +464,27 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w900,
-            color: Color(0xFF1B3022),
+            color: textPrimary,
           ),
         ),
         if (onViewAll != null)
           GestureDetector(
             onTap: onViewAll,
             child: Row(
-              children: const [
+              children: [
                 Text(
                   "View all",
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF6B8F71),
+                    color: muted,
                   ),
                 ),
-                SizedBox(width: 2),
-                Icon(Icons.chevron_right, size: 16, color: Color(0xFF6B8F71)),
+                const SizedBox(width: 2),
+                Icon(Icons.chevron_right, size: 16, color: muted),
               ],
             ),
           ),
@@ -463,8 +492,13 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
     );
   }
 
-  
-  Widget _buildCategoryRow(BuildContext context) {
+  Widget _buildCategoryRow(
+    BuildContext context,
+    Color cardBg,
+    Color divider,
+    Color accent,
+    Color textPrimary,
+  ) {
     return SizedBox(
       height: 110,
       child: ListView.builder(
@@ -478,17 +512,17 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
               right: index == _allCategories.length - 1 ? 0 : 16,
             ),
             child: GestureDetector(
-              onTap: () => _openGuideSheet(context, category),
+              onTap: () => _openGuideSheet(context, category, cardBg, textPrimary),
               child: Column(
                 children: [
                   Container(
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardBg,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.grey.shade200,
+                        color: divider,
                         width: 1,
                       ),
                       boxShadow: [
@@ -499,16 +533,15 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                         ),
                       ],
                     ),
-                    child: Icon(category.icon,
-                        color: const Color(0xFF2D6A4F), size: 32),
+                    child: Icon(category.icon, color: accent, size: 32),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     category.label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1B3022),
+                      color: textPrimary,
                     ),
                   ),
                 ],
@@ -552,14 +585,16 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
     );
   }
 
-  
   Widget _buildScrollIndicator({
     required int itemCount,
     required double progress,
+    required Color accent,
+    required bool isDark,
   }) {
     final dotCount = itemCount;
     final activeIndex =
         (progress * (dotCount - 1)).round().clamp(0, dotCount - 1);
+    final inactiveColor = isDark ? Colors.grey.shade700 : Colors.grey.shade300;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -571,7 +606,7 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
           width: isActive ? 20 : 6,
           height: 6,
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF2D6A4F) : Colors.grey.shade300,
+            color: isActive ? accent : inactiveColor,
             borderRadius: BorderRadius.circular(10),
           ),
         );
