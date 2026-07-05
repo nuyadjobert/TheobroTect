@@ -120,6 +120,27 @@ class ScanResultController extends ChangeNotifier {
           'Disease not found in guide: $diseaseKey',
         );
       }
+      final monitoringPlan = await _repository.getMonitoringPlan(
+        diseaseKey,
+        severityKey,
+      );
+
+      if (monitoringPlan != null) {
+        rescanAfterDays = monitoringPlan['rescan_after_days'] as int?;
+
+        rescanMessage = Map<String, String>.from(
+          monitoringPlan['message'] as Map,
+        );
+
+        debugPrint('========== Monitoring Plan ==========');
+        debugPrint('Disease: $diseaseKey');
+        debugPrint('Severity: $severityKey');
+        debugPrint('Rescan After: $rescanAfterDays');
+        debugPrint('Preferred Hour: ${monitoringPlan['preferred_time_hour']}');
+        debugPrint('=====================================');
+      } else {
+        debugPrint('No monitoring plan found for $diseaseKey / $severityKey');
+      }
 
       displayName = _mapLang(
         disease['display_name'],

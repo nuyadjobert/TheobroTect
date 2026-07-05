@@ -9,12 +9,13 @@ import 'dart:async';
 
 import 'core/network/client.dart';
 import 'core/storage/token_storage.dart';
-import 'core/services/notification_service.dart';
 import 'modules/notifications/views/notification_screen.dart';
 import 'modules/auth/controllers/registration_controller.dart';
 import 'modules/auth/models/registration_model.dart';
 import 'core/config/app_config.dart';
 import 'core/db/database_helper.dart';
+import 'core/services/notification_service.dart';
+import 'core/db/scan_repository.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 
@@ -22,6 +23,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 late final RegistrationController controller;
 late final RegistrationRequest model;
+late LocalNotificationService notificationService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +42,11 @@ void main() async {
   final dbHelper = DatabaseHelper();
   await dbHelper.db;
 
-  await NotificationService.instance.init();
+  final scanRepository = ScanRepository();
+
+// Create the notification service
+  notificationService = LocalNotificationService(scanRepository);
+  await notificationService.initialize();
 
   // Load the user's saved Dark Mode preference before the first frame
   await ThemeController.instance.loadSavedTheme();

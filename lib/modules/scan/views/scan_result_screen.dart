@@ -152,6 +152,9 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
       smsEnabled: false,
       isLoading: controller.isLoading,
     );
+    debugPrint('Controller diseaseKey: ${controller.diseaseKey}');
+    debugPrint('Controller severityKey: ${controller.severityKey}');
+    debugPrint('Controller rescanAfterDays: ${controller.rescanAfterDays}');
 
     if (!mounted) return;
     _showSaveSnackBar(ok);
