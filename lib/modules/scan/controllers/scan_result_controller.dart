@@ -33,8 +33,7 @@ class ScanResultController extends ChangeNotifier {
     if (name.isEmpty || name == 'none' || name == 'null') return false;
 
     if (confidence < 0.75) return false;
-    if (secondaryConfidence != null && secondaryConfidence! < 0.75)
-      return false;
+    if (secondaryConfidence != null && secondaryConfidence! < 0.75) return false;
 
     final primaryDisease = _diseaseKeyFromName(diseaseName);
     if (primaryDisease == 'healthy' && confidence >= 0.90) return false;

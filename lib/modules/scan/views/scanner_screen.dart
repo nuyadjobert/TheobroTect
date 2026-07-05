@@ -1,5 +1,4 @@
 import 'dart:ui' as ui;
-import 'package:cacao_apps/modules/scan/model/scan_result_model.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,7 +17,6 @@ class _ScannerScreenState extends State<ScannerScreen>
   late final ScannerController controller;
 
   late AnimationController _animationController;
-  late Animation<double> _animation;
 
   // Adjusted dimensions to match the cacao pod aspect ratio in your design
   static const double _frameWidth = 280;
@@ -35,11 +33,6 @@ class _ScannerScreenState extends State<ScannerScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-
-    _animation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(_animationController);
   }
 
   @override
