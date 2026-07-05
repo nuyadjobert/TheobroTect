@@ -33,7 +33,8 @@ class ScanResultController extends ChangeNotifier {
     if (name.isEmpty || name == 'none' || name == 'null') return false;
 
     if (confidence < 0.75) return false;
-    if (secondaryConfidence != null && secondaryConfidence! < 0.75) return false;
+    if (secondaryConfidence != null && secondaryConfidence! < 0.75)
+      return false;
 
     final primaryDisease = _diseaseKeyFromName(diseaseName);
     if (primaryDisease == 'healthy' && confidence >= 0.90) return false;
@@ -227,18 +228,22 @@ class ScanResultController extends ChangeNotifier {
     }
   }
 
+  // bool get hasHighNonCacaoConfidence {
+  //   // Primary
+  //   if (diseaseKey == 'non_cacao' && confidence >= 0.50) {
+  //     return true;
+  //   }
+
+  //   // Secondary
+  //   final secondaryKey = secondaryDiseaseName != null
+  //       ? _diseaseKeyFromName(secondaryDiseaseName!)
+  //       : '';
+
+  //   return secondaryKey == 'non_cacao' && (secondaryConfidence ?? 0.0) >= 0.50;
+  // }
+
   bool get hasHighNonCacaoConfidence {
-    // Primary
-    if (diseaseKey == 'non_cacao' && confidence >= 0.50) {
-      return true;
-    }
-
-    // Secondary
-    final secondaryKey = secondaryDiseaseName != null
-        ? _diseaseKeyFromName(secondaryDiseaseName!)
-        : '';
-
-    return secondaryKey == 'non_cacao' && (secondaryConfidence ?? 0.0) >= 0.50;
+    return diseaseKey == 'non_cacao' && confidence >= 0.50;
   }
 
   Future<bool> saveScanRecord({bool smsEnabled = false}) {
