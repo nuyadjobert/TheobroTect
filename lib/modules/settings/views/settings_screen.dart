@@ -1,10 +1,16 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../widgets/settings_tile.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/help_center_screen.dart';
 import '../widgets/about_screen.dart';
+import '../widgets/photo_search.dart';
 import 'package:cacao_apps/modules/auth/login_factory.dart';
 import '../controllers/settings_controller.dart';
+import '../../../theme/theme_controller.dart';
+import '../../../theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,88 +20,156 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  static const _prefsKey = 'profile_photo_path';
+  static const _storedFileName = 'profile_photo.jpg';
+
   bool _isNotifEnabled = true;
   final SettingsController _controller = SettingsController();
+  final ImagePicker _picker = ImagePicker();
+
+  // Persisted profile photo. Loaded from SharedPreferences in initState and
+  // written back to disk + prefs every time it changes.
+  File? _profileImage;
+  bool _loadingImage = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPersistedImage();
+  }
+
+  Future<void> _loadPersistedImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedPath = prefs.getString(_prefsKey);
+    if (storedPath != null && await File(storedPath).exists()) {
+      if (!mounted) return;
+      setState(() {
+        _profileImage = File(storedPath);
+        _loadingImage = false;
+      });
+    } else {
+      if (!mounted) return;
+      setState(() => _loadingImage = false);
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        imageQuality: 85,
+      );
+      if (picked == null) return; // user cancelled
+
+      // Copy out of the OS's temp/cache location into a stable spot inside
+      // the app's own documents directory, so it isn't cleared by the OS
+      // and survives app restarts.
+      final docsDir = await getApplicationDocumentsDirectory();
+      final savedPath = '${docsDir.path}/$_storedFileName';
+      final targetFile = File(savedPath);
+
+      
+      await FileImage(targetFile).evict();
+
+      final savedFile = await File(picked.path).copy(savedPath);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefsKey, savedFile.path);
+
+      if (!mounted) return;
+      setState(() => _profileImage = savedFile);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Couldn't open ${source == ImageSource.camera ? 'camera' : 'gallery'}: $e")),
+      );
+    }
+  }
+
+  Future<void> _removeImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedPath = prefs.getString(_prefsKey);
+    if (storedPath != null) {
+      final file = File(storedPath);
+      // Same cache-eviction reasoning as in _pickImage: clear the stale
+      // entry for this path so a future re-add doesn't show leftover bytes.
+      await FileImage(file).evict();
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+    await prefs.remove(_prefsKey);
+    if (!mounted) return;
+    setState(() => _profileImage = null);
+  }
+
+  Future<void> _handlePhotoTap() async {
+    final action = await showPhotoSourceSheet(
+      context,
+      hasExistingPhoto: _profileImage != null,
+    );
+    if (action == null) return; // dismissed without choosing
+
+    switch (action) {
+      case PhotoSourceAction.camera:
+        await _pickImage(ImageSource.camera);
+        break;
+      case PhotoSourceAction.gallery:
+        await _pickImage(ImageSource.gallery);
+        break;
+      case PhotoSourceAction.remove:
+        await _removeImage();
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final Color bg = isDark ? AppColors.nightBg : AppColors.creamBg;
+    final Color cardBg = isDark ? AppColors.nightCard : AppColors.creamCard;
+    final Color textPrimary = isDark ? Colors.white : AppColors.forestDark;
+    final Color textSecondary = isDark ? Colors.white60 : Colors.grey;
+    final Color divider = isDark ? AppColors.nightDivider : Colors.grey.shade200;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: bg,
+        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF9FBF9),
+        backgroundColor: bg,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          systemOverlayStyle: SystemUiOverlayStyle.dark,
+          systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
           elevation: 0,
           centerTitle: true,
-          title: const Text(
+          title: Text(
             "Settings",
             style: TextStyle(
-              color: Color(0xFF1B3022),
+              color: textPrimary,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.5,
             ),
           ),
         ),
-        // Returning to a single scrollable area
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          // Added significant bottom padding (100) to ensure the logout button 
-          // can be scrolled well above the bottom of the screen
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 10),
-              _buildProfileCard(),
+              const SizedBox(height: 12),
+              _buildProfileHeader(textPrimary, textSecondary, bg),
               const SizedBox(height: 32),
-              _buildSectionLabel("GENERAL"),
-              SettingsTile(
-                icon: Icons.notifications_active_outlined,
-                title: "Notifications",
-                onTap: () => setState(() => _isNotifEnabled = !_isNotifEnabled),
-                trailing: Switch.adaptive(
-                  value: _isNotifEnabled,
-                  onChanged: (v) => setState(() => _isNotifEnabled = v),
-                  activeThumbColor: const Color(0xFF2D6A4F),
-                  activeTrackColor: const Color(0xFF2D6A4F),
-                ),
-              ),
-              const SettingsTile(
-                icon: Icons.language_rounded,
-                title: "App Language",
-                subtitle: "English (US)",
-              ),
-              const SizedBox(height: 24),
-              _buildSectionLabel("SUPPORT"),
-              SettingsTile(
-                icon: Icons.help_outline_rounded,
-                title: "Help Center",
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HelpCenterScreen()),
-                ),
-              ),
-              SettingsTile(
-                icon: Icons.info_outline_rounded,
-                title: "About TheobroTect",
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AboutScreen()),
-                ),
-              ),
-              
-              // Spacing before the button
-              const SizedBox(height: 60),
-              
-              // Button is now part of the scrollable list
-              _buildLogoutButton(),
+              _buildSettingsCard(cardBg, textPrimary, textSecondary, divider, isDark),
+              const SizedBox(height: 28),
+              _buildLogoutRow(cardBg, textPrimary, textSecondary),
             ],
           ),
         ),
@@ -103,125 +177,234 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // --- HELPER WIDGETS ---
+  // --- PROFILE HEADER ---
 
-  Widget _buildProfileCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2D6A4F), Color(0xFF1B3022)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _buildProfileHeader(Color textPrimary, Color textSecondary, Color bg) {
+    return Column(
+      children: [
+        Stack(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.forestMid, width: 2),
+              ),
+              child: CircleAvatar(
+                radius: 44,
+                backgroundColor: AppColors.forestMid.withAlpha(38),
+                backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                child: _profileImage == null
+                    ? Icon(Icons.person_rounded, color: textPrimary.withAlpha(180), size: 46)
+                    : null,
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: _handlePhotoTap,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.forestMid,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: bg, width: 2),
+                  ),
+                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 14),
+                ),
+              ),
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2D6A4F).withAlpha(77),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+        const SizedBox(height: 16),
+        Text(
+          "Farmer John",
+          style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          "Davao Region, PH",
+          style: TextStyle(color: textSecondary, fontSize: 13),
+        ),
+      ],
+    );
+  }
+
+  // --- SETTINGS CARD ---
+
+  Widget _buildSettingsCard(
+    Color cardBg,
+    Color textPrimary,
+    Color textSecondary,
+    Color divider,
+    bool isDark,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          _buildRow(
+            icon: Icons.notifications_active_outlined,
+            title: "Notifications",
+            textPrimary: textPrimary,
+            onTap: () => setState(() => _isNotifEnabled = !_isNotifEnabled),
+            trailing: Switch.adaptive(
+              value: _isNotifEnabled,
+              onChanged: (v) => setState(() => _isNotifEnabled = v),
+              activeThumbColor: AppColors.forestMid,
+              activeTrackColor: AppColors.forestMid,
+            ),
+          ),
+          _buildDivider(divider),
+          // Real dark mode toggle — drives ThemeController, which the
+          // whole app listens to via MaterialApp (see main.dart wiring).
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: ThemeController.instance.mode,
+            builder: (context, mode, _) {
+              final isDarkNow = mode == ThemeMode.dark;
+              return _buildRow(
+                icon: Icons.dark_mode_outlined,
+                title: "Dark Mode",
+                textPrimary: textPrimary,
+                onTap: () => ThemeController.instance.setDarkMode(!isDarkNow),
+                trailing: Switch.adaptive(
+                  value: isDarkNow,
+                  onChanged: (v) => ThemeController.instance.setDarkMode(v),
+                  activeThumbColor: AppColors.forestMid,
+                  activeTrackColor: AppColors.forestMid,
+                ),
+              );
+            },
+          ),
+          _buildDivider(divider),
+          _buildRow(
+            icon: Icons.help_outline_rounded,
+            title: "Help Center",
+            textPrimary: textPrimary,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HelpCenterScreen()),
+            ),
+            trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
+          ),
+          _buildDivider(divider),
+          _buildRow(
+            icon: Icons.info_outline_rounded,
+            title: "About TheobroTect",
+            textPrimary: textPrimary,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AboutScreen()),
+            ),
+            trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: const BoxDecoration(
-              color: Colors.white24,
-              shape: BoxShape.circle,
+    );
+  }
+
+  Widget _buildDivider(Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 60),
+      child: Divider(height: 1, thickness: 0.6, color: color),
+    );
+  }
+
+  Widget _buildRow({
+    required IconData icon,
+    required String title,
+    required Color textPrimary,
+    required VoidCallback onTap,
+    required Widget trailing,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.forestMid.withAlpha(38),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppColors.forestMid, size: 19),
             ),
-            child: const CircleAvatar(
-              radius: 32,
-              backgroundColor: Color(0xFFF9FBF9),
-              child: Icon(Icons.person_rounded, color: Color(0xFF1B3022), size: 35),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 15),
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  "Farmer John",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+            trailing,
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- LOGOUT ROW ---
+
+  Widget _buildLogoutRow(Color cardBg, Color textPrimary, Color textSecondary) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () async {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: cardBg,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text("Logout", style: TextStyle(fontWeight: FontWeight.bold, color: textPrimary)),
+              content: Text(
+                "Are you sure you want to logout?",
+                style: TextStyle(color: textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text("Cancel", style: TextStyle(color: textSecondary)),
                 ),
-                SizedBox(height: 2),
-                Text(
-                  "Davao Region, PH",
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.edit_note_rounded, color: Colors.white70),
-          ),
-        ],
-      ),
-    );
-  }
+          );
 
-  Widget _buildSectionLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 12),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
-          color: Colors.grey,
-          letterSpacing: 1.8,
-        ),
-      ),
-    );
-  }
+          if (confirm != true) return;
 
-  Widget _buildLogoutButton() {
-    return Center(
-      child: SizedBox(
-        width: double.infinity,
-        height: 56,
-        child: OutlinedButton.icon(
-          onPressed: () async {
-            final confirm = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                title: const Text("Logout", style: TextStyle(fontWeight: FontWeight.bold)),
-                content: const Text("Are you sure you want to logout?"),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                  ),
-                ],
+          await _controller.logout();
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => buildLoginScreen()),
+            (route) => false,
+          );
+        },
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(Icons.logout_rounded, color: Colors.redAccent, size: 19),
+              SizedBox(width: 14),
+              Text(
+                "Logout Account",
+                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15),
               ),
-            );
-
-            if (confirm != true) return;
-
-            await _controller.logout();
-            if (!mounted) return;
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => buildLoginScreen()),
-              (route) => false,
-            );
-          },
-          icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
-          label: const Text(
-            "Logout Account",
-            style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Colors.redAccent, width: 1.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            backgroundColor: Colors.redAccent.withAlpha(128),
+            ],
           ),
         ),
       ),

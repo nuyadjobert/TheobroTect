@@ -15,6 +15,80 @@ class DiagnosisSection extends StatelessWidget {
     required this.confidence,
   });
 
+void _showFullDescription(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFFF2F5F3), // Matching the matte background base
+      isScrollControlled: true, // Allows the sheet to adjust dynamically to content height
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)), // Matching your signature round curves
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top Grab Handle (Standard Sheet Ergonomics)
+                Center(
+                  child: Container(
+                    width: 48,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD1D6D2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Bottom Sheet Header: Title + Badge
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        diseaseName,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1B3022),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SeverityBadge(severity: severity),
+                  ],
+                ),
+                const Divider(height: 32, color: Color(0xFFD1D6D2), thickness: 1),
+                
+                // Scrollable Full Description Text
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Text(
+                      description,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.6,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF2E3E33),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -22,7 +96,6 @@ class DiagnosisSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ─── DISEASE TITLE & SEVERITY BADGE ───
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -39,15 +112,13 @@ class DiagnosisSection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            
-            // ─── DYNAMIC CLAYMORPHISM BADGE ───
-            // The Container wrapper is completely removed.
-            // SeverityBadge handles all its own styling now!
+        
             SeverityBadge(severity: severity),
             
           ],
         ),
-        const SizedBox(height: 24),
+
+        const SizedBox(height: 20),
 
         Container(
           width: double.infinity,
@@ -86,12 +157,6 @@ class DiagnosisSection extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        Icons.auto_awesome_rounded, // AI/Sparkle icon
-                        size: 18,
-                        color: Color(0xFF10B981), // Emerald green
-                      ),
-                      const SizedBox(width: 8),
                       const Text(
                         "AI Confidence",
                         style: TextStyle(
@@ -166,37 +231,33 @@ class DiagnosisSection extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
-        // ─── CLAYMORPHISM DESCRIPTION CARD ───
-        Container(
+       Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(32), // Exaggerated roundness for clay
-            // The volumetric clay gradient
+            borderRadius: BorderRadius.circular(32),
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xFFFFFFFF), // Top-left light catch
-                Color(0xFFF2F5F3), // Matte base
-                Color(0xFFE0E5E1), // Bottom-right subtle depth
+                Color(0xFFFFFFFF),
+                Color(0xFFF2F5F3),
+                Color(0xFFE0E5E1),
               ],
               stops: [0.0, 0.5, 1.0],
             ),
-            // Floating shadows
             boxShadow: const [
               BoxShadow(
-                color: Color(0xFFD1D6D2), // Darker lower shadow
+                color: Color(0xFFD1D6D2),
                 offset: Offset(8, 8),
                 blurRadius: 16,
               ),
               BoxShadow(
-                color: Colors.white, // Lighter upper shadow
+                color: Colors.white,
                 offset: Offset(-8, -8),
                 blurRadius: 16,
               ),
             ],
-            // Thick border acts as a high-contrast rim light
             border: Border.all(
               color: Colors.white,
               width: 2.5,
@@ -205,7 +266,6 @@ class DiagnosisSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Sub-header with a mini-clay button effect
               Row(
                 children: [
                   Container(
@@ -246,20 +306,47 @@ class DiagnosisSection extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Enhanced Body Text
+              // ─── TRUNCATED BODY TEXT ───
               Text(
                 description,
+                maxLines: 3, // Limits presentation text layer depth
+                overflow: TextOverflow.ellipsis, // Ends text with gracefully placed "..."
                 style: const TextStyle(
                   fontSize: 15,
-                  height: 1.6, // Crucial breathing room for clay style
+                  height: 1.6,
                   letterSpacing: 0.2,
                   fontWeight: FontWeight.w500,
                   color: Color(0xFF2E3E33),
                 ),
               ),
+              const SizedBox(height: 12),
+              
+              // ─── SEE MORE LINK INTERFACE ───
+              GestureDetector(
+                onTap: () => _showFullDescription(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text(
+                      "See more",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF10B981), // Stands out in accent green
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 18,
+                      color: Color(0xFF10B981),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),  
+        ),
       ],
     );
   }

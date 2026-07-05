@@ -20,6 +20,7 @@ import '../widgets/nav_farm_info.dart';
 import '../widgets/nav_stats_card.dart';
 import '../Controller/home_controller.dart';
 import '../views/skeleton_loading.dart';
+import '../../../theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey _catalogKey = GlobalKey();
   final GlobalKey _scannerKey = GlobalKey();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
   final HomeController _controller = HomeController();
 
   int _bottomNavIndex = 0;
@@ -46,16 +47,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
-    
+
     _controller.startBackgroundServices().then((_) {
       if (mounted) setState(() {});
     });
-    
+
     // Using controller methods instead of handling it directly in view
     _controller.startSync();
     _controller.checkPendingScans();
     _controller. syncGuideData();
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ShowcaseView.get().startShowCase([_profileKey, _catalogKey, _scannerKey]);
@@ -103,22 +104,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Core surfaces
+    final scaffoldBg = isDark ? AppColors.nightBg : const Color(0xFFF5FAF3);
+    final surfaceCard = isDark ? AppColors.nightCard : Colors.white;
+    final avatarBg = isDark ? AppColors.nightCard : const Color(0xFFF1F1F1);
+
+    // Text
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.white60 : Colors.grey[600];
+    final navInactiveIcon = isDark ? Colors.white38 : Colors.grey[400];
+    final navInactiveText = isDark ? Colors.white54 : Colors.grey[500];
+
+    // Brand / accent (green stays green, just lightens a touch in dark mode
+    // so it doesn't disappear against the dark surfaces)
+    final accent = isDark ? AppColors.forestLight : const Color(0xFF2D6A4F);
+    final avatarIconColor = isDark ? AppColors.forestLight : Colors.green;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: surfaceCard,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
       ),
       child: Scaffold(
         key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF5FAF3),
+        backgroundColor: scaffoldBg,
         extendBody: true,
         resizeToAvoidBottomInset: false,
-        drawer: const Drawer(
-          backgroundColor: Colors.white,
-          child: Column(
+        drawer: Drawer(
+          backgroundColor: surfaceCard,
+          child: const Column(
             children: [NavDrawerHeader(), NavFarmInfo(), NavStatsCard()],
           ),
         ),
@@ -131,7 +152,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 setState(() => _bottomNavIndex = index);
               },
               children: [
-                _buildHomeContent(),
+                _buildHomeContent(
+                  isDark: isDark,
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                  avatarBg: avatarBg,
+                  avatarIconColor: avatarIconColor,
+                ),
                 const HistoryScreen(),
                 const LearnHubScreen(),
                 const SettingsScreen(),
@@ -141,14 +168,14 @@ class _HomeScreenState extends State<HomeScreen> {
             if (_isLoading)
               Positioned.fill(
                 child: Container(
-                  color: const Color(0xFFF5FAF3),
+                  color: scaffoldBg,
                   child: Stack(
                     children: [
                       SkeletonLayout(pageIndex: _targetIndex),
                       BackdropFilter(
                         filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
                         child: Container(
-                          color: const Color(0xFFF5FAF3).withAlpha(102),
+                          color: scaffoldBg.withAlpha(102),
                           child: const Center(child: TheobroTectLoader()),
                         ),
                       ),
@@ -185,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
         bottomNavigationBar: BottomAppBar(
-          color: Colors.white,
+          color: surfaceCard,
           shape: const CircularNotchedRectangle(),
           notchMargin: 8.0,
           elevation: 20,
@@ -194,12 +221,23 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(0, Icons.eco_outlined, Icons.eco_rounded, "Home"),
+                _buildNavItem(
+                  0,
+                  Icons.eco_outlined,
+                  Icons.eco_rounded,
+                  "Home",
+                  accent,
+                  navInactiveIcon,
+                  navInactiveText,
+                ),
                 _buildNavItem(
                   1,
                   Icons.history_rounded,
                   Icons.history_rounded,
                   "History",
+                  accent,
+                  navInactiveIcon,
+                  navInactiveText,
                 ),
                 const SizedBox(width: 40),
                 _buildNavItem(
@@ -207,12 +245,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icons.menu_book_rounded,
                   Icons.menu_book_rounded,
                   "Learn",
+                  accent,
+                  navInactiveIcon,
+                  navInactiveText,
                 ),
                 _buildNavItem(
                   3,
                   Icons.tune_rounded,
                   Icons.settings_input_component_rounded,
                   "Settings",
+                  accent,
+                  navInactiveIcon,
+                  navInactiveText,
                 ),
               ],
             ),
@@ -227,6 +271,9 @@ class _HomeScreenState extends State<HomeScreen> {
     IconData icon,
     IconData activeIcon,
     String label,
+    Color activeColor,
+    Color? inactiveIconColor,
+    Color? inactiveTextColor,
   ) {
     bool isActive = _bottomNavIndex == index;
     return GestureDetector(
@@ -237,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Icon(
             isActive ? activeIcon : icon,
-            color: isActive ? const Color(0xFF2D6A4F) : Colors.grey[400],
+            color: isActive ? activeColor : inactiveIconColor,
             size: 24,
           ),
           const SizedBox(height: 2),
@@ -246,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-              color: isActive ? const Color(0xFF2D6A4F) : Colors.grey[500],
+              color: isActive ? activeColor : inactiveTextColor,
             ),
           ),
         ],
@@ -254,7 +301,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHomeContent() {
+  Widget _buildHomeContent({
+    required bool isDark,
+    required Color textPrimary,
+    required Color? textSecondary,
+    required Color avatarBg,
+    required Color avatarIconColor,
+  }) {
     return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,12 +336,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               width: 2,
                             ),
                           ),
-                          child: const CircleAvatar(
+                          child: CircleAvatar(
                             radius: 24,
-                            backgroundColor: Color(0xFFF1F1F1),
+                            backgroundColor: avatarBg,
                             child: Icon(
                               Icons.person_outline,
-                              color: Colors.green,
+                              color: avatarIconColor,
                             ),
                           ),
                         ),
@@ -302,15 +355,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           _controller.getGreeting(),
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: textSecondary,
                           ),
                         ),
                         Text(
                           "${_controller.userName ?? 'Farmer'}!",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             letterSpacing: -0.5,
+                            color: textPrimary,
                           ),
                         ),
                       ],
@@ -356,9 +410,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 15),
-                  const Text(
+                  Text(
                     "Quick Inspection",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 15),
                   Showcase(
@@ -369,9 +427,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const InspectionCard(),
                   ),
                   const SizedBox(height: 25),
-                  const Text(
+                  Text(
                     "Recent Activity",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   const TotalScannedCard(),
@@ -385,4 +447,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

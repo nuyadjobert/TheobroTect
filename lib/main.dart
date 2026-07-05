@@ -16,6 +16,8 @@ import 'core/config/app_config.dart';
 import 'core/db/database_helper.dart';
 import 'core/services/notification_service.dart';
 import 'core/db/scan_repository.dart';
+import 'theme/app_theme.dart';
+import 'theme/theme_controller.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -45,6 +47,9 @@ void main() async {
 // Create the notification service
   notificationService = LocalNotificationService(scanRepository);
   await notificationService.initialize();
+
+  // Load the user's saved Dark Mode preference before the first frame
+  await ThemeController.instance.loadSavedTheme();
 
   final authService = AuthService(DioClient.dio);
   controller = RegistrationController(authService);
@@ -108,7 +113,6 @@ class _MyAppState extends State<MyApp> {
     ScaffoldMessenger.of(context).showMaterialBanner(
       MaterialBanner(
         backgroundColor: color,
-        // ✅ Reduced padding for compact size
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         dividerColor: Colors.transparent,
         content: Row(
@@ -143,7 +147,6 @@ class _MyAppState extends State<MyApp> {
             ),
           ],
         ),
-        // ✅ Empty actions to remove the extra action row height
         actions: const [SizedBox.shrink()],
       ),
     );
@@ -193,13 +196,22 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.green),
-      home: widget.isLoggedIn ? const HomeScreen() : const IntroductionScreen(),
-      routes: {
-        '/notification': (_) => const NotificationScreen(),
+    // Listens to ThemeController so toggling Dark Mode anywhere
+    // (e.g. SettingsScreen) rebuilds the whole app with the new theme.
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.instance.mode,
+      builder: (context, currentMode, _) {
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: currentMode,
+          home: widget.isLoggedIn ? const HomeScreen() : const IntroductionScreen(),
+          routes: {
+            '/notification': (_) => const NotificationScreen(),
+          },
+        );
       },
     );
   }

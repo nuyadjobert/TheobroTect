@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme.dart';
 
 class DiseaseDetailSheet extends StatefulWidget {
   final Map<String, dynamic> disease;
@@ -54,6 +55,39 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final sheetBg = isDark ? AppColors.nightCard : Colors.white;
+    final dragHandleColor = isDark ? Colors.white24 : Colors.grey[300];
+    final titleColor = isDark ? Colors.white : const Color(0xFF1B4332);
+
+    final toggleBg = isDark ? _primaryGreen.withAlpha(45) : _lightMint;
+    final toggleBorder = isDark
+        ? _primaryGreen.withAlpha(110)
+        : _primaryGreen.withAlpha(51);
+    final toggleUnselectedText = isDark ? Colors.white70 : _primaryGreen;
+
+    final originBg = isDark
+        ? Colors.orange.withAlpha(38)
+        : Colors.orange.withAlpha(26);
+    final originBorder = Colors.orange.withAlpha(isDark ? 100 : 77);
+    final originTextColor = isDark ? Colors.orange[200]! : Colors.deepOrange;
+
+    final sectionHeaderColor = isDark ? Colors.white70 : Colors.grey[800];
+
+    final descriptionBoxBg =
+        isDark ? AppColors.nightBg : const Color(0xFFF8F9FA);
+    final descriptionTextColor = isDark ? Colors.white70 : Colors.grey[700];
+
+    final symptomCardBg = isDark ? AppColors.nightBg : Colors.white;
+    final symptomCardBorder =
+        isDark ? Colors.white12 : const Color(0xFFE0E0E0);
+    final symptomCardShadow =
+        isDark ? Colors.black.withAlpha(60) : Colors.grey.withAlpha(33);
+    final symptomIconBg = isDark ? _primaryGreen.withAlpha(45) : _lightMint;
+    final symptomTextColor =
+        isDark ? Colors.white70 : const Color(0xFF4A4A4A);
+
     final List<String> diseaseImages = List<String>.from(
       widget.disease["images"] ?? [],
     );
@@ -72,9 +106,9 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: sheetBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
         children: [
@@ -88,7 +122,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                 height: 5,
                 width: 45,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: dragHandleColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -109,7 +143,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: _primaryGreen.withAlpha(38), 
+                        color: _primaryGreen.withAlpha(38),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -176,10 +210,10 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                         Expanded(
                           child: Text(
                             widget.disease["title"] ?? "Unknown",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF1B4332),
+                              color: titleColor,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -194,16 +228,22 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: _lightMint,
+                              color: toggleBg,
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: _primaryGreen.withAlpha(51),
-                              ),
+                              border: Border.all(color: toggleBorder),
                             ),
                             child: Row(
                               children: [
-                                _buildToggleOption("EN", !isTagalog),
-                                _buildToggleOption("PH", isTagalog),
+                                _buildToggleOption(
+                                  "EN",
+                                  !isTagalog,
+                                  toggleUnselectedText,
+                                ),
+                                _buildToggleOption(
+                                  "PH",
+                                  isTagalog,
+                                  toggleUnselectedText,
+                                ),
                               ],
                             ),
                           ),
@@ -219,25 +259,23 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withAlpha(26),
+                        color: originBg,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.orange.withAlpha(77),
-                        ),
+                        border: Border.all(color: originBorder),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.public,
                             size: 14,
-                            color: Colors.deepOrange,
+                            color: originTextColor,
                           ),
                           const SizedBox(width: 6),
                           Text(
                             "Origin: ${widget.disease["origin"] ?? "Unknown"}",
-                            style: const TextStyle(
-                              color: Colors.deepOrange,
+                            style: TextStyle(
+                              color: originTextColor,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -253,20 +291,20 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+                        color: sectionHeaderColor,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8F9FA),
+                        color: descriptionBoxBg,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         description,
                         style: TextStyle(
-                          color: Colors.grey[700],
+                          color: descriptionTextColor,
                           height: 1.6,
                           fontSize: 15,
                         ),
@@ -280,12 +318,21 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+                        color: sectionHeaderColor,
                       ),
                     ),
                     const SizedBox(height: 15),
 
-                    ...symptoms.map((symptom) => _buildSymptomCard(symptom)),
+                    ...symptoms.map(
+                      (symptom) => _buildSymptomCard(
+                        symptom,
+                        symptomCardBg,
+                        symptomCardBorder,
+                        symptomCardShadow,
+                        symptomIconBg,
+                        symptomTextColor,
+                      ),
+                    ),
 
                     const SizedBox(height: 30),
 
@@ -324,7 +371,11 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
     );
   }
 
-  Widget _buildToggleOption(String text, bool isSelected) {
+  Widget _buildToggleOption(
+    String text,
+    bool isSelected,
+    Color unselectedTextColor,
+  ) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -339,7 +390,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
         child: Text(
           text,
           style: TextStyle(
-            color: isSelected ? Colors.white : _primaryGreen,
+            color: isSelected ? Colors.white : unselectedTextColor,
             fontWeight: FontWeight.bold,
             fontSize: 12,
           ),
@@ -348,17 +399,24 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
     );
   }
 
-  Widget _buildSymptomCard(String text) {
+  Widget _buildSymptomCard(
+    String text,
+    Color cardBg,
+    Color cardBorder,
+    Color cardShadow,
+    Color iconBg,
+    Color textColor,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(33),
+            color: cardShadow,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -370,7 +428,7 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: _lightMint,
+              color: iconBg,
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.check, color: _primaryGreen, size: 14),
@@ -379,9 +437,9 @@ class _DiseaseDetailSheetState extends State<DiseaseDetailSheet> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: Color(0xFF4A4A4A),
+                color: textColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
