@@ -33,8 +33,7 @@ class ScanResultController extends ChangeNotifier {
     if (name.isEmpty || name == 'none' || name == 'null') return false;
 
     if (confidence < 0.75) return false;
-    if (secondaryConfidence != null && secondaryConfidence! < 0.75)
-      return false;
+    if (secondaryConfidence != null && secondaryConfidence! < 0.75) return false;
 
     final primaryDisease = _diseaseKeyFromName(diseaseName);
     if (primaryDisease == 'healthy' && confidence >= 0.90) return false;
@@ -91,12 +90,12 @@ class ScanResultController extends ChangeNotifier {
 
     diseaseKey = _diseaseKeyFromName(diseaseName);
 
-    if (diseaseKey == 'non_cacao') {
-      _error = "NON_CACAO";
-      _isLoading = false;
-      notifyListeners();
-      return; // Stop execution
-    }
+    // if (diseaseKey == 'non_cacao') {
+    //   _error = "NON_CACAO";
+    //   _isLoading = false;
+    //   notifyListeners();
+    //   return; // Stop execution
+    // }
 
     if (hasHighNonCacaoConfidence) {
       _error = "NON_CACAO";
@@ -228,23 +227,26 @@ class ScanResultController extends ChangeNotifier {
     }
   }
 
-  // bool get hasHighNonCacaoConfidence {
-  //   // Primary
-  //   if (diseaseKey == 'non_cacao' && confidence >= 0.50) {
-  //     return true;
-  //   }
-
-  //   // Secondary
-  //   final secondaryKey = secondaryDiseaseName != null
-  //       ? _diseaseKeyFromName(secondaryDiseaseName!)
-  //       : '';
-
-  //   return secondaryKey == 'non_cacao' && (secondaryConfidence ?? 0.0) >= 0.50;
-  // }
-
   bool get hasHighNonCacaoConfidence {
-    return diseaseKey == 'non_cacao' && confidence >= 0.50;
+    // Primary prediction
+    if (diseaseKey == 'non_cacao' && confidence >= 0.50) {
+      return true;
+    }
+
+    // Secondary prediction
+    if (secondaryDiseaseName != null) {
+      final secondaryKey = _diseaseKeyFromName(secondaryDiseaseName!);
+
+      if (secondaryKey == 'non_cacao' && (secondaryConfidence ?? 0.0) >= 0.50) {
+        return true;
+      }
+    }
+
+    return false;
   }
+  // bool get hasHighNonCacaoConfidence {
+  //   return diseaseKey == 'non_cacao' && confidence >= 0.50;
+  // }
 
   Future<bool> saveScanRecord({bool smsEnabled = false}) {
     return saveScan.saveScanRecord(
