@@ -120,65 +120,13 @@ class CacaoModelService {
       throw Exception('Failed to decode image.');
     }
 
-    final crops = _createCrops(decoded);
-
-    // Full image prediction
-    final fullScores = _runInference(crops.first);
-    final singlePrediction = _findBestPrediction(fullScores);
-
-    debugPrint("========== INFERENCE START ==========");
-
-    logPrediction(
-      stage: "FULL IMAGE",
-      label: singlePrediction.label,
-      confidence: singlePrediction.confidence,
-    );
-
-    final level = getConfidenceLevel(
-      singlePrediction.confidence,
-    );
-
-    if (level == ConfidenceLevel.high) {
-      debugPrint(
-        "DECISION => HIGH CONFIDENCE, SKIP MULTI-CROP",
-      );
-
-      debugPrint(
-        "========== INFERENCE END ==========",
-      );
-
-      // return [singlePrediction];
-    }
-
-    if (level == ConfidenceLevel.medium) {
-      debugPrint(
-        "DECISION => MEDIUM CONFIDENCE",
-      );
-
-      debugPrint(
-        "ACTION => MULTI-CROP INFERENCE",
-      );
-    } else {
-      debugPrint(
-        "DECISION => LOW CONFIDENCE",
-      );
-
-      debugPrint(
-        "ACTION => MULTI-CROP INFERENCE",
-      );
-    }
-
-    return _runMultiCropInference(crops);
-  }
-
-  List<img.Image> _createCrops(img.Image decoded) {
+    // Make a single square crop only
     final int shortSide = min(decoded.width, decoded.height);
 
     final int offsetX = (decoded.width - shortSide) ~/ 2;
-
     final int offsetY = (decoded.height - shortSide) ~/ 2;
 
-    final img.Image fullCrop = img.copyCrop(
+    final squareImage = img.copyCrop(
       decoded,
       x: offsetX,
       y: offsetY,
@@ -186,36 +134,33 @@ class CacaoModelService {
       height: shortSide,
     );
 
-    final img.Image centerCrop = img.copyCrop(
-      fullCrop,
-      x: shortSide ~/ 4,
-      y: shortSide ~/ 4,
-      width: shortSide ~/ 2,
-      height: shortSide ~/ 2,
+    final scores = _runInference(squareImage);
+    final predictions = _findTopPredictions(scores, topK: 2);
+
+    for (final p in predictions) {
+      debugPrint("${p.label} : ${(p.confidence * 100).toStringAsFixed(2)}%");
+    }
+
+    return predictions;
+  }
+
+  List<ModelPrediction> _findTopPredictions(
+    List<double> scores, {
+    int topK = 2,
+  }) {
+    final indices = List.generate(scores.length, (i) => i);
+
+    indices.sort(
+      (a, b) => scores[b].compareTo(scores[a]),
     );
 
-    final img.Image leftCrop = img.copyCrop(
-      fullCrop,
-      x: 0,
-      y: 0,
-      width: shortSide ~/ 2,
-      height: shortSide,
-    );
-
-    final img.Image rightCrop = img.copyCrop(
-      fullCrop,
-      x: shortSide ~/ 2,
-      y: 0,
-      width: shortSide ~/ 2,
-      height: shortSide,
-    );
-
-    return [
-      fullCrop,
-      centerCrop,
-      leftCrop,
-      rightCrop,
-    ];
+    return indices.take(topK).map((index) {
+      return ModelPrediction(
+        label: labelsInOrder[index],
+        confidence: scores[index],
+        index: index,
+      );
+    }).toList();
   }
 
   List<double> _runInference(img.Image image) {
@@ -256,131 +201,5 @@ class CacaoModelService {
     debugPrint("RAW OUTPUT: ${output[0]}");
 
     return List<double>.from(output[0]);
-  }
-
-  List<ModelPrediction> _findPrimaryAndSecondaryDisease(
-    List<ModelPrediction> cropPredictions,
-  ) {
-    final Map<String, ModelPrediction> strongestPerDisease = {};
-
-    for (final prediction in cropPredictions) {
-      final family = getDiseaseFamily(
-        prediction.label,
-      );
-
-      final existing = strongestPerDisease[family];
-
-      if (existing == null || prediction.confidence > existing.confidence) {
-        strongestPerDisease[family] = prediction;
-      }
-    }
-
-    final diseases = strongestPerDisease.values.toList();
-
-    diseases.sort(
-      (a, b) => b.confidence.compareTo(
-        a.confidence,
-      ),
-    );
-
-    final primary = diseases.first;
-
-    ModelPrediction? secondary;
-
-    if (diseases.length > 1) {
-      secondary = diseases[1];
-    }
-
-    debugPrint("");
-    debugPrint(
-      "===== FINAL DECISION =====",
-    );
-
-    debugPrint(
-      "PRIMARY DISEASE => "
-      "${primary.label} "
-      "${(primary.confidence * 100).toStringAsFixed(2)}%",
-    );
-
-    if (secondary != null) {
-      debugPrint(
-        "SECONDARY DISEASE => "
-        "${secondary.label} "
-        "${(secondary.confidence * 100).toStringAsFixed(2)}%",
-      );
-    }
-
-    debugPrint(
-      "========== INFERENCE END ==========",
-    );
-
-    return secondary == null ? [primary] : [primary, secondary];
-  }
-
-  Future<List<ModelPrediction>> _runMultiCropInference(
-    List<img.Image> crops,
-  ) async {
-    final cropNames = [
-      'FULL CROP',
-      'CENTER CROP',
-      'LEFT CROP',
-      'RIGHT CROP',
-    ];
-
-    final cropPredictions = <ModelPrediction>[];
-
-    for (int i = 0; i < crops.length; i++) {
-      final scores = _runInference(crops[i]);
-
-      // 1. Find the absolute winner for this crop
-      final primaryPrediction = _findBestPrediction(scores);
-      cropPredictions.add(primaryPrediction);
-
-      // 2. 👉 NEW: Also find the runner-up for this crop if it has decent confidence
-      final sortedIndices = List.generate(scores.length, (idx) => idx)
-        ..sort((a, b) => scores[b].compareTo(scores[a]));
-
-      int runnerUpIdx = sortedIndices[1];
-      double runnerUpScore = scores[runnerUpIdx];
-
-      // If the second-highest disease has a confidence over 15%, count it!
-      if (runnerUpScore > 0.15) {
-        cropPredictions.add(ModelPrediction(
-          label: labelsInOrder[runnerUpIdx],
-          confidence: runnerUpScore,
-          index: runnerUpIdx,
-        ));
-      }
-
-      logPrediction(
-        stage: cropNames[i],
-        label: primaryPrediction.label,
-        confidence: primaryPrediction.confidence,
-      );
-    }
-
-    return _findPrimaryAndSecondaryDisease(
-      cropPredictions,
-    );
-  }
-
-  ModelPrediction _findBestPrediction(
-    List<double> scores,
-  ) {
-    int bestIdx = 0;
-    double bestScore = scores[0];
-
-    for (int i = 1; i < scores.length; i++) {
-      if (scores[i] > bestScore) {
-        bestScore = scores[i];
-        bestIdx = i;
-      }
-    }
-
-    return ModelPrediction(
-      label: labelsInOrder[bestIdx],
-      confidence: bestScore,
-      index: bestIdx,
-    );
   }
 }
