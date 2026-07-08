@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,7 +21,6 @@ class _ScannerScreenState extends State<ScannerScreen>
   static const double _frameWidth = 280;
   static const double _frameHeight = 440;
 
-bool _loading = true;
 
 @override
 void initState() {
@@ -43,9 +41,6 @@ Future<void> _initialize() async {
 
   if (!mounted) return;
 
-  setState(() {
-    _loading = false;
-  });
 }
 
   @override

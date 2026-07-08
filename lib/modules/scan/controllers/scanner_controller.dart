@@ -52,9 +52,6 @@ class ScannerController extends ChangeNotifier {
 
     _camera = CameraController(
       _cameras![0],
-      // ✅ ADJUSTMENT 2: Changed from high to medium.
-      // Medium is typically 480p, which is perfect since we only need 224x224.
-      // This will make capture much faster and reduce memory overhead.
       ResolutionPreset.high,
       enableAudio: false,
     );
@@ -73,6 +70,14 @@ class ScannerController extends ChangeNotifier {
     }
 
     _isFlashOn = !_isFlashOn;
+    notifyListeners();
+  }
+
+  Future<void> turnOffFlash() async {
+    if (_camera == null || !_isFlashOn) return;
+
+    await _camera!.setFlashMode(FlashMode.off);
+    _isFlashOn = false;
     notifyListeners();
   }
 
@@ -95,6 +100,9 @@ class ScannerController extends ChangeNotifier {
 
     try {
       final XFile photo = await _camera!.takePicture();
+
+      await turnOffFlash();
+
       final imagePath = photo.path;
 
       debugPrint("\n📸 [SCANNER] Picture taken at: $imagePath");
@@ -168,6 +176,10 @@ class ScannerController extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_camera != null && _isFlashOn) {
+      _camera!.setFlashMode(FlashMode.off);
+    }
+
     _camera?.dispose();
     super.dispose();
   }

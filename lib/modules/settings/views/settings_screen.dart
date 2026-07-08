@@ -1,13 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/help_center_screen.dart';
 import '../widgets/about_screen.dart';
-import '../widgets/photo_search.dart';
-// Note: Replace this import path with the actual path to your User Profile screen file
 import 'package:cacao_apps/modules/auth/login_factory.dart';
 import '../controllers/settings_controller.dart';
 import '../../../theme/theme_controller.dart';

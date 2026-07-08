@@ -14,9 +14,6 @@ import '../../history/views/history_screen.dart';
 import '../../notifications/views/notification_screen.dart';
 import '../../scan/views/scanner_screen.dart';
 import '../../introduction/widgets/loading_screen.dart';
-
-import '../widgets/nav_drawer_header.dart';
-import '../widgets/nav_farm_info.dart';
 import '../Controller/home_controller.dart';
 import '../views/skeleton_loading.dart';
 import '../../../theme/app_theme.dart';
