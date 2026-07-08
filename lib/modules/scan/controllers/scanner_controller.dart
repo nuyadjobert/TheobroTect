@@ -146,22 +146,6 @@ class ScannerController extends ChangeNotifier {
     }
   }
 
-  // --- helpers ---
-
-  _ParsedLabel _parseLabel(String label) {
-    if (label == 'healthy') {
-      return const _ParsedLabel(diseaseKey: 'healthy', severityKey: 'default');
-    }
-    if (label == 'non_cacao') {
-      return const _ParsedLabel(
-          diseaseKey: 'non_cacao', severityKey: 'default');
-    }
-    final idx = label.lastIndexOf('_');
-    final diseaseKey = label.substring(0, idx);
-    final severityKey = label.substring(idx + 1);
-    return _ParsedLabel(diseaseKey: diseaseKey, severityKey: severityKey);
-  }
-
   String _toDisplayName(String diseaseKey) {
     switch (diseaseKey) {
       case 'black_pod_disease':
@@ -187,10 +171,4 @@ class ScannerController extends ChangeNotifier {
     _camera?.dispose();
     super.dispose();
   }
-}
-
-class _ParsedLabel {
-  final String diseaseKey;
-  final String severityKey;
-  const _ParsedLabel({required this.diseaseKey, required this.severityKey});
 }

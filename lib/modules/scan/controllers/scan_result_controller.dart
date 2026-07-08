@@ -63,7 +63,14 @@ class ScanResultController extends ChangeNotifier {
 
     diseaseKey = _diseaseKeyFromName(diseaseName);
 
+    // final exists = await _repository.healthyHasSeverity();
 
+    // if (exists) {
+    //   debugPrint("Healthy mild severity exists==============================================.");
+    //   debugPrint("Healthy mild severity exists==============================================.");
+    //   debugPrint("Healthy mild severity exists==============================================.");
+    //   debugPrint("Healthy mild severity exists==============================================.");
+    // }
     if (hasHighNonCacaoConfidence) {
       _error = "NON_CACAO";
       _isLoading = false;

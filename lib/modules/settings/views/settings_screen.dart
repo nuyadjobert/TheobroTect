@@ -7,10 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/help_center_screen.dart';
 import '../widgets/about_screen.dart';
 import '../widgets/photo_search.dart';
+// Note: Replace this import path with the actual path to your User Profile screen file
 import 'package:cacao_apps/modules/auth/login_factory.dart';
 import '../controllers/settings_controller.dart';
 import '../../../theme/theme_controller.dart';
 import '../../../theme/app_theme.dart';
+import '../widgets/profile_screen.dart';
+import '../../../core/model/user.model.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -20,108 +23,28 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const _prefsKey = 'profile_photo_path';
-  static const _storedFileName = 'profile_photo.jpg';
-
-  bool _isNotifEnabled = true;
   final SettingsController _controller = SettingsController();
-  final ImagePicker _picker = ImagePicker();
+  LocalUser? currentUser;
 
-  // Persisted profile photo. Loaded from SharedPreferences in initState and
-  // written back to disk + prefs every time it changes.
   File? _profileImage;
-  bool _loadingImage = true;
 
   @override
   void initState() {
     super.initState();
-    _loadPersistedImage();
+    _loadUser();
   }
 
-  Future<void> _loadPersistedImage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final storedPath = prefs.getString(_prefsKey);
-    if (storedPath != null && await File(storedPath).exists()) {
-      if (!mounted) return;
-      setState(() {
-        _profileImage = File(storedPath);
-        _loadingImage = false;
-      });
-    } else {
-      if (!mounted) return;
-      setState(() => _loadingImage = false);
-    }
+  Future<void> _loadUser() async {
+    currentUser = await _controller.getCurrentUser();
+    setState(() {});
   }
 
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final XFile? picked = await _picker.pickImage(
-        source: source,
-        maxWidth: 800,
-        imageQuality: 85,
-      );
-      if (picked == null) return; // user cancelled
-
-      // Copy out of the OS's temp/cache location into a stable spot inside
-      // the app's own documents directory, so it isn't cleared by the OS
-      // and survives app restarts.
-      final docsDir = await getApplicationDocumentsDirectory();
-      final savedPath = '${docsDir.path}/$_storedFileName';
-      final targetFile = File(savedPath);
-
-      
-      await FileImage(targetFile).evict();
-
-      final savedFile = await File(picked.path).copy(savedPath);
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_prefsKey, savedFile.path);
-
-      if (!mounted) return;
-      setState(() => _profileImage = savedFile);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Couldn't open ${source == ImageSource.camera ? 'camera' : 'gallery'}: $e")),
-      );
-    }
-  }
-
-  Future<void> _removeImage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final storedPath = prefs.getString(_prefsKey);
-    if (storedPath != null) {
-      final file = File(storedPath);
-      // Same cache-eviction reasoning as in _pickImage: clear the stale
-      // entry for this path so a future re-add doesn't show leftover bytes.
-      await FileImage(file).evict();
-      if (await file.exists()) {
-        await file.delete();
-      }
-    }
-    await prefs.remove(_prefsKey);
-    if (!mounted) return;
-    setState(() => _profileImage = null);
-  }
-
-  Future<void> _handlePhotoTap() async {
-    final action = await showPhotoSourceSheet(
+  void _navigateToProfile() {
+    Navigator.push(
       context,
-      hasExistingPhoto: _profileImage != null,
+      MaterialPageRoute(builder: (context) => const UserProfileScreen()),
     );
-    if (action == null) return; // dismissed without choosing
-
-    switch (action) {
-      case PhotoSourceAction.camera:
-        await _pickImage(ImageSource.camera);
-        break;
-      case PhotoSourceAction.gallery:
-        await _pickImage(ImageSource.gallery);
-        break;
-      case PhotoSourceAction.remove:
-        await _removeImage();
-        break;
-    }
+    debugPrint("Navigating to User Profile details...");
   }
 
   @override
@@ -132,7 +55,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final Color cardBg = isDark ? AppColors.nightCard : AppColors.creamCard;
     final Color textPrimary = isDark ? Colors.white : AppColors.forestDark;
     final Color textSecondary = isDark ? Colors.white60 : Colors.grey;
-    final Color divider = isDark ? AppColors.nightDivider : Colors.grey.shade200;
+    final Color divider =
+        isDark ? AppColors.nightDivider : Colors.grey.shade200;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -140,13 +64,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         systemNavigationBarColor: bg,
-        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
       ),
       child: Scaffold(
         backgroundColor: bg,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-          systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+          systemOverlayStyle:
+              isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
           elevation: 0,
           centerTitle: true,
           title: Text(
@@ -167,7 +93,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 12),
               _buildProfileHeader(textPrimary, textSecondary, bg),
               const SizedBox(height: 32),
-              _buildSettingsCard(cardBg, textPrimary, textSecondary, divider, isDark),
+              _buildSettingsCard(
+                  cardBg, textPrimary, textSecondary, divider, isDark),
               const SizedBox(height: 28),
               _buildLogoutRow(cardBg, textPrimary, textSecondary),
             ],
@@ -177,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // --- PROFILE HEADER ---
+  // --- ENHANCED PROFILE HEADER ---
 
   Widget _buildProfileHeader(Color textPrimary, Color textSecondary, Color bg) {
     return Column(
@@ -186,52 +113,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.forestMid, width: 2),
-              ),
               child: CircleAvatar(
-                radius: 44,
+                radius: 46, // Slighly enlarged for visual focus
                 backgroundColor: AppColors.forestMid.withAlpha(38),
-                backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                backgroundImage:
+                    _profileImage != null ? FileImage(_profileImage!) : null,
                 child: _profileImage == null
-                    ? Icon(Icons.person_rounded, color: textPrimary.withAlpha(180), size: 46)
+                    ? Icon(Icons.person_rounded,
+                        color: textPrimary.withAlpha(180), size: 48)
                     : null,
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: _handlePhotoTap,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.forestMid,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: bg, width: 2),
-                  ),
-                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 14),
-                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 16),
         Text(
-          "Farmer John",
-          style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 20),
+          currentUser?.name ?? "Loading...",
+          style: TextStyle(
+            color: textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            letterSpacing: -0.5,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
-          "Davao Region, PH",
-          style: TextStyle(color: textSecondary, fontSize: 13),
+          currentUser?.address ?? "",
+          style: TextStyle(
+            color: textSecondary,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
   }
-
-  // --- SETTINGS CARD ---
 
   Widget _buildSettingsCard(
     Color cardBg,
@@ -245,71 +161,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: cardBg,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(
-        children: [
-          _buildRow(
-            icon: Icons.notifications_active_outlined,
-            title: "Notifications",
-            textPrimary: textPrimary,
-            onTap: () => setState(() => _isNotifEnabled = !_isNotifEnabled),
-            trailing: Switch.adaptive(
-              value: _isNotifEnabled,
-              onChanged: (v) => setState(() => _isNotifEnabled = v),
-              activeThumbColor: AppColors.forestMid,
-              activeTrackColor: AppColors.forestMid,
+      // ClipRRect added to ensure InkWell splash doesn't bleed out of the container corners
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          children: [
+            // 🔄 NEW: My Profile Entry Option Replacement
+            _buildRow(
+              icon: Icons.person_outline_rounded,
+              title: "My Profile",
+              textPrimary: textPrimary,
+              onTap: _navigateToProfile,
+              trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
             ),
-          ),
-          _buildDivider(divider),
-          // Real dark mode toggle — drives ThemeController, which the
-          // whole app listens to via MaterialApp (see main.dart wiring).
-          ValueListenableBuilder<ThemeMode>(
-            valueListenable: ThemeController.instance.mode,
-            builder: (context, mode, _) {
-              final isDarkNow = mode == ThemeMode.dark;
-              return _buildRow(
-                icon: Icons.dark_mode_outlined,
-                title: "Dark Mode",
-                textPrimary: textPrimary,
-                onTap: () => ThemeController.instance.setDarkMode(!isDarkNow),
-                trailing: Switch.adaptive(
-                  value: isDarkNow,
-                  onChanged: (v) => ThemeController.instance.setDarkMode(v),
-                  activeThumbColor: AppColors.forestMid,
-                  activeTrackColor: AppColors.forestMid,
-                ),
-              );
-            },
-          ),
-          _buildDivider(divider),
-          _buildRow(
-            icon: Icons.help_outline_rounded,
-            title: "Help Center",
-            textPrimary: textPrimary,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const HelpCenterScreen()),
+            _buildDivider(divider),
+
+            // System Dark Mode Toggle
+            ValueListenableBuilder<ThemeMode>(
+              valueListenable: ThemeController.instance.mode,
+              builder: (context, mode, _) {
+                final isDarkNow = mode == ThemeMode.dark;
+                return _buildRow(
+                  icon: Icons.dark_mode_outlined,
+                  title: "Dark Mode",
+                  textPrimary: textPrimary,
+                  onTap: () => ThemeController.instance.setDarkMode(!isDarkNow),
+                  trailing: Switch.adaptive(
+                    value: isDarkNow,
+                    onChanged: (v) => ThemeController.instance.setDarkMode(v),
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: AppColors.forestMid,
+                  ),
+                );
+              },
             ),
-            trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
-          ),
-          _buildDivider(divider),
-          _buildRow(
-            icon: Icons.info_outline_rounded,
-            title: "About TheobroTect",
-            textPrimary: textPrimary,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AboutScreen()),
+            _buildDivider(divider),
+
+            // Help Center Entry
+            _buildRow(
+              icon: Icons.help_outline_rounded,
+              title: "Help Center",
+              textPrimary: textPrimary,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const HelpCenterScreen()),
+              ),
+              trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
             ),
-            trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
-          ),
-        ],
+            _buildDivider(divider),
+
+            // About Entry
+            _buildRow(
+              icon: Icons.info_outline_rounded,
+              title: "About TheobroTect",
+              textPrimary: textPrimary,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AboutScreen()),
+              ),
+              trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDivider(Color color) {
     return Padding(
-      padding: const EdgeInsets.only(left: 60),
+      padding: const EdgeInsets.only(left: 68),
       child: Divider(height: 1, thickness: 0.6, color: color),
     );
   }
@@ -324,23 +245,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: AppColors.forestMid.withAlpha(38),
+                color: AppColors.forestMid.withAlpha(30),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: AppColors.forestMid, size: 19),
+              child: Icon(icon, color: AppColors.forestMid, size: 20),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 15),
+                style: TextStyle(
+                    color: textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15.5),
               ),
             ),
             trailing,
@@ -359,52 +283,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: cardBg,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: InkWell(
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        onTap: () async {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              backgroundColor: cardBg,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text("Logout", style: TextStyle(fontWeight: FontWeight.bold, color: textPrimary)),
-              content: Text(
-                "Are you sure you want to logout?",
-                style: TextStyle(color: textSecondary),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text("Cancel", style: TextStyle(color: textSecondary)),
+        child: InkWell(
+          onTap: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: cardBg,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                title: Text("Logout",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: textPrimary)),
+                content: Text(
+                  "Are you sure you want to logout?",
+                  style: TextStyle(color: textSecondary),
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text("Cancel",
+                        style: TextStyle(
+                            color: textSecondary, fontWeight: FontWeight.w500)),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text("Logout",
+                        style: TextStyle(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirm != true) return;
+
+            await _controller.logout();
+            if (!mounted) return;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => buildLoginScreen()),
+              (route) => false,
+            );
+          },
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(
+              children: [
+                Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+                SizedBox(width: 14),
+                Text(
+                  "Logout Account",
+                  style: TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.5),
                 ),
               ],
             ),
-          );
-
-          if (confirm != true) return;
-
-          await _controller.logout();
-          if (!mounted) return;
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => buildLoginScreen()),
-            (route) => false,
-          );
-        },
-        child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(Icons.logout_rounded, color: Colors.redAccent, size: 19),
-              SizedBox(width: 14),
-              Text(
-                "Logout Account",
-                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-            ],
           ),
         ),
       ),

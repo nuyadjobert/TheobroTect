@@ -17,7 +17,6 @@ import '../../introduction/widgets/loading_screen.dart';
 
 import '../widgets/nav_drawer_header.dart';
 import '../widgets/nav_farm_info.dart';
-import '../widgets/nav_stats_card.dart';
 import '../Controller/home_controller.dart';
 import '../views/skeleton_loading.dart';
 import '../../../theme/app_theme.dart';
@@ -137,12 +136,12 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: scaffoldBg,
         extendBody: true,
         resizeToAvoidBottomInset: false,
-        drawer: Drawer(
-          backgroundColor: surfaceCard,
-          child: const Column(
-            children: [NavDrawerHeader(), NavFarmInfo(), NavStatsCard()],
-          ),
-        ),
+        // drawer: Drawer(
+        //   backgroundColor: surfaceCard,
+        //   child: const Column(
+        //     children: [NavDrawerHeader(), NavFarmInfo()],
+        //   ),
+        // ),
         body: Stack(
           children: [
             PageView(

@@ -4,7 +4,6 @@ import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flutter/foundation.dart';
 
-// Import your updated model (code provided below)
 import '../model/multitask.dart';
 
 enum ConfidenceLevel {
@@ -91,7 +90,6 @@ class CacaoModelService {
       throw Exception('Failed to decode image.');
     }
 
-    // Make a single square crop only
     final int shortSide = min(decoded.width, decoded.height);
     final int offsetX = (decoded.width - shortSide) ~/ 2;
     final int offsetY = (decoded.height - shortSide) ~/ 2;
@@ -120,7 +118,6 @@ class CacaoModelService {
       }
     }
 
-    // 4. Find the highest confidence for severity
     int bestSeverityIdx = 0;
     double maxSeverityConf = 0.0;
     for (int i = 0; i < severityScores.length; i++) {
@@ -140,13 +137,12 @@ class CacaoModelService {
     debugPrint(
         "PREDICTION: ${prediction.diseaseLabel} (${(maxDiseaseConf * 100).toStringAsFixed(1)}%) | ${prediction.severityLabel} (${(maxSeverityConf * 100).toStringAsFixed(1)}%)");
 
-    // Returning as a list of 1 to easily fit into your ScannerController logic
     return [prediction];
   }
 
   Map<String, List<double>> _runInference(img.Image image) {
     final inputTensor = _interpreter!.getInputTensor(0);
-    final shape = inputTensor.shape; // [1, 224, 224, 3]
+    final shape = inputTensor.shape; 
 
     final int h = shape[1];
     final int w = shape[2];
@@ -168,14 +164,11 @@ class CacaoModelService {
       )
     ];
 
-    // 5. Smartly determine which output is disease and which is severity
-    // We check the length of the output tensor. 5 = Disease, 4 = Severity.
     int out0Length = _interpreter!.getOutputTensor(0).shape[1];
 
     int diseaseTensorIndex = (out0Length == diseaseLabels.length) ? 0 : 1;
     int severityTensorIndex = (diseaseTensorIndex == 0) ? 1 : 0;
 
-    // 6. Prepare empty output buffers
     final diseaseOutput = [List.filled(diseaseLabels.length, 0.0)];
     final severityOutput = [List.filled(severityLabels.length, 0.0)];
 
@@ -184,10 +177,8 @@ class CacaoModelService {
       severityTensorIndex: severityOutput,
     };
 
-    // 7. Run Multi-Input/Output Inference
     _interpreter!.runForMultipleInputs([input], outputs);
 
-    // Extract the arrays from the buffers
     return {
       'disease': List<double>.from((outputs[diseaseTensorIndex] as List)[0]),
       'severity': List<double>.from((outputs[severityTensorIndex] as List)[0]),
