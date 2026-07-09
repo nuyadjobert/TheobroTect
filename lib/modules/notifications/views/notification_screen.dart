@@ -13,9 +13,14 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
+  late final NotificationController controller;
+
   @override
   void initState() {
     super.initState();
+
+    controller = NotificationController(ScanRepository());
+
     _loadNotifications();
   }
 
@@ -24,15 +29,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     if (!mounted || user == null) return;
 
-    final controller = NotificationController(ScanRepository());
     await controller.loadNotifications(user.userId);
+
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = NotificationController(ScanRepository());
-    final userId = UserRepository().getCurrentUser();
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5FAF3),
       appBar: AppBar(
