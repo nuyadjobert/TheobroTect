@@ -9,21 +9,18 @@ class NotificationScreen extends StatelessWidget {
     // Mock data for multiple notifications
     final List<Map<String, String>> alerts = [
       {
-        "id": "POD-001",
         "disease": "Cacao Pod Borer",
         "severity": "High",
         "date": "Apr 18 • 02:45 PM",
         "sector": "Sector B"
       },
       {
-        "id": "POD-042",
         "disease": "Black Pod Rot",
         "severity": "Moderate",
         "date": "Apr 18 • 01:20 PM",
         "sector": "Sector A"
       },
       {
-        "id": "POD-089",
         "disease": "Mealybug",
         "severity": "Low",
         "date": "Apr 17 • 09:15 AM",

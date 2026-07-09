@@ -44,7 +44,7 @@ class CacaoModelService {
       debugPrint("Loading TFLite model...");
 
       _interpreter = await Interpreter.fromAsset(
-        'assets/models/final_multitask_model.tflite',
+        'assets/models/final_multitask_model1.2.tflite',
         options: InterpreterOptions()..threads = Platform.numberOfProcessors,
       );
 
