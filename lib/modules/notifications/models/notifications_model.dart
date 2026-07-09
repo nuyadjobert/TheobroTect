@@ -1,15 +1,25 @@
-class NotificationTask {
-  final String id;
-  final String title;
-  final String lastScanned;
-  final String imagePath;
-  final List<String> subTasks;
+class NotificationModel {
+  final String localId;
+  final String diseaseKey;
+  final String severityKey;
+  final DateTime scannedAt;
+  final DateTime nextScanAt;
 
-  NotificationTask({
-    required this.id,
-    required this.title,
-    required this.lastScanned,
-    required this.imagePath,
-    required this.subTasks,
+  NotificationModel({
+    required this.localId,
+    required this.diseaseKey,
+    required this.severityKey,
+    required this.scannedAt,
+    required this.nextScanAt,
   });
+
+  factory NotificationModel.fromMap(Map<String, dynamic> map) {
+    return NotificationModel(
+      localId: map['local_id'],
+      diseaseKey: map['disease_key'],
+      severityKey: map['severity_key'],
+      scannedAt: DateTime.parse(map['scanned_at']),
+      nextScanAt: DateTime.parse(map['next_scan_at']),
+    );
+  }
 }

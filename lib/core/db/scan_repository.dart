@@ -94,10 +94,12 @@ class ScanRepository {
     );
   }
 
-    Future<List<Map<String, dynamic>>> getPendingNotifications(
+  Future<List<Map<String, dynamic>>> getPendingNotifications(
     String userId,
   ) async {
     final database = await _dbHelper.db;
+
+    final now = DateTime.now().toIso8601String();
 
     return await database.query(
       'scan_history',
@@ -108,9 +110,33 @@ class ScanRepository {
         'disease_key',
         'severity_key',
         'scanned_at',
+        'image_path',
+        'confidence',
       ],
-      where: 'user_id = ? AND next_scan_at IS NOT NULL',
-      whereArgs: [userId],
+      where: '''
+      user_id = ?
+      AND next_scan_at IS NOT NULL
+      AND next_scan_at <= ?
+      AND notif_local_id IS NOT NULL
+    ''',
+      whereArgs: [
+        userId,
+        now,
+      ],
+      orderBy: 'next_scan_at ASC',
+    );
+  }
+
+  Future<void> markNotificationShown(String localId) async {
+    final database = await _dbHelper.db;
+
+    await database.update(
+      'scan_history',
+      {
+        'notif_local_id': 1, // or notification_sent = 1
+      },
+      where: 'local_id = ?',
+      whereArgs: [localId],
     );
   }
 }

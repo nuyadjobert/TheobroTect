@@ -1,32 +1,37 @@
 import 'package:flutter/material.dart';
 import '../../scan/views/scanner_screen.dart';
+import '../widgets/notification_card.dart';
+import '../controller/notification_controller.dart';
+import '../../../core/db/user_repository.dart';
+import '../../../core/db/scan_repository.dart';
 
-class NotificationScreen extends StatelessWidget {
+class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
   @override
+  State<NotificationScreen> createState() => _NotificationScreenState();
+}
+
+class _NotificationScreenState extends State<NotificationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    final user = await UserRepository().getCurrentUser();
+
+    if (!mounted || user == null) return;
+
+    final controller = NotificationController(ScanRepository());
+    await controller.loadNotifications(user.userId);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Mock data for multiple notifications
-    final List<Map<String, String>> alerts = [
-      {
-        "disease": "Cacao Pod Borer",
-        "severity": "High",
-        "date": "Apr 18 • 02:45 PM",
-        "sector": "Sector B"
-      },
-      {
-        "disease": "Black Pod Rot",
-        "severity": "Moderate",
-        "date": "Apr 18 • 01:20 PM",
-        "sector": "Sector A"
-      },
-      {
-        "disease": "Mealybug",
-        "severity": "Low",
-        "date": "Apr 17 • 09:15 AM",
-        "sector": "Sector C"
-      },
-    ];
+    final controller = NotificationController(ScanRepository());
+    final userId = UserRepository().getCurrentUser();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5FAF3),
@@ -34,7 +39,8 @@ class NotificationScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              color: Colors.black, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -47,165 +53,66 @@ class NotificationScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20),
-        itemCount: alerts.length,
-        itemBuilder: (context, index) {
-          final alert = alerts[index];
-          return _buildNotificationCard(context, alert);
-        },
-      ),
-    );
-  }
+      body: controller.alerts.isEmpty
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.notifications_none_rounded,
+                    size: 72,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'No notifications today',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'You have no active scan reminders.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              itemCount: controller.alerts.length,
+              itemBuilder: (context, index) {
+                final alert = controller.alerts[index];
 
-  Widget _buildNotificationCard(BuildContext context, Map<String, String> alert) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2D6A4F), Color(0xFF1B4332)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1B4332).withAlpha(51),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      alert['id']!,
-                      style: TextStyle(
-                        color: Colors.white.withAlpha(153),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                    _buildSeverityBadge(alert['severity']!),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  alert['disease']!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Location: ${alert['sector']} • ${alert['date']}",
-                  style: TextStyle(
-                    color: Colors.white.withAlpha(179),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Action Buttons Divider
-          Container(height: 1, color: Colors.white.withAlpha(26)),
-          
-          // Row of Buttons
-          IntrinsicHeight(
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () {
-                      // Logic to remove/ignore this specific notification
-                    },
-                    style: TextButton.styleFrom(padding: const EdgeInsets.all(16)),
-                    child: Text(
-                      "IGNORE",
-                      style: TextStyle(
-                        color: Colors.white.withAlpha(128),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-                VerticalDivider(color: Colors.white.withAlpha(26), width: 1, indent: 10, endIndent: 10),
-                Expanded(
-                  child: TextButton(
-                    onPressed: () {
+                return NotificationCard(
+                  disease: alert['disease']!,
+                  severity: alert['severity']!,
+                  date: alert['date']!,
+                  sector: alert['sector']!,
+                  onIgnore: () async {
+                    await controller.dismissAlert(index);
+                  },
+                  onRescan: () async {
+                    await controller.rescanAlert(index);
+
+                    if (context.mounted) {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ScannerScreen()),
-                      );
-                    },
-                    style: TextButton.styleFrom(padding: const EdgeInsets.all(16)),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.qr_code_scanner, color: Colors.white, size: 16),
-                        SizedBox(width: 8),
-                        Text(
-                          "RE-SCAN",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
+                        MaterialPageRoute(
+                          builder: (_) => const ScannerScreen(),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                      );
+                    }
+                  },
+                );
+              },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSeverityBadge(String severity) {
-    Color color;
-    switch (severity.toLowerCase()) {
-      case 'high':
-        color = Colors.redAccent;
-        break;
-      case 'moderate':
-        color = Colors.orangeAccent;
-        break;
-      default:
-        color = Colors.lightBlueAccent;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withAlpha(51),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withAlpha(128)),
-      ),
-      child: Text(
-        severity.toUpperCase(),
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
     );
   }
 }

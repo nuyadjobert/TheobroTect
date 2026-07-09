@@ -133,12 +133,6 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: scaffoldBg,
         extendBody: true,
         resizeToAvoidBottomInset: false,
-        // drawer: Drawer(
-        //   backgroundColor: surfaceCard,
-        //   child: const Column(
-        //     children: [NavDrawerHeader(), NavFarmInfo()],
-        //   ),
-        // ),
         body: Stack(
           children: [
             PageView(
