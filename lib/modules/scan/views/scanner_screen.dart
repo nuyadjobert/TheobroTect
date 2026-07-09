@@ -21,27 +21,25 @@ class _ScannerScreenState extends State<ScannerScreen>
   static const double _frameWidth = 280;
   static const double _frameHeight = 440;
 
+  @override
+  void initState() {
+    super.initState();
 
-@override
-void initState() {
-  super.initState();
+    controller = ScannerController();
 
-  controller = ScannerController();
+    _initialize();
 
-  _initialize();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
 
-  _animationController = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 2),
-  )..repeat(reverse: true);
-}
+  Future<void> _initialize() async {
+    await controller.init();
 
-Future<void> _initialize() async {
-  await controller.init();
-
-  if (!mounted) return;
-
-}
+    if (!mounted) return;
+  }
 
   @override
   void dispose() {
@@ -50,23 +48,39 @@ Future<void> _initialize() async {
     super.dispose();
   }
 
- Future<void> _onCapture() async {
-  final results = await controller.captureAndAnalyze();
+  Future<void> _onCapture() async {
+    final results = await controller.captureAndAnalyze();
 
-  if (!mounted || results == null || results.isEmpty) return;
+    if (!mounted || results == null || results.isEmpty) return;
 
-  // Sort by confidence (IMPORTANT for UI clarity)
-  results.sort((a, b) => b.confidence.compareTo(a.confidence));
+    // Sort by confidence (IMPORTANT for UI clarity)
+    results.sort((a, b) => b.confidence.compareTo(a.confidence));
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ScanResultScreen(
-        results: results, // ✅ pass full list
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ScanResultScreen(
+          results: results, // ✅ pass full list
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Future<void> _onTapToFocus(TapDownDetails details) async {
+    final RenderBox box = context.findRenderObject() as RenderBox;
+
+    final Offset localPosition = box.globalToLocal(details.globalPosition);
+
+    final Size size = box.size;
+
+    final Offset point = Offset(
+      localPosition.dx / size.width,
+      localPosition.dy / size.height,
+    );
+
+    await controller.cameraController?.setFocusPoint(point);
+    await controller.cameraController?.setExposurePoint(point);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +113,25 @@ Future<void> _initialize() async {
                           .cameraController!.value.previewSize!.height,
                       height:
                           controller.cameraController!.value.previewSize!.width,
-                      child: CameraPreview(controller.cameraController!),
+                      child: GestureDetector(
+                        onTapDown: _onTapToFocus,
+                        child: ClipRect(
+                          child: OverflowBox(
+                            alignment: Alignment.center,
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width: controller.cameraController!.value
+                                    .previewSize!.height,
+                                height: controller
+                                    .cameraController!.value.previewSize!.width,
+                                child:
+                                    CameraPreview(controller.cameraController!),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -293,5 +325,3 @@ Future<void> _initialize() async {
     );
   }
 }
-
- 
