@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ScannerController extends ChangeNotifier {
-  
   CameraController? _camera;
   List<CameraDescription>? _cameras;
 
@@ -21,11 +20,15 @@ class ScannerController extends ChangeNotifier {
   bool get isAnalyzing => _isAnalyzing;
 
   bool get isReady =>
-      _isPermissionGranted && _camera != null && _camera!.value.isInitialized;
-
+      _isPermissionGranted &&
+      _camera != null &&
+      _camera!.value.isInitialized &&
+      CacaoModelService().isLoaded;
   Future<void> init() async {
-    await CacaoModelService().loadModel();
-    await _setupCamera();
+    await Future.wait([
+      CacaoModelService().loadModel(),
+      _setupCamera(),
+    ]);
   }
 
   Future<void> _setupCamera() async {
@@ -49,10 +52,7 @@ class ScannerController extends ChangeNotifier {
 
     _camera = CameraController(
       _cameras![0],
-      // ✅ ADJUSTMENT 2: Changed from high to medium. 
-      // Medium is typically 480p, which is perfect since we only need 224x224.
-      // This will make capture much faster and reduce memory overhead.
-      ResolutionPreset.high, 
+      ResolutionPreset.high,
       enableAudio: false,
     );
 
@@ -73,58 +73,85 @@ class ScannerController extends ChangeNotifier {
     notifyListeners();
   }
 
-Future<List<ScanResultModel>?> captureAndAnalyze() async {
-  if (!isReady) return null;
-  if (_isAnalyzing) return null;
+  Future<void> turnOffFlash() async {
+    if (_camera == null || !_isFlashOn) return;
 
-  HapticFeedback.heavyImpact();
-
-  _isAnalyzing = true;
-  notifyListeners();
-
-  try {
-    final XFile photo = await _camera!.takePicture();
-    final imagePath = photo.path;
-
-    // ✅ NOW RETURNS MULTIPLE PREDICTIONS
-    final predictions = await CacaoModelService().predict(imagePath);
-
-    if (predictions.isEmpty) return null;
-
-    // Convert ALL predictions into UI models
-    final results = predictions.map((pred) {
-      final parsed = _parseLabel(pred.label);
-
-      return ScanResultModel(
-        imagePath: imagePath,
-        diseaseName: _toDisplayName(parsed.diseaseKey),
-        confidence: pred.confidence,
-        severity: _capitalize(parsed.severityKey),
-      );
-    }).toList();
-
-    return results;
-  } catch (e) {
-    return null;
-  } finally {
-    _isAnalyzing = false;
+    await _camera!.setFlashMode(FlashMode.off);
+    _isFlashOn = false;
     notifyListeners();
   }
-}
 
-  // --- helpers ---
+  Future<List<ScanResultModel>?> captureAndAnalyze() async {
+    if (!isReady) {
+      debugPrint("===== Scanner Not Ready =====");
+      debugPrint("Permission : $_isPermissionGranted");
+      debugPrint("Camera     : ${_camera != null}");
+      debugPrint("Initialized: ${_camera?.value.isInitialized}");
+      debugPrint("Model      : ${CacaoModelService().isLoaded}");
+      debugPrint("=============================");
+      return null;
+    }
+    if (_isAnalyzing) return null;
 
-  _ParsedLabel _parseLabel(String label) {
-    if (label == 'healthy') {
-      return const _ParsedLabel(diseaseKey: 'healthy', severityKey: 'default');
+    HapticFeedback.heavyImpact();
+
+    _isAnalyzing = true;
+    notifyListeners();
+
+    try {
+      final XFile photo = await _camera!.takePicture();
+
+      await turnOffFlash();
+
+      final imagePath = photo.path;
+
+      debugPrint("\n📸 [SCANNER] Picture taken at: $imagePath");
+      debugPrint("🧠 [SCANNER] Sending to multi-task ML model...");
+
+      // Fetch predictions from the updated multi-task TFLite service
+      final predictions = await CacaoModelService().predict(imagePath);
+
+      if (predictions.isEmpty) {
+        debugPrint("⚠️ [SCANNER] No predictions returned from the model.");
+        return null;
+      }
+
+      // Convert ALL predictions into UI models AND log them
+      final results = predictions.map((pred) {
+        // If it's healthy or non-cacao, we don't really need a severity.
+        String finalSeverity =
+            (pred.diseaseLabel == 'healthy' || pred.diseaseLabel == 'non_cacao')
+                ? 'Default'
+                : _capitalize(pred.severityLabel);
+
+        // 🔍 DETAILED LOGGING FOR DEBUGGING
+        debugPrint("================= SCAN RESULT =================");
+        debugPrint(
+            "🧪 RAW DISEASE  : ${pred.diseaseLabel} (${(pred.diseaseConfidence * 100).toStringAsFixed(2)}%)");
+        debugPrint(
+            "🧪 RAW SEVERITY : ${pred.severityLabel} (${(pred.severityConfidence * 100).toStringAsFixed(2)}%)");
+        debugPrint("📱 UI DISEASE   : ${_toDisplayName(pred.diseaseLabel)}");
+        debugPrint("📱 UI SEVERITY  : $finalSeverity");
+        debugPrint("===============================================\n");
+
+        return ScanResultModel(
+          imagePath: imagePath,
+          diseaseName: _toDisplayName(pred.diseaseLabel),
+          confidence: pred.diseaseConfidence,
+          severity: finalSeverity,
+        );
+      }).toList();
+
+      return results;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint("❌ [SCANNER] Error during capture and analyze: $e");
+      }
+      return null;
+    } finally {
+      _isAnalyzing = false;
+      notifyListeners();
     }
-    if (label == 'non_cacao') {
-      return const _ParsedLabel(diseaseKey: 'non_cacao', severityKey: 'default');
-    }
-    final idx = label.lastIndexOf('_');
-    final diseaseKey = label.substring(0, idx);
-    final severityKey = label.substring(idx + 1);
-    return _ParsedLabel(diseaseKey: diseaseKey, severityKey: severityKey);
   }
 
   String _toDisplayName(String diseaseKey) {
@@ -149,13 +176,11 @@ Future<List<ScanResultModel>?> captureAndAnalyze() async {
 
   @override
   void dispose() {
+    if (_camera != null && _isFlashOn) {
+      _camera!.setFlashMode(FlashMode.off);
+    }
+
     _camera?.dispose();
     super.dispose();
   }
-}
-
-class _ParsedLabel {
-  final String diseaseKey;
-  final String severityKey;
-  const _ParsedLabel({required this.diseaseKey, required this.severityKey});
 }

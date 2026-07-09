@@ -32,17 +32,12 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
   void initState() {
     super.initState();
     final primary = widget.results[0];
-    final hasSecondary = widget.results.length > 1;
-    final secondary = hasSecondary ? widget.results[1] : null;
-
     controller = ScanResultController(
       imagePath: primary.imagePath,
       diseaseName: primary.diseaseName,
       confidence: primary.confidence,
       severity: primary.severity,
-      secondaryDiseaseName: secondary?.diseaseName,
-      secondaryConfidence: secondary?.confidence,
-      secondarySeverity: secondary?.severity,
+
     );
 
     saveController = SaveScanController();
@@ -262,10 +257,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
 
     // Fallback to raw names if localized strings are missing
     final primaryTitle = controller.displayName[lang] ?? controller.diseaseName;
-    final secondaryTitle = controller.secondaryDisplayName[lang] ??
-        controller.secondaryDiseaseName ??
-        "";
-
+  
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
       child: Column(
@@ -291,60 +283,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             confidence: controller.confidence,
           ),
 
-          if (controller.hasSecondaryDisease) ...[
-            // 👈 CHANGE THIS LINE
-            const SizedBox(height: 32),
-            _buildSectionHeader(
-              label: lang == "tl"
-                  ? "TALAANG PAGKAKAKILANLAN"
-                  : "SECONDARY DETECTION",
-              icon: Icons.layers_outlined,
-              color: Colors.blueGrey.shade700,
-            ),
-            const SizedBox(height: 8),
-
-            // Styled as a sub-card to visually sit lower in importance
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.blueGrey.shade100, width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(51), // 0.02 * 255 ≈ 51
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Stack(
-                  children: [
-                    // Subtle left border accent color
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: 6,
-                      child: Container(color: Colors.blueGrey.shade300),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 16, 22, 20),
-                      child: DiagnosisSection(
-                        diseaseName: secondaryTitle, // 👈 Fixed: Localized
-                        description:
-                            controller.secondaryDescription[lang] ?? "",
-                        severity: controller.secondarySeverity ?? "",
-                        confidence: controller.secondaryConfidence ?? 0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-
+  
           const SizedBox(height: 32),
           // --- METADATA & ACTIONS ---
           LocationStatusBanner(

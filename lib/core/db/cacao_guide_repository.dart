@@ -228,6 +228,23 @@ class CacaoGuideRepository {
     }).toList();
   }
 
+  /// Returns true if the "healthy" disease has at least one severity record.
+// Future<bool> healthyHasSeverity() async {
+//   final database = await _dbHelper.db;
+
+//   final result = Sqflite.firstIntValue(
+//     await database.rawQuery('''
+//       SELECT COUNT(*)
+//       FROM guide_disease_severities s
+//       INNER JOIN guide_diseases d
+//         ON s.disease_id = d.id
+//       WHERE d.disease_key = ?
+//     ''', ['healthy']),
+//   );
+
+//   return (result ?? 0) > 0;
+// }
+
   // ==========================================
   // 4. ML INTEGRATION: GET GUIDE BY PREDICTION
   // ==========================================

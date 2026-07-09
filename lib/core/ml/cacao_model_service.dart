@@ -3,7 +3,8 @@ import 'dart:math';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flutter/foundation.dart';
-import '../model/prediction.model.dart';
+
+import '../model/multitask.dart';
 
 enum ConfidenceLevel {
   low,
@@ -16,59 +17,55 @@ class CacaoModelService {
   factory CacaoModelService() => _instance;
   CacaoModelService._internal();
 
-  String getDiseaseFamily(String label) {
-    if (label.startsWith('mealybug')) {
-      return 'mealybug';
-    }
-
-    if (label.startsWith('cacao_pod_borer')) {
-      return 'cacao_pod_borer';
-    }
-
-    if (label.startsWith('black_pod_disease')) {
-      return 'black_pod_disease';
-    }
-
-    return label;
-  }
-
   Interpreter? _interpreter;
   bool _isLoaded = false;
 
-  static const List<String> labelsInOrder = [
-    "black_pod_disease_mild",
-    "black_pod_disease_moderate",
-    "black_pod_disease_severe",
-    "cacao_pod_borer_mild",
-    "cacao_pod_borer_moderate",
-    "cacao_pod_borer_severe",
+  // 1. Separate the labels to match the multi-task outputs
+  static const diseaseLabels = [
+    "black_pod_disease",
+    "cacao_pod_borer",
+    "mealybug",
     "healthy",
-    "mealybug_mild",
-    "mealybug_moderate",
-    "mealybug_severe",
     "non_cacao",
   ];
 
+  static const severityLabels = [
+    "none",
+    "mild",
+    "moderate",
+    "severe",
+  ];
+  bool get isLoaded => _isLoaded;
+
   Future<void> loadModel() async {
     if (_isLoaded) return;
-    _interpreter = await Interpreter.fromAsset(
-      // 'assets/models/mobilenetv3large_retrain_V7.tflite',
-      // 'assets/models/mobilenetv3large_retrain_V8.tflite',
-      'assets/models/mobilenetv3large_retrain_V9.tflite',
-      // 'assets/models/mobilenetv3large_modelv1.tflite',
-      // 'assets/models/mobilenetv3large_augmented_V8.tflite',
-      // 'assets/models/mobilenetv3large_retrain_V5_augmented.tflite',
-      options: InterpreterOptions()..threads = 2,
-    );
-    _isLoaded = true;
 
-    final inputTensor = _interpreter!.getInputTensor(0);
-    final outputTensor = _interpreter!.getOutputTensor(0);
-    debugPrint("Model loaded.");
-    debugPrint("  Input shape : ${inputTensor.shape}");
-    debugPrint("  Input type  : ${inputTensor.type}");
-    debugPrint("  Output shape: ${outputTensor.shape}");
-    debugPrint("  Output type : ${outputTensor.type}");
+    try {
+      debugPrint("Loading TFLite model...");
+
+      _interpreter = await Interpreter.fromAsset(
+        'assets/models/final_multitask_model1.2.tflite',
+        options: InterpreterOptions()..threads = Platform.numberOfProcessors,
+      );
+
+      _isLoaded = true;
+
+      for (int i = 0; i < _interpreter!.getOutputTensors().length; i++) {
+        final tensor = _interpreter!.getOutputTensor(i);
+
+        debugPrint("Output $i");
+        debugPrint("shape : ${tensor.shape}");
+        debugPrint("name  : ${tensor.name}");
+      }
+
+      debugPrint("✅ Model loaded successfully.");
+    } catch (e, s) {
+      debugPrint("❌ Failed to load model");
+      debugPrint(e.toString());
+      debugPrint(s.toString());
+
+      rethrow;
+    }
   }
 
   ConfidenceLevel getConfidenceLevel(double confidence) {
@@ -81,34 +78,7 @@ class CacaoModelService {
     }
   }
 
-  void logPrediction({
-    required String stage,
-    required String label,
-    required double confidence,
-  }) {
-    final percent = (confidence * 100).toStringAsFixed(2);
-    final level = getConfidenceLevel(confidence);
-
-    String status;
-
-    switch (level) {
-      case ConfidenceLevel.high:
-        status = "HIGH CONFIDENCE";
-        break;
-      case ConfidenceLevel.medium:
-        status = "MEDIUM (AMBIGUOUS)";
-        break;
-      case ConfidenceLevel.low:
-        status = "LOW CONFIDENCE";
-        break;
-    }
-
-    debugPrint(
-      "[$stage] => $label | $percent% | $status",
-    );
-  }
-
-  Future<List<ModelPrediction>> predict(String imagePath) async {
+  Future<List<MultiTaskPrediction>> predict(String imagePath) async {
     if (!_isLoaded || _interpreter == null) {
       throw StateError('Model not loaded. Call loadModel() first.');
     }
@@ -120,65 +90,11 @@ class CacaoModelService {
       throw Exception('Failed to decode image.');
     }
 
-    final crops = _createCrops(decoded);
-
-    // Full image prediction
-    final fullScores = _runInference(crops.first);
-    final singlePrediction = _findBestPrediction(fullScores);
-
-    debugPrint("========== INFERENCE START ==========");
-
-    logPrediction(
-      stage: "FULL IMAGE",
-      label: singlePrediction.label,
-      confidence: singlePrediction.confidence,
-    );
-
-    final level = getConfidenceLevel(
-      singlePrediction.confidence,
-    );
-
-    if (level == ConfidenceLevel.high) {
-      debugPrint(
-        "DECISION => HIGH CONFIDENCE, SKIP MULTI-CROP",
-      );
-
-      debugPrint(
-        "========== INFERENCE END ==========",
-      );
-
-      // return [singlePrediction];
-    }
-
-    if (level == ConfidenceLevel.medium) {
-      debugPrint(
-        "DECISION => MEDIUM CONFIDENCE",
-      );
-
-      debugPrint(
-        "ACTION => MULTI-CROP INFERENCE",
-      );
-    } else {
-      debugPrint(
-        "DECISION => LOW CONFIDENCE",
-      );
-
-      debugPrint(
-        "ACTION => MULTI-CROP INFERENCE",
-      );
-    }
-
-    return _runMultiCropInference(crops);
-  }
-
-  List<img.Image> _createCrops(img.Image decoded) {
     final int shortSide = min(decoded.width, decoded.height);
-
     final int offsetX = (decoded.width - shortSide) ~/ 2;
-
     final int offsetY = (decoded.height - shortSide) ~/ 2;
 
-    final img.Image fullCrop = img.copyCrop(
+    final squareImage = img.copyCrop(
       decoded,
       x: offsetX,
       y: offsetY,
@@ -186,201 +102,86 @@ class CacaoModelService {
       height: shortSide,
     );
 
-    final img.Image centerCrop = img.copyCrop(
-      fullCrop,
-      x: shortSide ~/ 4,
-      y: shortSide ~/ 4,
-      width: shortSide ~/ 2,
-      height: shortSide ~/ 2,
+    // 2. Get the two score arrays from inference
+    final results = _runInference(squareImage);
+    final diseaseScores = results['disease']!;
+    final severityScores = results['severity']!;
+    debugPrint("Disease scores : ${results['disease']}");
+    debugPrint("Severity scores: ${results['severity']}");
+    // 3. Find the highest confidence for disease
+    int bestDiseaseIdx = 0;
+    double maxDiseaseConf = 0.0;
+    for (int i = 0; i < diseaseScores.length; i++) {
+      if (diseaseScores[i] > maxDiseaseConf) {
+        maxDiseaseConf = diseaseScores[i];
+        bestDiseaseIdx = i;
+      }
+    }
+
+    int bestSeverityIdx = 0;
+    double maxSeverityConf = 0.0;
+    for (int i = 0; i < severityScores.length; i++) {
+      if (severityScores[i] > maxSeverityConf) {
+        maxSeverityConf = severityScores[i];
+        bestSeverityIdx = i;
+      }
+    }
+
+    final prediction = MultiTaskPrediction(
+      diseaseLabel: diseaseLabels[bestDiseaseIdx],
+      severityLabel: severityLabels[bestSeverityIdx],
+      diseaseConfidence: maxDiseaseConf,
+      severityConfidence: maxSeverityConf,
     );
 
-    final img.Image leftCrop = img.copyCrop(
-      fullCrop,
-      x: 0,
-      y: 0,
-      width: shortSide ~/ 2,
-      height: shortSide,
-    );
+    debugPrint(
+        "PREDICTION: ${prediction.diseaseLabel} (${(maxDiseaseConf * 100).toStringAsFixed(1)}%) | ${prediction.severityLabel} (${(maxSeverityConf * 100).toStringAsFixed(1)}%)");
 
-    final img.Image rightCrop = img.copyCrop(
-      fullCrop,
-      x: shortSide ~/ 2,
-      y: 0,
-      width: shortSide ~/ 2,
-      height: shortSide,
-    );
-
-    return [
-      fullCrop,
-      centerCrop,
-      leftCrop,
-      rightCrop,
-    ];
+    return [prediction];
   }
 
-  List<double> _runInference(img.Image image) {
+  Map<String, List<double>> _runInference(img.Image image) {
     final inputTensor = _interpreter!.getInputTensor(0);
-    final shape = inputTensor.shape;
+    final shape = inputTensor.shape; 
 
     final int h = shape[1];
     final int w = shape[2];
 
-    final resized = img.copyResize(
-      image,
-      width: w,
-      height: h,
-    );
+    final resized = img.copyResize(image, width: w, height: h);
 
-    final input = List.generate(
-      1,
-      (_) => List.generate(
+    // Build the 4D input array
+    final input = [
+      List.generate(
         h,
         (y) => List.generate(w, (x) {
           final pixel = resized.getPixel(x, y);
-
           return [
             pixel.r.toDouble(),
             pixel.g.toDouble(),
             pixel.b.toDouble(),
           ];
         }),
-      ),
-    );
-
-    final output = [
-      List.filled(labelsInOrder.length, 0.0),
+      )
     ];
 
-    _interpreter!.run(input, output);
+    int out0Length = _interpreter!.getOutputTensor(0).shape[1];
 
-    debugPrint("RAW OUTPUT: ${output[0]}");
+    int diseaseTensorIndex = (out0Length == diseaseLabels.length) ? 0 : 1;
+    int severityTensorIndex = (diseaseTensorIndex == 0) ? 1 : 0;
 
-    return List<double>.from(output[0]);
-  }
+    final diseaseOutput = [List.filled(diseaseLabels.length, 0.0)];
+    final severityOutput = [List.filled(severityLabels.length, 0.0)];
 
-  List<ModelPrediction> _findPrimaryAndSecondaryDisease(
-    List<ModelPrediction> cropPredictions,
-  ) {
-    final Map<String, ModelPrediction> strongestPerDisease = {};
+    Map<int, Object> outputs = {
+      diseaseTensorIndex: diseaseOutput,
+      severityTensorIndex: severityOutput,
+    };
 
-    for (final prediction in cropPredictions) {
-      final family = getDiseaseFamily(
-        prediction.label,
-      );
+    _interpreter!.runForMultipleInputs([input], outputs);
 
-      final existing = strongestPerDisease[family];
-
-      if (existing == null || prediction.confidence > existing.confidence) {
-        strongestPerDisease[family] = prediction;
-      }
-    }
-
-    final diseases = strongestPerDisease.values.toList();
-
-    diseases.sort(
-      (a, b) => b.confidence.compareTo(
-        a.confidence,
-      ),
-    );
-
-    final primary = diseases.first;
-
-    ModelPrediction? secondary;
-
-    if (diseases.length > 1) {
-      secondary = diseases[1];
-    }
-
-    debugPrint("");
-    debugPrint(
-      "===== FINAL DECISION =====",
-    );
-
-    debugPrint(
-      "PRIMARY DISEASE => "
-      "${primary.label} "
-      "${(primary.confidence * 100).toStringAsFixed(2)}%",
-    );
-
-    if (secondary != null) {
-      debugPrint(
-        "SECONDARY DISEASE => "
-        "${secondary.label} "
-        "${(secondary.confidence * 100).toStringAsFixed(2)}%",
-      );
-    }
-
-    debugPrint(
-      "========== INFERENCE END ==========",
-    );
-
-    return secondary == null ? [primary] : [primary, secondary];
-  }
-
-  Future<List<ModelPrediction>> _runMultiCropInference(
-    List<img.Image> crops,
-  ) async {
-    final cropNames = [
-      'FULL CROP',
-      'CENTER CROP',
-      'LEFT CROP',
-      'RIGHT CROP',
-    ];
-
-    final cropPredictions = <ModelPrediction>[];
-
-    for (int i = 0; i < crops.length; i++) {
-      final scores = _runInference(crops[i]);
-
-      // 1. Find the absolute winner for this crop
-      final primaryPrediction = _findBestPrediction(scores);
-      cropPredictions.add(primaryPrediction);
-
-      // 2. 👉 NEW: Also find the runner-up for this crop if it has decent confidence
-      final sortedIndices = List.generate(scores.length, (idx) => idx)
-        ..sort((a, b) => scores[b].compareTo(scores[a]));
-
-      int runnerUpIdx = sortedIndices[1];
-      double runnerUpScore = scores[runnerUpIdx];
-
-      // If the second-highest disease has a confidence over 15%, count it!
-      if (runnerUpScore > 0.15) {
-        cropPredictions.add(ModelPrediction(
-          label: labelsInOrder[runnerUpIdx],
-          confidence: runnerUpScore,
-          index: runnerUpIdx,
-        ));
-      }
-
-      logPrediction(
-        stage: cropNames[i],
-        label: primaryPrediction.label,
-        confidence: primaryPrediction.confidence,
-      );
-    }
-
-    return _findPrimaryAndSecondaryDisease(
-      cropPredictions,
-    );
-  }
-
-  ModelPrediction _findBestPrediction(
-    List<double> scores,
-  ) {
-    int bestIdx = 0;
-    double bestScore = scores[0];
-
-    for (int i = 1; i < scores.length; i++) {
-      if (scores[i] > bestScore) {
-        bestScore = scores[i];
-        bestIdx = i;
-      }
-    }
-
-    return ModelPrediction(
-      label: labelsInOrder[bestIdx],
-      confidence: bestScore,
-      index: bestIdx,
-    );
+    return {
+      'disease': List<double>.from((outputs[diseaseTensorIndex] as List)[0]),
+      'severity': List<double>.from((outputs[severityTensorIndex] as List)[0]),
+    };
   }
 }
