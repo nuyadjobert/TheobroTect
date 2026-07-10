@@ -53,7 +53,7 @@ class QueueSyncService {
   Future<bool> _syncUser(SyncQueue job) async {
     try {
       await dio.put(
-        "/api/profile",
+        "/api/theobrotect/users/${job.recordId}",
         data: job.payload,
       );
 
