@@ -1,14 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../widgets/help_center_screen.dart';
-import '../widgets/about_screen.dart';
 import 'package:cacao_apps/modules/auth/login_factory.dart';
 import '../controllers/settings_controller.dart';
-import '../../../theme/theme_controller.dart';
+import '../../history/controllers/history_controller.dart';
 import '../../../theme/app_theme.dart';
-import '../widgets/profile_screen.dart';
 import '../../../core/model/user.model.dart';
+import '../widgets/profile_hero_card.dart';
+import '../widgets/stats_row.dart';
+import '../widgets/settings_section_label.dart';
+import '../widgets/account_settings.dart';
+import '../widgets/support_settings.dart';
+import '../widgets/logout_button.dart';
+import '../widgets/profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -19,14 +23,20 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final SettingsController _controller = SettingsController();
+  final HistoryController _historyController = HistoryController();
   LocalUser? currentUser;
 
   File? _profileImage;
+
+  int _overallScans = 0;
+  String _farmStatus = "Loading...";
+  int _diseasesScanned = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _loadFarmStats();
   }
 
   Future<void> _loadUser() async {
@@ -34,12 +44,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {});
   }
 
-  void _navigateToProfile() {
-    Navigator.push(
+  Future<void> _loadFarmStats() async {
+    final stats = await _historyController.getFarmStats();
+    if (!mounted) return;
+    setState(() {
+      _overallScans = stats['overallScans'];
+      _farmStatus = stats['farmStatus'];
+      _diseasesScanned = stats['diseasesScanned'];
+    });
+  }
+
+  // --- NAVIGATION ---
+  // Push Profile, then refresh the user once we're back — otherwise the
+  // hero card keeps showing stale data until this screen is torn down
+  // and rebuilt from scratch (e.g. by switching bottom-nav tabs).
+  Future<void> _navigateToProfile() async {
+    await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const UserProfileScreen()),
+      MaterialPageRoute(builder: (_) => const UserProfileScreen()),
     );
-    debugPrint("Navigating to User Profile details...");
+    if (!mounted) return;
+    _loadUser();
+  }
+
+  // --- LOGOUT ---
+  // Business logic only. The confirmation dialog itself lives in
+  // LogoutButton; this is what runs once the user has confirmed.
+  Future<void> _handleLogoutConfirmed() async {
+    await _controller.logout();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => buildLoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -47,17 +84,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final Color bg = isDark ? AppColors.nightBg : AppColors.creamBg;
+    final Color appBarBg = isDark ? AppColors.nightBg : Colors.white;
     final Color cardBg = isDark ? AppColors.nightCard : AppColors.creamCard;
     final Color textPrimary = isDark ? Colors.white : AppColors.forestDark;
     final Color textSecondary = isDark ? Colors.white60 : Colors.grey;
+    final Color textMuted = isDark ? Colors.white38 : Colors.grey[500]!;
     final Color divider =
         isDark ? AppColors.nightDivider : Colors.grey.shade200;
-    final Color accentColor =
-        isDark ? const Color(0xFF74C69D) : const Color(0xFF2D6A4F);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
+        // Dark icons on light app bar, light icons on dark app bar
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         systemNavigationBarColor: bg,
@@ -67,7 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Scaffold(
         backgroundColor: bg,
         appBar: AppBar(
-          backgroundColor: accentColor, // Transparent background
+          backgroundColor: appBarBg,
           systemOverlayStyle:
               isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
           elevation: 0,
@@ -81,265 +119,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ),
-        body: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 12),
-              _buildProfileHeader(textPrimary, textSecondary, bg),
-              const SizedBox(height: 32),
-              _buildSettingsCard(
-                  cardBg, textPrimary, textSecondary, divider, isDark),
-              const SizedBox(height: 28),
-              _buildLogoutRow(cardBg, textPrimary, textSecondary),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // --- ENHANCED PROFILE HEADER ---
-
-  Widget _buildProfileHeader(Color textPrimary, Color textSecondary, Color bg) {
-    return Column(
-      children: [
-        Stack(
+        body: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(3),
-              child: CircleAvatar(
-                radius: 46, // Slighly enlarged for visual focus
-                backgroundColor: AppColors.forestMid.withAlpha(38),
-                backgroundImage:
-                    _profileImage != null ? FileImage(_profileImage!) : null,
-                child: _profileImage == null
-                    ? Icon(Icons.person_rounded,
-                        color: textPrimary.withAlpha(180), size: 48)
-                    : null,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Text(
-          currentUser?.name ?? "Loading...",
-          style: TextStyle(
-            color: textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          currentUser?.address ?? "",
-          style: TextStyle(
-            color: textSecondary,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSettingsCard(
-    Color cardBg,
-    Color textPrimary,
-    Color textSecondary,
-    Color divider,
-    bool isDark,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      // ClipRRect added to ensure InkWell splash doesn't bleed out of the container corners
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          children: [
-            // 🔄 NEW: My Profile Entry Option Replacement
-            _buildRow(
-              icon: Icons.person_outline_rounded,
-              title: "My Profile",
-              textPrimary: textPrimary,
-              onTap: _navigateToProfile,
-              trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
-            ),
-            _buildDivider(divider),
-
-            // System Dark Mode Toggle
-            ValueListenableBuilder<ThemeMode>(
-              valueListenable: ThemeController.instance.mode,
-              builder: (context, mode, _) {
-                final isDarkNow = mode == ThemeMode.dark;
-                return _buildRow(
-                  icon: Icons.dark_mode_outlined,
-                  title: "Dark Mode",
-                  textPrimary: textPrimary,
-                  onTap: () => ThemeController.instance.setDarkMode(!isDarkNow),
-                  trailing: Switch.adaptive(
-                    value: isDarkNow,
-                    onChanged: (v) => ThemeController.instance.setDarkMode(v),
-                    activeThumbColor: Colors.white,
-                    activeTrackColor: AppColors.forestMid,
+            // --- PINNED SECTION: profile hero card + stats row ---
+            // This stays fixed in place; it does NOT scroll with the list below.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Column(
+                children: [
+                  ProfileHeroCard(
+                    cardBg: cardBg,
+                    textPrimary: textPrimary,
+                    textSecondary: textSecondary,
+                    currentUser: currentUser,
+                    profileImage: _profileImage,
                   ),
-                );
-              },
-            ),
-            _buildDivider(divider),
-
-            // Help Center Entry
-            _buildRow(
-              icon: Icons.help_outline_rounded,
-              title: "Help Center",
-              textPrimary: textPrimary,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const HelpCenterScreen()),
-              ),
-              trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
-            ),
-            _buildDivider(divider),
-
-            // About Entry
-            _buildRow(
-              icon: Icons.info_outline_rounded,
-              title: "About TheobroTect",
-              textPrimary: textPrimary,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AboutScreen()),
-              ),
-              trailing: Icon(Icons.chevron_right_rounded, color: textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDivider(Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 68),
-      child: Divider(height: 1, thickness: 0.6, color: color),
-    );
-  }
-
-  Widget _buildRow({
-    required IconData icon,
-    required String title,
-    required Color textPrimary,
-    required VoidCallback onTap,
-    required Widget trailing,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.forestMid.withAlpha(30),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: AppColors.forestMid, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                    color: textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15.5),
-              ),
-            ),
-            trailing,
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- LOGOUT ROW ---
-
-  Widget _buildLogoutRow(Color cardBg, Color textPrimary, Color textSecondary) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: () async {
-            final confirm = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                backgroundColor: cardBg,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                title: Text("Logout",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: textPrimary)),
-                content: Text(
-                  "Are you sure you want to logout?",
-                  style: TextStyle(color: textSecondary),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text("Cancel",
-                        style: TextStyle(
-                            color: textSecondary, fontWeight: FontWeight.w500)),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text("Logout",
-                        style: TextStyle(
-                            color: Colors.redAccent,
-                            fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  StatsRow(
+                    cardBg: cardBg,
+                    textPrimary: textPrimary,
+                    textMuted: textMuted,
+                    overallScans: _overallScans,
+                    farmStatus: _farmStatus,
+                    diseasesScanned: _diseasesScanned,
                   ),
                 ],
               ),
-            );
-
-            if (confirm != true) return;
-
-            await _controller.logout();
-            if (!mounted) return;
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => buildLoginScreen()),
-              (route) => false,
-            );
-          },
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-            child: Row(
-              children: [
-                Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
-                SizedBox(width: 14),
-                Text(
-                  "Logout Account",
-                  style: TextStyle(
-                      color: Colors.redAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15.5),
-                ),
-              ],
             ),
-          ),
+
+            // --- SCROLLABLE SECTION: Account, Support, Logout ---
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                // Extra bottom padding (120) clears the parent HomeScreen's
+                // BottomAppBar, since HomeScreen uses extendBody: true and
+                // this screen's content would otherwise be obscured by it.
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SettingsSectionLabel(label: "Account", textMuted: textMuted),
+                    const SizedBox(height: 8),
+                    AccountSettingsCard(
+                      cardBg: cardBg,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      dividerColor: divider,
+                      onProfileTap: _navigateToProfile,
+                    ),
+                    const SizedBox(height: 24),
+                    SettingsSectionLabel(label: "Support", textMuted: textMuted),
+                    const SizedBox(height: 8),
+                    SupportSettingsCard(
+                      cardBg: cardBg,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      dividerColor: divider,
+                    ),
+                    const SizedBox(height: 24),
+                    LogoutButton(
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      onConfirmed: _handleLogoutConfirmed,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../controllers/profile_controller.dart';
 import '../../../core/widgets/toast.dart';
+import '../../../theme/app_theme.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -69,6 +70,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       _isSaving = true;
     });
 
+    // Let the user know a save is underway.
+    TopToast.show(context, "Saving changes...");
+
     try {
       await controller.updateProfile(
         name: _nameController.text.trim() != (currentUser.name ?? "")
@@ -102,76 +106,41 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Theming fallbacks matching your Settings design
-    final Color bg = isDark ? const Color(0xFF121212) : const Color(0xFFF5FAF3);
-    final Color cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final Color textPrimary = isDark ? Colors.white : const Color(0xFF1B3022);
+    // Theming aligned with the Settings screen's palette.
+    final Color bg = isDark ? AppColors.nightBg : AppColors.creamBg;
+    final Color appBarBg = isDark ? AppColors.nightBg : Colors.white;
+    final Color cardBg = isDark ? AppColors.nightCard : AppColors.creamCard;
+    final Color textPrimary = isDark ? Colors.white : AppColors.forestDark;
     final Color textSecondary = isDark ? Colors.white60 : Colors.grey;
     final Color accentColor =
-        isDark ? const Color(0xFF74C69D) : const Color(0xFF2D6A4F);
+        isDark ? AppColors.forestLight : AppColors.forestMid;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         systemNavigationBarColor: bg,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
       ),
       child: Scaffold(
         backgroundColor: bg,
         appBar: AppBar(
-          backgroundColor: accentColor,
+          backgroundColor: appBarBg,
+          systemOverlayStyle:
+              isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
           elevation: 0,
           centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text(
+          iconTheme: IconThemeData(color: textPrimary),
+          title: Text(
             "My Profile",
             style: TextStyle(
-              color: Colors.white,
+              color: textPrimary,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.5,
             ),
           ),
-          actions: [
-            GestureDetector(
-              onTap: _toggleEditMode,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOut,
-                margin: const EdgeInsets.only(right: 16),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: _isEditing
-                      ? Colors.redAccent.withAlpha(60)
-                      : Colors.white.withAlpha(40),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: _isEditing ? Colors.redAccent : Colors.white,
-                    width: 1.2,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _isEditing ? Icons.close_rounded : Icons.edit_rounded,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _isEditing ? "Cancel" : "Edit",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -220,6 +189,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       accentColor: accentColor,
+                      showEditToggle: true,
                     ),
                     const SizedBox(height: 20),
 
@@ -245,6 +215,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       textSecondary: textSecondary,
                       accentColor: accentColor,
                       keyboardType: TextInputType.phone,
+                      showEditToggle: true,
                     ),
                     const SizedBox(height: 20),
 
@@ -257,6 +228,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       textSecondary: textSecondary,
                       accentColor: accentColor,
                       maxLines: 2,
+                      showEditToggle: true,
                     ),
                   ],
                 ),
@@ -341,6 +313,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     required Color textSecondary,
     required Color accentColor,
     bool isLocked = false,
+    bool showEditToggle = false,
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
   }) {
@@ -361,7 +334,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
-          enabled: isEditable,
+          enabled: true,
+          readOnly: !isEditable,
           maxLines: maxLines,
           keyboardType: keyboardType,
           style: TextStyle(
@@ -376,7 +350,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             suffixIcon: isLocked
                 ? Icon(Icons.lock_outline_rounded,
                     color: textSecondary.withAlpha(128), size: 18)
-                : null,
+                : showEditToggle
+                    ? IconButton(
+                        onPressed: _toggleEditMode,
+                        icon: Icon(
+                          isEditable
+                              ? Icons.close_rounded
+                              : Icons.edit_rounded,
+                          color:
+                              isEditable ? Colors.redAccent : accentColor,
+                          size: 18,
+                        ),
+                      )
+                    : null,
             filled: true,
             fillColor:
                 isEditable ? Colors.transparent : textSecondary.withAlpha(128),

@@ -13,9 +13,9 @@ import '../../learn/views/learn_hub_screen.dart';
 import '../../history/views/history_screen.dart';
 import '../../notifications/views/notification_screen.dart';
 import '../../scan/views/scanner_screen.dart';
-import '../../introduction/widgets/loading_screen.dart';
+import '../../components/loading-state/loading_screen.dart';
 import '../Controller/home_controller.dart';
-import '../../components/skeletons/skeleton_loading.dart';
+import '../../components/skeletons-state/skeleton_loading.dart';
 import '../../../theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
