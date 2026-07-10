@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import 'home_skeleton.dart';
+import 'package:flutter/material.dart';
 import 'history_skeleton.dart';
 import 'learn_skeleton.dart';
 import 'settings_skeleton.dart';
+import 'home_skeleton.dart';
 
 class SkeletonLayout extends StatelessWidget {
   final int pageIndex;

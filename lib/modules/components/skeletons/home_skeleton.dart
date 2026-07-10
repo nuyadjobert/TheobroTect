@@ -13,53 +13,53 @@ class HomeSkeleton extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 50,
+                height: 50,
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 15),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(width: 100, height: 12, color: Colors.white),
                   const SizedBox(height: 8),
-                  Container(width: 140, height: 20, color: Colors.white),
+                  Container(width: 160, height: 20, color: Colors.white),
                 ],
-              )
+              ),
             ],
           ),
-          const SizedBox(height: 25),
+          const SizedBox(height: 30),
           Container(
             width: double.infinity,
-            height: 60,
+            height: 140,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
             ),
-          ), // Weather card
+          ),
           const SizedBox(height: 20),
           Container(
             width: double.infinity,
             height: 180,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(20),
             ),
-          ), // Disease Slider
+          ),
           const SizedBox(height: 30),
-          Container(width: 150, height: 20, color: Colors.white), // Quick Inspection Text
+          Container(width: 150, height: 20, color: Colors.white),
           const SizedBox(height: 15),
           Container(
             width: double.infinity,
-            height: 150,
+            height: 100,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(15),
             ),
-          ), // Scanner Card
+          ),
         ],
       ),
     );

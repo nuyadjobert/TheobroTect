@@ -15,7 +15,7 @@ import '../../notifications/views/notification_screen.dart';
 import '../../scan/views/scanner_screen.dart';
 import '../../introduction/widgets/loading_screen.dart';
 import '../Controller/home_controller.dart';
-import '../views/skeleton_loading.dart';
+import '../../components/skeletons/skeleton_loading.dart';
 import '../../../theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
