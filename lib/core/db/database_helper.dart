@@ -44,6 +44,7 @@ class DatabaseHelper {
     await db.execute(DbSchemas.createGuideSeveritiesTable);
     await db.execute(DbSchemas.createGuideMonitoringPlansTable);
     await db.execute(DbSchemas.createGuideRecommendationsTable);
+    await db.execute(DbSchemas.createSyncTable);
     for (String query in DbSchemas.createGuideIndexes) {
       await db.execute(query);
     }

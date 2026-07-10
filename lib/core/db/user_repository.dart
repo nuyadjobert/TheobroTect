@@ -27,4 +27,36 @@ class UserRepository {
     final database = await _dbHelper.db;
     await database.delete('users');
   }
+
+  Future<void> updateUser({
+    required String userId,
+    String? name,
+    String? address,
+    String? contactNumber,
+  }) async {
+    final database = await _dbHelper.db;
+
+    final Map<String, Object?> updates = {};
+
+    if (name != null) {
+      updates['name'] = name;
+    }
+
+    if (address != null) {
+      updates['address'] = address;
+    }
+
+    if (contactNumber != null) {
+      updates['contact_number'] = contactNumber;
+    }
+
+    if (updates.isEmpty) return;
+
+    await database.update(
+      'users',
+      updates,
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
 }

@@ -98,4 +98,16 @@ class DbSchemas {
     'CREATE INDEX IF NOT EXISTS idx_guide_severity_disease ON guide_disease_severities(disease_id);',
     'CREATE INDEX IF NOT EXISTS idx_guide_rec_severity ON guide_recommendations(disease_severity_id);',
   ];
+
+  static const String createSyncTable = '''
+    CREATE TABLE sync_queue (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      table_name TEXT NOT NULL,
+      record_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      status INTEGER DEFAULT 0,
+      retry_count INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL
+      );''';
 }
