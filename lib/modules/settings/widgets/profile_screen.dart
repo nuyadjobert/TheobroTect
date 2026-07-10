@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../controllers/profile_controller.dart';
+import '../../../core/widgets/toast.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -13,11 +14,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isEditing = false;
   late final UserProfileController controller;
 
-  // Form Controllers
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _contactController;
   late TextEditingController _addressController;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -60,22 +61,41 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     setState(() {});
   }
 
-  void _saveChanges() {
-    debugPrint("Saving Name: ${_nameController.text}");
-    debugPrint("Saving Contact: ${_contactController.text}");
-    debugPrint("Saving Address: ${_addressController.text}");
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Profile updated successfully!"),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.green,
-      ),
-    );
+  Future<void> _saveChanges() async {
+    final currentUser = controller.user;
+    if (currentUser == null) return;
 
     setState(() {
-      _isEditing = false;
+      _isSaving = true;
     });
+
+    try {
+      await controller.updateProfile(
+        name: _nameController.text.trim() != (currentUser.name ?? "")
+            ? _nameController.text.trim()
+            : null,
+        address: _addressController.text.trim() != (currentUser.address)
+            ? _addressController.text.trim()
+            : null,
+        contactNumber:
+            _contactController.text.trim() != (currentUser.contactNumber)
+                ? _contactController.text.trim()
+                : null,
+      );
+
+      if (!mounted) return;
+      TopToast.show(context, "Profile updated successfully!");
+
+      setState(() {
+        _isEditing = false;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 
   @override
@@ -83,7 +103,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Theming fallbacks matching your Settings design
-    final Color bg = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
+    final Color bg = isDark ? const Color(0xFF121212) : const Color(0xFFF5FAF3);
     final Color cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final Color textPrimary = isDark ? Colors.white : const Color(0xFF1B3022);
     final Color textSecondary = isDark ? Colors.white60 : Colors.grey;
@@ -99,28 +119,58 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       child: Scaffold(
         backgroundColor: bg,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: accentColor,
           elevation: 0,
           centerTitle: true,
-          iconTheme: IconThemeData(color: textPrimary),
-          title: Text(
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: const Text(
             "My Profile",
             style: TextStyle(
-              color: textPrimary,
+              color: Colors.white,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.5,
             ),
           ),
           actions: [
-            IconButton(
-              icon: Icon(
-                _isEditing ? Icons.close_rounded : Icons.edit_rounded,
-                color: _isEditing ? Colors.redAccent : accentColor,
+            GestureDetector(
+              onTap: _toggleEditMode,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOut,
+                margin: const EdgeInsets.only(right: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _isEditing
+                      ? Colors.redAccent.withAlpha(60)
+                      : Colors.white.withAlpha(40),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: _isEditing ? Colors.redAccent : Colors.white,
+                    width: 1.2,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isEditing ? Icons.close_rounded : Icons.edit_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _isEditing ? "Cancel" : "Edit",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              onPressed: _toggleEditMode,
-              tooltip: _isEditing ? "Cancel Editing" : "Edit Profile",
             ),
-            const SizedBox(width: 8),
           ],
         ),
         body: SingleChildScrollView(
@@ -223,7 +273,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: _saveChanges,
+                          onPressed: _isSaving ? null : _saveChanges,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: accentColor,
                             foregroundColor: Colors.white,
@@ -232,12 +282,43 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text(
-                            "Save Changes",
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                                    opacity: animation, child: child),
+                            child: _isSaving
+                                ? const Row(
+                                    key: ValueKey("saving"),
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        "Saving...",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : const Text(
+                                    "Save Changes",
+                                    key: ValueKey("idle"),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
                           ),
                         ),
                       )

@@ -1,11 +1,12 @@
-
 import 'package:flutter/material.dart';
 import 'package:cacao_apps/core/db/user_repository.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/model/user.model.dart';
+import '../../../core/db/sync_queue_reporitory.dart';
 
 class UserProfileController extends ChangeNotifier {
   final UserRepository _repository = UserRepository();
+  final syncQueueRepository = SyncQueueRepository();
 
   LocalUser? user;
   bool isLoading = true;
@@ -20,21 +21,42 @@ class UserProfileController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Future<void> saveProfile({
-  //   required String name,
-  //   required String contact,
-  //   required String address,
-  // }) async {
-  //   if (user == null) return;
+  Future<void> updateProfile({
+    String? name,
+    String? address,
+    String? contactNumber,
+  }) async {
+    if (user == null) return;
 
-  //   user = user!.copyWith(
-  //     fullName: name,
-  //     contactNumber: contact,
-  //     address: address,
-  //   );
+    // Update the database
+    await _repository.updateUser(
+      userId: user!.userId,
+      name: name,
+      address: address,
+      contactNumber: contactNumber,
+    );
 
-    // await _repository.updateUser(user!);
+    // Update the local object
+    user = LocalUser(
+      userId: user!.userId,
+      email: user!.email,
+      createdAt: user!.createdAt,
+      name: name ?? user!.name,
+      address: address ?? user!.address,
+      contactNumber: contactNumber ?? user!.contactNumber,
+    );
 
-    // notifyListeners();
-  // }
+    await syncQueueRepository.add(
+      tableName: 'users',
+      recordId: user!.userId,
+      action: 'update',
+      payload: {
+        'name': name,
+        'address': address,
+        'contact_number': contactNumber,
+      },
+    );
+
+    notifyListeners();
+  }
 }

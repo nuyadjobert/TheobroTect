@@ -52,6 +52,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final Color textSecondary = isDark ? Colors.white60 : Colors.grey;
     final Color divider =
         isDark ? AppColors.nightDivider : Colors.grey.shade200;
+    final Color accentColor =
+        isDark ? const Color(0xFF74C69D) : const Color(0xFF2D6A4F);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -65,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Scaffold(
         backgroundColor: bg,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: accentColor, // Transparent background
           systemOverlayStyle:
               isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
           elevation: 0,

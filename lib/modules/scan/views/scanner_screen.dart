@@ -53,14 +53,13 @@ class _ScannerScreenState extends State<ScannerScreen>
 
     if (!mounted || results == null || results.isEmpty) return;
 
-    // Sort by confidence (IMPORTANT for UI clarity)
     results.sort((a, b) => b.confidence.compareTo(a.confidence));
 
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ScanResultScreen(
-          results: results, // ✅ pass full list
+          results: results,
         ),
       ),
     );
