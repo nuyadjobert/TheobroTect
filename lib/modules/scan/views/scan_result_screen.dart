@@ -255,7 +255,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
       );
     }
 
-    // Fallback to raw names if localized strings are missing
     final primaryTitle = controller.displayName[lang] ?? controller.diseaseName;
   
     return SingleChildScrollView(
@@ -268,7 +267,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
           ),
           const SizedBox(height: 16),
 
-          // ─── PRIMARY DIAGNOSIS SECTION ───
           _buildSectionHeader(
             label: lang == "tl" ? "PANGUNAHING SURI" : "PRIMARY DIAGNOSIS",
             icon: Icons.gpp_maybe_rounded,
@@ -277,7 +275,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
           const SizedBox(height: 8),
           DiagnosisSection(
             diseaseName:
-                primaryTitle, // 👈 Fixed: Using localized display name map
+                primaryTitle,
             description: controller.description[lang] ?? "",
             severity: controller.severity,
             confidence: controller.confidence,
@@ -285,7 +283,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
 
   
           const SizedBox(height: 32),
-          // --- METADATA & ACTIONS ---
           LocationStatusBanner(
             locationPicker: saveController.locationPicker,
             onTap: _showLocationPicker,
@@ -298,7 +295,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
     );
   }
 
-// Helper utility widget to keep body code exceptionally clean
   Widget _buildSectionHeader(
       {required String label, required IconData icon, required Color color}) {
     return Row(

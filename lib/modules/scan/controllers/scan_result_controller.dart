@@ -51,6 +51,8 @@ class ScanResultController extends ChangeNotifier {
   List<TreatmentTask> get treatmentPlan => _treatmentPlan;
   bool get isBookmarked => saveScan.isSaved;
   bool get isNonCacao => diseaseKey == 'non_cacao';
+  bool get isLowConfidence => confidence < 0.70;
+
 
   void toggleBookmark() {
     // saveScan.toggleSaveRecord();
@@ -63,21 +65,12 @@ class ScanResultController extends ChangeNotifier {
 
     diseaseKey = _diseaseKeyFromName(diseaseName);
 
-    // final exists = await _repository.healthyHasSeverity();
-
-    // if (exists) {
-    //   debugPrint("Healthy mild severity exists==============================================.");
-    //   debugPrint("Healthy mild severity exists==============================================.");
-    //   debugPrint("Healthy mild severity exists==============================================.");
-    //   debugPrint("Healthy mild severity exists==============================================.");
-    // }
     if (hasHighNonCacaoConfidence) {
       _error = "NON_CACAO";
       _isLoading = false;
       notifyListeners();
       return;
     }
-
     if (confidence < 0.70) {
       _error = "LOW_CONFIDENCE";
       _isLoading = false;
@@ -173,15 +166,11 @@ class ScanResultController extends ChangeNotifier {
   }
 
   bool get hasHighNonCacaoConfidence {
-    // Primary prediction
     if (diseaseKey == 'non_cacao' && confidence >= 0.50) {
       return true;
     }
     return false;
   }
-  // bool get hasHighNonCacaoConfidence {
-  //   return diseaseKey == 'non_cacao' && confidence >= 0.50;
-  // }
 
   Future<bool> saveScanRecord({bool smsEnabled = false}) {
     return saveScan.saveScanRecord(

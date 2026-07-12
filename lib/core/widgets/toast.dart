@@ -1,20 +1,54 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+enum ToastType {
+  success,
+  error,
+  warning,
+  info,
+}
+
 class TopToast {
   static void show(
     BuildContext context,
     String message, {
-    Color backgroundColor = const Color.fromARGB(255, 2, 83, 5),
+    ToastType type = ToastType.success,
     Duration duration = const Duration(seconds: 2),
   }) {
     final overlay = Overlay.of(context);
+
+    Color backgroundColor;
+    IconData icon;
+
+    switch (type) {
+      case ToastType.success:
+        backgroundColor = const Color(0xFF2E7D32);
+        icon = Icons.check_circle;
+        break;
+
+      case ToastType.error:
+        backgroundColor = Colors.red;
+        icon = Icons.error;
+        break;
+
+      case ToastType.warning:
+        backgroundColor = Colors.orange;
+        icon = Icons.warning;
+        break;
+
+      case ToastType.info:
+        backgroundColor = Colors.blue;
+        icon = Icons.info;
+        break;
+    }
+
     late OverlayEntry entry;
 
     entry = OverlayEntry(
-      builder: (context) => _TopToastWidget(
+      builder: (_) => _TopToastWidget(
         message: message,
         backgroundColor: backgroundColor,
+        icon: icon,
         duration: duration,
         onDismissed: () => entry.remove(),
       ),
@@ -27,12 +61,15 @@ class TopToast {
 class _TopToastWidget extends StatefulWidget {
   final String message;
   final Color backgroundColor;
+  final IconData icon;
   final Duration duration;
   final VoidCallback onDismissed;
 
   const _TopToastWidget({
+    super.key,
     required this.message,
     required this.backgroundColor,
+    required this.icon,
     required this.duration,
     required this.onDismissed,
   });
@@ -40,6 +77,7 @@ class _TopToastWidget extends StatefulWidget {
   @override
   State<_TopToastWidget> createState() => _TopToastWidgetState();
 }
+
 
 class _TopToastWidgetState extends State<_TopToastWidget>
     with SingleTickerProviderStateMixin {
@@ -101,7 +139,7 @@ class _TopToastWidgetState extends State<_TopToastWidget>
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                Icon(widget.icon, color: Colors.white, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
