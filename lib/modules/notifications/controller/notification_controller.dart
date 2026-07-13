@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../core/db/scan_repository.dart';
+import 'dart:developer';
 
 class NotificationController extends ChangeNotifier {
   final ScanRepository repository;
 
   NotificationController(this.repository);
 
- final List<Map<String, dynamic>> _alerts = [];
+  final List<Map<String, dynamic>> _alerts = [];
 
   void ignoreAlert(int index) {
     if (index >= 0 && index < _alerts.length) {
@@ -15,8 +16,7 @@ class NotificationController extends ChangeNotifier {
     }
   }
 
-  List<Map<String, dynamic>> get alerts =>
-    List.unmodifiable(_alerts);
+  List<Map<String, dynamic>> get alerts => List.unmodifiable(_alerts);
 
   void addAlert({
     required String disease,
@@ -40,6 +40,7 @@ class NotificationController extends ChangeNotifier {
   }
 
   Future<void> loadNotifications(String userId) async {
+    log("Loading notifications...");
     final rows = await repository.getPendingNotifications(userId);
 
     final now = DateTime.now();
@@ -56,7 +57,6 @@ class NotificationController extends ChangeNotifier {
           "disease": row["disease_key"] as String,
           "severity": row["severity_key"] as String,
           "date": row["scanned_at"] as String,
-          "sector": row["location_label"]?.toString() ?? "",
         });
       }
     }

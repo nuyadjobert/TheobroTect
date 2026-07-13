@@ -3,7 +3,6 @@ class NotificationCard extends StatelessWidget {
   final String disease;
   final String severity;
   final String date;
-  final String sector;
   final VoidCallback onRescan;
   final VoidCallback onIgnore;
 
@@ -12,7 +11,6 @@ class NotificationCard extends StatelessWidget {
     required this.disease,
     required this.severity,
     required this.date,
-    required this.sector,
     required this.onRescan,
     required this.onIgnore,
   });
@@ -90,7 +88,7 @@ class NotificationCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      "$sector  •  $date",
+                      "$date",
                       style: TextStyle(
                         color: deepGreen.withAlpha(140),
                         fontSize: 12.5,

@@ -99,8 +99,6 @@ class ScanRepository {
   ) async {
     final database = await _dbHelper.db;
 
-    final now = DateTime.now().toIso8601String();
-
     return await database.query(
       'scan_history',
       columns: [
@@ -116,13 +114,10 @@ class ScanRepository {
       where: '''
       user_id = ?
       AND next_scan_at IS NOT NULL
-      AND next_scan_at <= ?
-      AND notif_local_id IS NOT NULL
+      AND datetime(next_scan_at) <= datetime('now', 'localtime')
+      AND notif_local_id IS NULL
     ''',
-      whereArgs: [
-        userId,
-        now,
-      ],
+      whereArgs: [userId],
       orderBy: 'next_scan_at ASC',
     );
   }

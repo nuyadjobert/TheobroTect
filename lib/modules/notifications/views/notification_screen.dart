@@ -97,7 +97,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   disease: alert['disease']!,
                   severity: alert['severity']!,
                   date: alert['date']!,
-                  sector: alert['sector']!,
                   onIgnore: () async {
                     await controller.dismissAlert(index);
                   },
