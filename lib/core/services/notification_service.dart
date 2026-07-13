@@ -5,8 +5,6 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'dart:developer';
 import '../navigation/app_navigator.dart';
-import '../../modules/notifications/views/notification_screen.dart';
-import 'package:flutter/material.dart';
 
 class LocalNotificationService {
   final ScanRepository repository;

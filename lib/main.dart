@@ -43,11 +43,9 @@ void main() async {
 
   final scanRepository = ScanRepository();
 
-// Create the notification service
   notificationService = LocalNotificationService(scanRepository);
   await notificationService.initialize();
 
-  // Load the user's saved Dark Mode preference before the first frame
   await ThemeController.instance.loadSavedTheme();
 
   final authService = AuthService(DioClient.dio);
@@ -195,8 +193,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Listens to ThemeController so toggling Dark Mode anywhere
-    // (e.g. SettingsScreen) rebuilds the whole app with the new theme.
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeController.instance.mode,
       builder: (context, currentMode, _) {
