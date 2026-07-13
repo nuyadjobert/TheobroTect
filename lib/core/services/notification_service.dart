@@ -3,6 +3,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'dart:developer';
+import '../navigation/app_navigator.dart';
+import '../../modules/notifications/views/notification_screen.dart';
+import 'package:flutter/material.dart';
 
 class LocalNotificationService {
   final ScanRepository repository;
@@ -43,10 +47,9 @@ class LocalNotificationService {
   }
 
   void onNotificationTap(NotificationResponse response) {
-    // Later:
-    // Navigate to Scan History
-    // or open the Scan screen.
+    navigatorKey.currentState?.pushNamed('/notification');
   }
+
   Future<void> cancelNotification(String localId) async {
     await _notifications.cancel(
       id: localId.hashCode,
@@ -54,6 +57,7 @@ class LocalNotificationService {
   }
 
   Future<void> scheduleUserNotifications(String userId) async {
+    print("Scheduling notification...");
     final scans = await repository.getPendingNotifications(userId);
 
     for (final scan in scans) {
@@ -64,12 +68,15 @@ class LocalNotificationService {
       final nextScanAt = DateTime.parse(
         scan['next_scan_at'] as String,
       );
+      final now = DateTime.now();
 
-      // Skip expired reminders.
-      if (!nextScanAt.isAfter(DateTime.now())) {
+      final isToday = nextScanAt.year == now.year &&
+          nextScanAt.month == now.month &&
+          nextScanAt.day == now.day;
+
+      if (!isToday) {
         continue;
       }
-
       final notificationId = localId.hashCode;
 
       final title = buildNotificationTitle();
@@ -77,6 +84,20 @@ class LocalNotificationService {
       final body = buildNotificationBody(
         diseaseKey: diseaseKey,
         severityKey: severityKey,
+      );
+
+      await _notifications.show(
+        id: notificationId,
+        title: title,
+        body: body,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'scan_reminders',
+            'Scan Reminders',
+            importance: Importance.max,
+            priority: Priority.max,
+          ),
+        ),
       );
 
       await _notifications.zonedSchedule(
@@ -96,6 +117,11 @@ class LocalNotificationService {
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         payload: localId,
+      );
+
+      log(
+        "Notification successfully registered.",
+        name: "Notification",
       );
     }
   }

@@ -18,8 +18,7 @@ import 'core/services/notification_service.dart';
 import 'core/db/scan_repository.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
-
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+import 'core/navigation/app_navigator.dart';
 
 late final RegistrationController controller;
 late final RegistrationRequest model;
