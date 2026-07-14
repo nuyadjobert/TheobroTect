@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 class NotificationCard extends StatelessWidget {
   final String disease;
   final String severity;
@@ -15,22 +17,39 @@ class NotificationCard extends StatelessWidget {
     required this.onIgnore,
   });
 
-  // Shared palette — keep in sync with the rest of the app.
   static const Color primaryDarkGreen = Color(0xFF2D6A4F);
   static const Color deepGreen = Color(0xFF1B4332);
-  static const Color clayBase = Color(0xFFEFF7EE); // soft green-tinted base
+  static const Color clayBase = Color(0xFFEFF7EE);
 
-  /// Severity is still color-coded, but pulled toward the green family
-  /// so it never feels like it's from a different palette.
   Color _severityColor() {
     switch (severity.toLowerCase()) {
+      case 'severe':
+        return const Color(0xFFD90429);
       case 'high':
-        return const Color(0xFFE8604A); // warm coral-red, muted
+        return const Color(0xFFE8604A); // Warm coral-red, muted
       case 'moderate':
-        return const Color(0xFFE0A23D); // muted amber
+        return const Color(0xFFE0A23D); // Muted amber
       default:
-        return primaryDarkGreen; // low severity stays fully "on brand"
+        return primaryDarkGreen; // Low severity stays fully "on brand"
     }
+  }
+
+  String formatNotificationDate(String date) {
+    final dt = DateTime.parse(date);
+    final now = DateTime.now();
+
+    if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
+      return "Today • ${DateFormat('h:mm a').format(dt)}";
+    }
+
+    final yesterday = now.subtract(const Duration(days: 1));
+    if (dt.year == yesterday.year &&
+        dt.month == yesterday.month &&
+        dt.day == yesterday.day) {
+      return "Yesterday • ${DateFormat('h:mm a').format(dt)}";
+    }
+
+    return DateFormat('MMM d, yyyy • h:mm a').format(dt);
   }
 
   @override
@@ -88,7 +107,7 @@ class NotificationCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      "$date",
+                      formatNotificationDate(date),
                       style: TextStyle(
                         color: deepGreen.withAlpha(140),
                         fontSize: 12.5,
@@ -235,7 +254,9 @@ class _ClayButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 15, color: filled ? Colors.white : deepGreen.withAlpha(160)),
+              Icon(icon,
+                  size: 15,
+                  color: filled ? Colors.white : deepGreen.withAlpha(160)),
               const SizedBox(width: 6),
             ],
             Text(

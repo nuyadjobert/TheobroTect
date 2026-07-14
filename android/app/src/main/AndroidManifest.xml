@@ -10,7 +10,7 @@
     
     
     <application
-        android:label="cacao_apps"
+        android:label="TheobroTect"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

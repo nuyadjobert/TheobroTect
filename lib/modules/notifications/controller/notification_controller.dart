@@ -43,22 +43,14 @@ class NotificationController extends ChangeNotifier {
     log("Loading notifications...");
     final rows = await repository.getPendingNotifications(userId);
 
-    final now = DateTime.now();
-
     _alerts.clear();
-
     for (final row in rows) {
-      final nextScan = DateTime.parse(row['next_scan_at']);
-
-      if (!nextScan.isAfter(now)) {
-        // Show in the NotificationScreen
-        _alerts.add({
-          "local_id": row["local_id"] as String,
-          "disease": row["disease_key"] as String,
-          "severity": row["severity_key"] as String,
-          "date": row["scanned_at"] as String,
-        });
-      }
+      _alerts.add({
+        "local_id": row["local_id"] as String,
+        "disease": row["disease_key"] as String,
+        "severity": row["severity_key"] as String,
+        "date": row["scanned_at"] as String,
+      });
     }
 
     notifyListeners();

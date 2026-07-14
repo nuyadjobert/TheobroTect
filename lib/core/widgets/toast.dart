@@ -66,7 +66,6 @@ class _TopToastWidget extends StatefulWidget {
   final VoidCallback onDismissed;
 
   const _TopToastWidget({
-    super.key,
     required this.message,
     required this.backgroundColor,
     required this.icon,

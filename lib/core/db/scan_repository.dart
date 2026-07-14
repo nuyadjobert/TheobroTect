@@ -114,7 +114,7 @@ class ScanRepository {
       where: '''
       user_id = ?
       AND next_scan_at IS NOT NULL
-      AND datetime(next_scan_at) <= datetime('now', 'localtime')
+      AND date(next_scan_at) <= date('now', 'localtime')
       AND notif_local_id IS NULL
     ''',
       whereArgs: [userId],
