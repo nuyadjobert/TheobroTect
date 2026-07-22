@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/db/cacao_guide_repository.dart';
+import '../../scan/model/recommendation_item.dart';
 class ScanResultController extends ChangeNotifier {
   // Keep these as given inputs
   final String diseaseName;
@@ -37,6 +38,8 @@ class ScanResultController extends ChangeNotifier {
   List<String> whatToDoNowTl = [];
   List<String> preventionTl = [];
   List<String> whenToEscalateTl = [];
+
+  List<RecommendationItem> recommendations = [];
 
   ScanResultController({
     required this.diseaseName,
@@ -101,24 +104,31 @@ class ScanResultController extends ChangeNotifier {
       whatToDoNowEn.clear(); whatToDoNowTl.clear();
       preventionEn.clear(); preventionTl.clear();
       whenToEscalateEn.clear(); whenToEscalateTl.clear();
+      recommendations.clear();
 
       // 3. Sort recommendations into the right UI lists based on category
       for (var rec in recsList) {
         final category = rec['category_key'].toString().toLowerCase();
-        final content = rec['content'] as Map<String, dynamic>;
+        final content = rec['content'];
 
-        final textEn = content['en']?.toString() ?? '';
-        final textTl = content['tl']?.toString() ?? '';
+        final itemsEn = _extractLang(content, 'en');
+        final itemsTl = _extractLang(content, 'tl');
+
+        recommendations.add(RecommendationItem(
+          category: category,
+          contentEn: itemsEn,
+          contentTl: itemsTl,
+        ));
 
         if (category == 'what_to_do_now' || category == 'now') {
-          whatToDoNowEn.add(textEn);
-          whatToDoNowTl.add(textTl);
+          whatToDoNowEn.addAll(itemsEn);
+          whatToDoNowTl.addAll(itemsTl);
         } else if (category == 'prevention') {
-          preventionEn.add(textEn);
-          preventionTl.add(textTl);
+          preventionEn.addAll(itemsEn);
+          preventionTl.addAll(itemsTl);
         } else if (category == 'when_to_escalate' || category == 'escalate') {
-          whenToEscalateEn.add(textEn);
-          whenToEscalateTl.add(textTl);
+          whenToEscalateEn.addAll(itemsEn);
+          whenToEscalateTl.addAll(itemsTl);
         }
       }
 
@@ -140,6 +150,7 @@ class ScanResultController extends ChangeNotifier {
 
     whatToDoNowEn.clear(); preventionEn.clear(); whenToEscalateEn.clear();
     whatToDoNowTl.clear(); preventionTl.clear(); whenToEscalateTl.clear();
+    recommendations.clear();
 
     _guideError = null;
     _isLoadingGuide = false;
@@ -170,5 +181,46 @@ class ScanResultController extends ChangeNotifier {
     
     // Healthy and Non-Cacao usually default to 'default'
     return 'default'; 
+  }
+
+  List<String> _extractLang(dynamic node, String lang) {
+    final List<String> results = [];
+
+    if (node is List) {
+      for (final item in node) {
+        if (item is Map) {
+          final value = item[lang];
+          if (value is List) {
+            results.addAll(value.map((e) => e.toString()));
+          } else if (value != null) {
+            results.add(value.toString());
+          }
+        } else if (item is String) {
+          results.add(item);
+        }
+      }
+      return results;
+    }
+
+    if (node is Map) {
+      final value = node[lang];
+      if (value is List) {
+        return value.map((e) => e.toString()).toList();
+      }
+      if (value is String) {
+        return [value];
+      }
+
+      for (final entry in node.entries) {
+        if (entry.value is Map) {
+          final inner = _extractLang(entry.value, lang);
+          if (inner.isNotEmpty) {
+            results.addAll(inner);
+          }
+        }
+      }
+    }
+
+    return results;
   }
 }

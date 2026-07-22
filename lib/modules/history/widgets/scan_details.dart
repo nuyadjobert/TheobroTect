@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
-import '../controllers/scan_result_controller.dart'; 
+import '../controllers/scan_result_controller.dart';
+import '../../scan/widgets/treatment_plan_section.dart';
 
 class ScanDetailsSheet extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -28,56 +29,21 @@ class ScanDetailsSheet extends StatefulWidget {
 }
 
 class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
-  String _selectedSection = "what_to_do_now";
-  String _activeLang = "en"; // Local state for the toggle
+  String _activeLang = "en";
 
-  // Nature-Tech Palette
+  // Refined Color Palette
   static const Color forestGreen = Color(0xFF1B3022);
   static const Color leafGreen = Color(0xFF2D6A4F);
-  static const Color creamBg = Color(0xFFF9F9F5);
-
-  // Synced Section Meta
-  static const _sectionMeta = <String, ({String labelEn, String labelTl, IconData icon})>{
-    "what_to_do_now": (
-      labelEn: "What to do now",
-      labelTl: "Dapat gawin",
-      icon: Icons.bolt_rounded,
-    ),
-    "prevention": (
-      labelEn: "Prevention",
-      labelTl: "Pag-iwas",
-      icon: Icons.shield_outlined,
-    ),
-    "when_to_escalate": (
-      labelEn: "When to escalate",
-      labelTl: "Kailan magsusuri",
-      icon: Icons.warning_amber_rounded,
-    ),
-  };
+  static const Color creamBg = Color(0xFFFBFBF9); // Slightly cleaner cream
+  static const Color dangerRed = Color(0xFFD9534F); // For infections
 
   String _formatDate(String? rawDate) {
     if (rawDate == null) return "N/A";
     try {
       DateTime dt = DateTime.parse(rawDate);
-      return DateFormat('MMM dd, yyyy').format(dt);
+      return DateFormat('MMMM dd, yyyy').format(dt);
     } catch (e) {
       return rawDate;
-    }
-  }
-
-  List<String> _getItems() {
-    final c = widget.controller;
-    final isTl = _activeLang == "tl";
-
-    switch (_selectedSection) {
-      case "what_to_do_now":
-        return isTl ? c.whatToDoNowTl : c.whatToDoNowEn;
-      case "prevention":
-        return isTl ? c.preventionTl : c.preventionEn;
-      case "when_to_escalate":
-        return isTl ? c.whenToEscalateTl : c.whenToEscalateEn;
-      default:
-        return const [];
     }
   }
 
@@ -87,85 +53,98 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
       animation: widget.controller,
       builder: (context, _) {
         final bool isInfected = widget.data['status'] == 'Infected';
-        final String title = widget.data['title'] ?? (isInfected ? "Detected Infection" : "Healthy Leaf");
+        final c = widget.controller;
+        final lang = _activeLang;
+        
+        final String title = c.displayName[lang] ?? widget.data['title'] ?? (isInfected ? "Detected Infection" : "Healthy Leaf");
         final String imagePath = widget.data['image'] ?? '';
         final bool isLocal = widget.data['isLocalFile'] ?? false;
-        final items = _getItems();
+        final String desc = c.description[lang] ?? '';
 
         return Container(
-          height: MediaQuery.of(context).size.height * 0.9,
+          height: MediaQuery.of(context).size.height * 0.92, // Slightly taller
           decoration: const BoxDecoration(
             color: creamBg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
             children: [
+              // --- DRAG HANDLE ---
               const SizedBox(height: 12),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(2))),
+              Container(
+                width: 48,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(15),
+                  borderRadius: BorderRadius.circular(10)
+                )
+              ),
               
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // --- IMAGE ---
                       _buildImageFrame(imagePath, isLocal),
                       const SizedBox(height: 24),
 
+                      // --- BADGE & LANG TOGGLE ---
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildStatusBadge(isInfected),
-                          Text("Date Scanned: ${_formatDate(widget.data['date'])}", 
-                              style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w600)),
+                          _buildLanguageToggle(),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
 
+                      // --- TITLE & DATE ---
+                      Text(
+                        title, 
+                        style: const TextStyle(
+                          fontSize: 28, 
+                          fontWeight: FontWeight.w800, 
+                          color: forestGreen, 
+                          height: 1.1,
+                          letterSpacing: -0.5
+                        )
+                      ),
+                      const SizedBox(height: 8),
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(title, 
-                                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: forestGreen, letterSpacing: -0.5)),
+                          Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey[600]),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Scanned on ${_formatDate(widget.data['date'])}", 
+                            style: TextStyle(
+                              color: Colors.grey[600], 
+                              fontSize: 13, 
+                              fontWeight: FontWeight.w500
+                            )
                           ),
-                          _buildLanguageToggle(),
                         ],
                       ),
                       const SizedBox(height: 24),
 
-                      Text(_activeLang == "tl" ? "Gabay sa Pag-aalaga" : "Care Guide", 
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: forestGreen)),
-                      const SizedBox(height: 12),
-                      
-                      _buildSectionTabs(),
-                      const SizedBox(height: 20),
+                      // --- DESCRIPTION CARD ---
+                      if (desc.isNotEmpty) _buildDescriptionCard(desc),
 
-                      if (items.isEmpty)
-                        Center(child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: Text(_activeLang == "tl" ? "Walang makitang hakbang." : "No specific steps found.", 
-                              style: const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
-                        ))
-                      else
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: items.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12),
-                          itemBuilder: (context, index) => _buildInstructionCard(items[index], index + 1),
-                        ),
-                      
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
+
+                      // --- TREATMENT PLAN ---
+                      TreatmentPlanSection(
+                        recommendations: c.recommendations,
+                        lang: lang,
+                      ),
+                      const SizedBox(height: 32),
                     ],
                   ),
                 ),
               ),
               
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                child: _buildActionButton(),
-              ),
             ],
           ),
         );
@@ -176,42 +155,73 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
   // --- HELPER WIDGETS ---
 
   Widget _buildImageFrame(String path, bool isLocal) {
-  return Container(
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(28),
-      boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 20, offset: const Offset(0, 10))],
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: AspectRatio(
-        aspectRatio: 1.6,
-        child: path.isEmpty
-            ? Container(
-                color: Colors.grey[200],
-                child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 48),
-              )
-            : isLocal
-                ? Image.file(
-                    File(path),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 48),
-                    ),
-                  )
-                : Image.asset(path, fit: BoxFit.cover),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20), 
+            blurRadius: 24, 
+            offset: const Offset(0, 12)
+          )
+        ],
       ),
-    ),
-  );
-}
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: AspectRatio(
+          aspectRatio: 1.5,
+          child: path.isEmpty
+              ? Container(
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 48),
+                )
+              : isLocal
+                  ? Image.file(
+                      File(path),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _errorImage(),
+                    )
+                  : Image.asset(path, fit: BoxFit.cover),
+        ),
+      ),
+    );
+  }
+
+  Widget _errorImage() {
+    return Container(
+      color: Colors.grey[200],
+      child: const Icon(Icons.broken_image_rounded, color: Colors.grey, size: 48),
+    );
+  }
 
   Widget _buildStatusBadge(bool isInfected) {
+    final Color badgeColor = isInfected ? dangerRed : leafGreen;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: forestGreen, borderRadius: BorderRadius.circular(8)),
-      child: Text(
-        isInfected ? "ANALYSIS: DETECTED" : "ANALYSIS: HEALTHY",
-        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: badgeColor.withAlpha(200), 
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: badgeColor.withAlpha(30)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isInfected ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+            size: 16,
+            color: badgeColor,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            isInfected ? "INFECTION DETECTED" : "HEALTHY",
+            style: TextStyle(
+              color: badgeColor, 
+              fontSize: 11, 
+              fontWeight: FontWeight.w800, 
+              letterSpacing: 0.5
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -220,9 +230,12 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9), 
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFC8E6C9)),
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withAlpha(20)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(2), blurRadius: 4, offset: const Offset(0, 2))
+        ]
       ),
       child: Row(
         children: ["EN", "TL"].map((l) {
@@ -234,15 +247,15 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: active ? leafGreen : Colors.transparent, 
-                borderRadius: BorderRadius.circular(10)
+                color: active ? forestGreen : Colors.transparent, 
+                borderRadius: BorderRadius.circular(8)
               ),
               child: Text(l, style: TextStyle(
-                color: active ? Colors.white : leafGreen, 
-                fontSize: 11, 
-                fontWeight: FontWeight.bold
+                color: active ? Colors.white : Colors.grey[600], 
+                fontSize: 12, 
+                fontWeight: active ? FontWeight.bold : FontWeight.w600
               )),
             ),
           );
@@ -251,93 +264,49 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
     );
   }
 
-  Widget _buildSectionTabs() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: _sectionMeta.entries.map((e) {
-          bool selected = _selectedSection == e.key;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                setState(() => _selectedSection = e.key);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: selected ? forestGreen : Colors.black.withAlpha(13),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(e.value.icon, size: 16, color: selected ? Colors.white : Colors.black54),
-                    const SizedBox(width: 8),
-                    Text(
-                      _activeLang == "tl" ? e.value.labelTl : e.value.labelEn,
-                      style: TextStyle(
-                        color: selected ? Colors.white : Colors.black54, 
-                        fontWeight: FontWeight.bold, 
-                        fontSize: 13
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildInstructionCard(String text, int number) {
+  Widget _buildDescriptionCard(String desc) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withAlpha(13)), // 0.05 * 255 = 13
+        border: Border.all(color: Colors.grey.withAlpha(30)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(51), blurRadius: 10, offset: const Offset(0, 4)) // 0.02 * 255 = 51
-        ],
+          BoxShadow(color: Colors.black.withAlpha(2), blurRadius: 10, offset: const Offset(0, 4))
+        ]
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 32, height: 32,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F8E9), 
-              borderRadius: BorderRadius.circular(8)
-            ),
-            alignment: Alignment.center,
-            child: Text("$number", style: const TextStyle(color: leafGreen, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Icon(Icons.info_outline_rounded, size: 18, color: leafGreen),
+              const SizedBox(width: 8),
+              Text(
+                _activeLang == "tl" ? "Tungkol sa Kondisyong Ito" : "About this Condition",
+                style: const TextStyle(
+                  fontSize: 14, 
+                  fontWeight: FontWeight.bold, 
+                  color: forestGreen, 
+                  letterSpacing: 0.2
+                )
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 14, height: 1.5, color: forestGreen, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 12),
+          Text(
+            desc, 
+            style: TextStyle(
+              fontSize: 14.5, 
+              height: 1.6, 
+              color: Colors.grey[700], 
+              fontWeight: FontWeight.w400
+            )
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: forestGreen,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          elevation: 0,
-        ),
-        onPressed: () => Navigator.pop(context),
-        child: const Text("Return to Dashboard", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-      ),
-    );
-  }
 }

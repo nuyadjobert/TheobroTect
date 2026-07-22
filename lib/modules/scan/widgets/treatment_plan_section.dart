@@ -3,8 +3,13 @@ import '../model/recommendation_item.dart';
 
 class TreatmentPlanSection extends StatelessWidget {
   final List<RecommendationItem> recommendations;
+  final String lang;
 
-  const TreatmentPlanSection({super.key, required this.recommendations});
+  const TreatmentPlanSection({
+    super.key,
+    required this.recommendations,
+    this.lang = 'tl',
+  });
 
   static const Map<String, Map<String, String>> categoryTitles = {
     'action_items': {
@@ -30,11 +35,11 @@ class TreatmentPlanSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4.0, bottom: 16.0),
+        Padding(
+          padding: const EdgeInsets.only(left: 4.0, bottom: 16.0),
           child: Text(
-            "Treatment Plan",
-            style: TextStyle(
+            lang == 'tl' ? "Plano ng Paggamot" : "Treatment Plan",
+            style: const TextStyle(
               fontSize: 22, // Slightly larger for better hierarchy
               fontWeight: FontWeight.w800,
               color: Color(0xFF1B3022),
@@ -42,7 +47,7 @@ class TreatmentPlanSection extends StatelessWidget {
             ),
           ),
         ),
-        ...recommendations.map((rec) => _RecommendationBlock(rec: rec)),
+        ...recommendations.map((rec) => _RecommendationBlock(rec: rec, lang: lang)),
       ],
     );
   }
@@ -50,8 +55,9 @@ class TreatmentPlanSection extends StatelessWidget {
 
 class _RecommendationBlock extends StatelessWidget {
   final RecommendationItem rec;
+  final String lang;
 
-  const _RecommendationBlock({required this.rec});
+  const _RecommendationBlock({required this.rec, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +97,7 @@ class _RecommendationBlock extends StatelessWidget {
           Text(
             TreatmentPlanSection.getCategoryTitle(
               rec.category,
-              'tl', // or your current language provider
+              lang,
             ),
             style: const TextStyle(
               fontWeight: FontWeight.w800,
@@ -102,7 +108,7 @@ class _RecommendationBlock extends StatelessWidget {
           const SizedBox(height: 12),
           
           // Bullet Points (Upgraded to stylish rows)
-          ...rec.content.map(
+          ...rec.content(lang).map(
             (item) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(

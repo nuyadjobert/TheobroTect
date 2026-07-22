@@ -27,6 +27,7 @@ class ScanResultScreen extends StatefulWidget {
 class _ScanResultScreenState extends State<ScanResultScreen> {
   late final ScanResultController controller;
   late final SaveScanController saveController;
+  String _selectedLang = 'en';
 
   @override
   void initState() {
@@ -185,9 +186,6 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final langCode = Localizations.localeOf(context).languageCode;
-    final lang = (langCode == "tl") ? "tl" : "en";
-
     return Scaffold(
       backgroundColor: const Color(0xFFF9FBF9),
       appBar: AppBar(
@@ -204,10 +202,14 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          _buildLanguageToggle(),
+          const SizedBox(width: 8),
+        ],
       ),
       body: ListenableBuilder(
         listenable: controller,
-        builder: (context, _) => _buildBody(context, lang),
+        builder: (context, _) => _buildBody(context, _selectedLang),
       ),
       bottomNavigationBar: ListenableBuilder(
         listenable: controller,
@@ -289,7 +291,7 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
             isDisabled: controller.isNonCacao,
           ),
           const SizedBox(height: 24),
-          TreatmentPlanSection(recommendations: controller.recommendations),
+          TreatmentPlanSection(recommendations: controller.recommendations, lang: lang),
         ],
       ),
     );
@@ -311,6 +313,63 @@ class _ScanResultScreenState extends State<ScanResultScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLanguageToggle() {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFC8E6C9), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildToggleBtn("EN", _selectedLang == 'en'),
+          _buildToggleBtn("TL", _selectedLang == 'tl'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleBtn(String label, bool isSelected) {
+    return GestureDetector(
+      onTap: () {
+        if (!isSelected) {
+          HapticFeedback.mediumImpact();
+          setState(() => _selectedLang = label.toLowerCase());
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        width: 40,
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF2D6A4F) : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF2D6A4F).withAlpha(77),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : const Color(0xFF2D6A4F),
+          ),
+        ),
+      ),
     );
   }
 }

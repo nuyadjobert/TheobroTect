@@ -55,7 +55,6 @@ class LocalNotificationService {
   }
 
   Future<void> scheduleUserNotifications(String userId) async {
-    print("Scheduling notification...");
     final scans = await repository.getPendingNotifications(userId);
 
     for (final scan in scans) {

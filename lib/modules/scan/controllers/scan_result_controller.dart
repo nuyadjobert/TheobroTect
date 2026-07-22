@@ -47,12 +47,39 @@ class ScanResultController extends ChangeNotifier {
   List<RecommendationItem> recommendations = [];
   int? rescanAfterDays;
   Map<String, String>? rescanMessage;
-  List<TreatmentTask> _treatmentPlan = const [];
-  List<TreatmentTask> get treatmentPlan => _treatmentPlan;
+
+  List<TreatmentTask> getTreatmentPlan(String lang) {
+    // Dynamically choose between Tagalog or English lists
+    final items = recommendations
+        .expand((e) => lang == 'tl' ? e.contentTl : e.contentEn)
+        .toList();
+
+    if (items.isEmpty) {
+      return [
+        TreatmentTask(
+          icon: Icons.visibility_outlined,
+          title: lang == 'tl' ? "Subaybayan" : "Monitor",
+          desc: lang == 'tl'
+              ? "Obserbahan ang bunga at i-scan muli pagkalipas ng ilang araw."
+              : "Observe the pod and rescan after a few days.",
+        ),
+      ];
+    }
+
+    return items
+        .map(
+          (item) => TreatmentTask(
+            icon: Icons.check_circle_outline,
+            title: lang == 'tl' ? "Rekomendasyon" : "Recommendation",
+            desc: item,
+          ),
+        )
+        .toList();
+  }
+
   bool get isBookmarked => saveScan.isSaved;
   bool get isNonCacao => diseaseKey == 'non_cacao';
   bool get isLowConfidence => confidence < 0.70;
-
 
   void toggleBookmark() {
     // saveScan.toggleSaveRecord();
@@ -126,36 +153,17 @@ class ScanResultController extends ChangeNotifier {
         final category = row['category_key']?.toString() ?? 'general';
         final content = row['content'];
 
-        final items = _listLang(content, 'en');
+        final itemsEn = _listLang(content, 'en');
+        final itemsTl = _listLang(content, 'tl');
 
         recommendations.add(
           RecommendationItem(
             category: category,
-            content: items,
+            contentEn: itemsEn,
+            contentTl: itemsTl,
           ),
         );
       }
-
-      final allItems = recommendations.expand((e) => e.content).toList();
-
-      _treatmentPlan = allItems.isNotEmpty
-          ? allItems
-              .map(
-                (item) => TreatmentTask(
-                  icon: Icons.check_circle_outline,
-                  title: "Recommendation",
-                  desc: item,
-                ),
-              )
-              .toList(growable: false)
-          : const [
-              TreatmentTask(
-                icon: Icons.visibility_outlined,
-                title: "Monitor",
-                desc: "Observe the pod and rescan after a few days.",
-              ),
-            ];
-
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -219,34 +227,44 @@ class ScanResultController extends ChangeNotifier {
     debugPrint("NODE VALUE: $node");
 
     final List<String> results = [];
+
     if (node is List) {
       for (final item in node) {
         if (item is Map) {
           final value = item[lang];
-
-          if (value != null) {
+          if (value is List) {
+            results.addAll(value.map((e) => e.toString()));
+          } else if (value != null) {
             results.add(value.toString());
           }
+        } else if (item is String) {
+          results.add(item);
         }
       }
-
-      debugPrint("RETURNING LIST: $results");
+      debugPrint("LIST RESULT: $results");
       return results;
     }
 
     if (node is Map) {
       final value = node[lang];
-
       if (value is List) {
         return value.map((e) => e.toString()).toList();
       }
-
       if (value is String) {
         return [value];
       }
+
+      for (final entry in node.entries) {
+        if (entry.value is Map) {
+          final inner = _listLang(entry.value, lang);
+          if (inner.isNotEmpty) {
+            results.addAll(inner);
+          }
+        }
+      }
     }
 
-    debugPrint("RETURNING EMPTY LIST");
-    return [];
+    debugPrint("FINAL RESULT: $results");
+    return results;
   }
 }
