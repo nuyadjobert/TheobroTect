@@ -18,8 +18,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _contactController;
-  late TextEditingController _addressController;
   bool _isSaving = false;
+
+  final List<String> barangayOptions = const [
+    'Dacudao',
+    'Datu Balong',
+    'Igangon',
+    'Kipalili',
+    'Libuton',
+    'Linao',
+    'Mamangan',
+    'Monte Dujali',
+    'Pinamuno',
+    'Sabangan',
+    'San Miguel',
+    'Santo Niño',
+    'Poblacion',
+  ];
+
+  String? _selectedBarangay;
 
   @override
   void initState() {
@@ -28,7 +45,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     _nameController = TextEditingController();
     _emailController = TextEditingController();
     _contactController = TextEditingController();
-    _addressController = TextEditingController();
     _loadUser();
   }
 
@@ -37,7 +53,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _contactController.dispose();
-    _addressController.dispose();
     super.dispose();
   }
 
@@ -49,14 +64,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Future<void> _loadUser() async {
     await controller.loadUser();
-
     final user = controller.user;
 
-    if (user != null) {
+    if (user != null && mounted) {
       _nameController.text = user.name ?? "";
       _emailController.text = user.email;
       _contactController.text = user.contactNumber;
-      _addressController.text = user.address;
+
+      if (barangayOptions.contains(user.address)) {
+        _selectedBarangay = user.address;
+      } else {
+        _selectedBarangay = null;
+      }
     }
 
     setState(() {});
@@ -70,7 +89,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       _isSaving = true;
     });
 
-    // Let the user know a save is underway.
     TopToast.show(context, "Saving changes...");
 
     try {
@@ -78,8 +96,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         name: _nameController.text.trim() != (currentUser.name ?? "")
             ? _nameController.text.trim()
             : null,
-        address: _addressController.text.trim() != (currentUser.address)
-            ? _addressController.text.trim()
+        address: _selectedBarangay != currentUser.address
+            ? _selectedBarangay
             : null,
         contactNumber:
             _contactController.text.trim() != (currentUser.contactNumber)
@@ -106,14 +124,26 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Theming aligned with the Settings screen's palette.
+    // Clean background & container surfaces
     final Color bg = isDark ? AppColors.nightBg : AppColors.creamBg;
-    final Color appBarBg = isDark ? AppColors.nightBg : Colors.white;
-    final Color cardBg = isDark ? AppColors.nightCard : AppColors.creamCard;
+    final Color appBarBg = bg;
+    final Color cardBg = isDark ? AppColors.nightCard : Colors.white;
+
+    // Brand-based non-gray color palette
     final Color textPrimary = isDark ? Colors.white : AppColors.forestDark;
-    final Color textSecondary = isDark ? Colors.white60 : Colors.grey;
+    final Color textSecondary = isDark
+        ? const Color(0xFFA5C9B7) // Soft mint green tint
+        : const Color(0xFF3D6350); // Muted dark forest green
     final Color accentColor =
         isDark ? AppColors.forestLight : AppColors.forestMid;
+
+    // Distinct soft fills for inputs (No gray)
+    final Color inputFill = isDark
+        ? AppColors.nightBg.withOpacity(0.6)
+        : accentColor.withOpacity(0.04);
+    final Color lockedFill = isDark
+        ? AppColors.nightBg.withOpacity(0.9)
+        : accentColor.withOpacity(0.02);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -128,54 +158,110 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         backgroundColor: bg,
         appBar: AppBar(
           backgroundColor: appBarBg,
-          systemOverlayStyle:
-              isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
           elevation: 0,
+          scrolledUnderElevation: 0,
           centerTitle: true,
           iconTheme: IconThemeData(color: textPrimary),
           title: Text(
             "My Profile",
             style: TextStyle(
               color: textPrimary,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.5,
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
+              letterSpacing: -0.3,
             ),
           ),
+          actions: [
+            TextButton.icon(
+              onPressed: _toggleEditMode,
+              icon: Icon(
+                _isEditing ? Icons.close_rounded : Icons.edit_outlined,
+                size: 18,
+                color: _isEditing ? Colors.redAccent : accentColor,
+              ),
+              label: Text(
+                _isEditing ? "Cancel" : "Edit",
+                style: TextStyle(
+                  color: _isEditing ? Colors.redAccent : accentColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
         ),
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Profile Picture Indicator
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: accentColor, width: 2),
-                ),
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: accentColor.withAlpha(26),
-                  child: Icon(Icons.person_rounded,
-                      color: textPrimary.withAlpha(128), size: 54),
-                ),
-              ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 12),
 
-              // Form Container
+              // Profile Picture Avatar with optional Edit Badge
+              Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: accentColor.withOpacity(0.3),
+                        width: 3,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accentColor.withOpacity(0.12),
+                          blurRadius: 20,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundColor: accentColor.withOpacity(0.12),
+                      child: Icon(
+                        Icons.person_rounded,
+                        color: accentColor,
+                        size: 52,
+                      ),
+                    ),
+                  ),
+                  if (_isEditing)
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cardBg, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 28),
+
+              // Clean Card Container
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: cardBg,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: accentColor.withOpacity(0.12),
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          isDark ? Colors.black26 : Colors.black.withAlpha(128),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: accentColor.withOpacity(0.06),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -189,11 +275,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       accentColor: accentColor,
+                      inputFill: inputFill,
+                      lockedFill: lockedFill,
                       showEditToggle: true,
                     ),
                     const SizedBox(height: 20),
 
-                    // Email is ALWAYS read-only
                     _buildTextField(
                       controller: _emailController,
                       label: "Email Address",
@@ -202,6 +289,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       accentColor: accentColor,
+                      inputFill: inputFill,
+                      lockedFill: lockedFill,
                       isLocked: true,
                     ),
                     const SizedBox(height: 20),
@@ -214,32 +303,32 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       accentColor: accentColor,
+                      inputFill: inputFill,
+                      lockedFill: lockedFill,
                       keyboardType: TextInputType.phone,
                       showEditToggle: true,
                     ),
                     const SizedBox(height: 20),
 
-                    _buildTextField(
-                      controller: _addressController,
-                      label: "Address",
-                      icon: Icons.location_on_outlined,
+                    _buildBarangayDropdown(
+                      isDark: isDark,
                       isEditable: _isEditing,
                       textPrimary: textPrimary,
                       textSecondary: textSecondary,
                       accentColor: accentColor,
-                      maxLines: 2,
-                      showEditToggle: true,
+                      inputFill: inputFill,
+                      cardBg: cardBg,
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
 
-              // Animated Save Button (Only shows when editing)
+              // Smooth Animated Save Button
               AnimatedOpacity(
                 opacity: _isEditing ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 250),
                 child: _isEditing
                     ? SizedBox(
                         width: double.infinity,
@@ -250,15 +339,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             backgroundColor: accentColor,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(18),
                             ),
                             elevation: 0,
                           ),
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 200),
-                            transitionBuilder: (child, animation) =>
-                                FadeTransition(
-                                    opacity: animation, child: child),
                             child: _isSaving
                                 ? const Row(
                                     key: ValueKey("saving"),
@@ -288,7 +374,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
+                                      letterSpacing: 0.3,
                                     ),
                                   ),
                           ),
@@ -296,7 +382,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       )
                     : const SizedBox.shrink(),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -312,12 +398,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     required Color textPrimary,
     required Color textSecondary,
     required Color accentColor,
+    required Color inputFill,
+    required Color lockedFill,
     bool isLocked = false,
     bool showEditToggle = false,
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    final textColor = (isEditable) ? textPrimary : textSecondary;
+    final textColor = isEditable ? textPrimary : textSecondary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,9 +414,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           label,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: textSecondary,
-            letterSpacing: 0.5,
+            letterSpacing: 0.3,
           ),
         ),
         const SizedBox(height: 8),
@@ -341,47 +429,163 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           style: TextStyle(
             fontSize: 15,
             color: textColor,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
           ),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon,
-                color: isEditable ? accentColor : textSecondary.withAlpha(128),
-                size: 22),
+            prefixIcon: Icon(
+              icon,
+              color: isEditable ? accentColor : textSecondary,
+              size: 20,
+            ),
             suffixIcon: isLocked
-                ? Icon(Icons.lock_outline_rounded,
-                    color: textSecondary.withAlpha(128), size: 18)
-                : showEditToggle
+                ? Icon(
+                    Icons.lock_rounded,
+                    color: accentColor.withOpacity(0.5),
+                    size: 18,
+                  )
+                : (showEditToggle
                     ? IconButton(
                         onPressed: _toggleEditMode,
                         icon: Icon(
-                          isEditable
+                          _isEditing
                               ? Icons.close_rounded
-                              : Icons.edit_rounded,
-                          color:
-                              isEditable ? Colors.redAccent : accentColor,
+                              : Icons.edit_outlined,
+                          color: _isEditing ? Colors.redAccent : accentColor,
                           size: 18,
                         ),
                       )
-                    : null,
+                    : null),
             filled: true,
-            fillColor:
-                isEditable ? Colors.transparent : textSecondary.withAlpha(128),
+            fillColor: isLocked
+                ? lockedFill
+                : (isEditable ? Colors.transparent : inputFill),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.transparent),
+              borderSide: BorderSide(
+                color: accentColor.withOpacity(0.12),
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  BorderSide(color: textSecondary.withAlpha(51), width: 1.5),
+              borderSide: BorderSide(
+                color: isEditable
+                    ? accentColor.withOpacity(0.4)
+                    : accentColor.withOpacity(0.12),
+                width: 1.5,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(color: accentColor, width: 2),
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBarangayDropdown({
+    required bool isDark,
+    required bool isEditable,
+    required Color textPrimary,
+    required Color textSecondary,
+    required Color accentColor,
+    required Color inputFill,
+    required Color cardBg,
+  }) {
+    final textColor = isEditable ? textPrimary : textSecondary;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Address (Barangay)",
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: textSecondary,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: barangayOptions.contains(_selectedBarangay)
+              ? _selectedBarangay
+              : null,
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: isEditable ? accentColor : textSecondary,
+          ),
+          style: TextStyle(
+            color: textColor,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+          dropdownColor: cardBg,
+          onChanged: isEditable
+              ? (String? newValue) {
+                  setState(() {
+                    _selectedBarangay = newValue;
+                  });
+                }
+              : null,
+          decoration: InputDecoration(
+            prefixIcon: Icon(
+              Icons.location_on_outlined,
+              color: isEditable ? accentColor : textSecondary,
+              size: 20,
+            ),
+            suffixIcon: IconButton(
+              onPressed: _toggleEditMode,
+              icon: Icon(
+                _isEditing ? Icons.close_rounded : Icons.edit_outlined,
+                color: _isEditing ? Colors.redAccent : accentColor,
+                size: 18,
+              ),
+            ),
+            filled: true,
+            fillColor: isEditable ? Colors.transparent : inputFill,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: accentColor.withOpacity(0.12),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isEditable
+                    ? accentColor.withOpacity(0.4)
+                    : accentColor.withOpacity(0.12),
+                width: 1.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: accentColor, width: 2),
+            ),
+          ),
+          hint: Text(
+            "Choose your barangay",
+            style: TextStyle(
+              color: textSecondary.withOpacity(0.7),
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          items: barangayOptions.map((String barangay) {
+            return DropdownMenuItem<String>(
+              value: barangay,
+              child: Text(
+                barangay,
+                style: TextStyle(color: textPrimary),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );

@@ -54,10 +54,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  // --- NAVIGATION ---
-  // Push Profile, then refresh the user once we're back — otherwise the
-  // hero card keeps showing stale data until this screen is torn down
-  // and rebuilt from scratch (e.g. by switching bottom-nav tabs).
   Future<void> _navigateToProfile() async {
     await Navigator.push(
       context,
@@ -67,9 +63,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadUser();
   }
 
-  // --- LOGOUT ---
-  // Business logic only. The confirmation dialog itself lives in
-  // LogoutButton; this is what runs once the user has confirmed.
   Future<void> _handleLogoutConfirmed() async {
     await _controller.logout();
     if (!mounted) return;
@@ -95,7 +88,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        // Dark icons on light app bar, light icons on dark app bar
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         systemNavigationBarColor: bg,
@@ -121,8 +113,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         body: Column(
           children: [
-            // --- PINNED SECTION: profile hero card + stats row ---
-            // This stays fixed in place; it does NOT scroll with the list below.
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Column(
@@ -147,13 +137,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // --- SCROLLABLE SECTION: Account, Support, Logout ---
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                // Extra bottom padding (120) clears the parent HomeScreen's
-                // BottomAppBar, since HomeScreen uses extendBody: true and
-                // this screen's content would otherwise be obscured by it.
+
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
