@@ -1,27 +1,24 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-class ScannerOverlayPainter extends CustomPainter {
-  final double frameWidth;
-  final double frameHeight;
 
-  ScannerOverlayPainter({
-    required this.frameWidth,
-    required this.frameHeight,
-  });
+class ScannerOverlayPainter extends CustomPainter {
+  final Rect frameRect;
+
+  ScannerOverlayPainter({required this.frameRect});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double cx = size.width / 2;
-    final double cy = size.height / 2;
-    final double podRadius = 80.0; // The roundedness of the pod cutout
+    final double cx = frameRect.center.dx;
+    final double cy = frameRect.center.dy;
+    final double frameWidth = frameRect.width;
+    final double frameHeight = frameRect.height;
+    final double podRadius = frameRect.shortestSide * 0.2857; // The roundedness of the pod cutout
 
     // 1. Draw Semi-Transparent Dark Mask
     final bgPaint = Paint()..color = Colors.black.withAlpha(204); // 80% opacity
     final bgPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    
-    final cutoutRect = Rect.fromCenter(
-        center: Offset(cx, cy), width: frameWidth, height: frameHeight);
-    final cutoutRRect = RRect.fromRectAndRadius(cutoutRect, Radius.circular(podRadius));
+
+    final cutoutRRect = RRect.fromRectAndRadius(frameRect, Radius.circular(podRadius));
     final cutoutPath = Path()..addRRect(cutoutRRect);
 
     // Subtract the pod shape from the dark background
@@ -55,7 +52,7 @@ class ScannerOverlayPainter extends CustomPainter {
       ..color = Colors.white.withAlpha(77) // 30% opacity
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
-    
+
     const double crosshairSize = 24.0;
     canvas.drawLine(Offset(cx - crosshairSize / 2, cy),
         Offset(cx + crosshairSize / 2, cy), crosshairPaint);
@@ -116,5 +113,6 @@ class ScannerOverlayPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant ScannerOverlayPainter oldDelegate) =>
+      oldDelegate.frameRect != frameRect;
 }

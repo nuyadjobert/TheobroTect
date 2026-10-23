@@ -43,7 +43,7 @@ class CacaoModelService {
 
     try {
       _interpreter = await Interpreter.fromAsset(
-        'assets/models/final_ft_model2.5.tflite',
+        'assets/models/2.6.tflite',
         options: InterpreterOptions()..threads = Platform.numberOfProcessors,
       );
     //the 2.3 is good

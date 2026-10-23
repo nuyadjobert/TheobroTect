@@ -10,7 +10,6 @@ class RegistrationController extends ChangeNotifier {
   final AuthService _auth;
   final _tokenStorage = TokenStorage();
   
-  // 2. Initialize the User Repository
   final UserRepository _userRepository = UserRepository();
 
   RegistrationController(this._auth);
@@ -156,7 +155,6 @@ class RegistrationController extends ChangeNotifier {
       createdAt: now,
     );
     
-    // 3. Swap the raw database calls for the repository methods
     await _userRepository.clearUsers();
     await _userRepository.upsertUser(localUser);
   }

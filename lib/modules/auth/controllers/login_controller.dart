@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/toast.dart';
 import '../models/login_model.dart';
 import '../services/auth_services.dart';
 import '../views/verify_account_screen.dart';
@@ -64,7 +65,10 @@ class LoginController {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => VerifyAccountScreen(email: email),
+            builder: (_) => VerifyAccountScreen(
+              email: email,
+              initialSeconds: result.expiresInSeconds,
+            ),
           ),
         );
         return;
@@ -73,23 +77,25 @@ class LoginController {
       if (!context.mounted) return;
       
       if (result.status == 'COOLDOWN') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please wait ${result.retryAfterSeconds}s then try again.')),
+        TopToast.show(
+          context,
+          'Please wait ${result.retryAfterSeconds}s then try again.',
+          type: ToastType.warning,
         );
         return;
       }
 
       if (!context.mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Request failed: ${result.status}')),
+
+      TopToast.show(
+        context,
+        'Request failed: ${result.status}',
+        type: ToastType.error,
       );
     } catch (e) {
       if (!context.mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+
+      TopToast.show(context, e.toString(), type: ToastType.error);
     } finally {
       model.isLoading = false;
       refresh();
