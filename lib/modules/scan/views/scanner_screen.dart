@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,13 +15,17 @@ class ScannerScreen extends StatefulWidget {
   State<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen>
-    with SingleTickerProviderStateMixin {
+class _ScannerScreenState extends State<ScannerScreen> {
   late final ScannerController controller;
-  late AnimationController _animationController;
 
-  static const double _frameWidth = 280;
-  static const double _frameHeight = 440;
+  static const double _maxFrameWidth = 280;
+  static const double _maxFrameHeight = 440;
+  static const double _topBarHeight = 72;
+  static const double _guidanceHeight = 64;
+  static const double _guidanceGap = 12;
+  static const double _captureButtonSize = 84;
+  static const double _bottomPadding = 16;
+  static const double _framePadding = 24;
 
   Offset? _focusPoint;
   bool _showFocusRing = false;
@@ -29,11 +35,6 @@ class _ScannerScreenState extends State<ScannerScreen>
     super.initState();
     controller = ScannerController();
     _initialize();
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
   }
 
   Future<void> _initialize() async {
@@ -44,7 +45,6 @@ class _ScannerScreenState extends State<ScannerScreen>
   @override
   void dispose() {
     controller.dispose();
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -105,227 +105,270 @@ class _ScannerScreenState extends State<ScannerScreen>
     });
   }
 
+  /// Fits the pod frame into the space between the top bar and the bottom
+  /// controls, scaling it down on small screens and keeping its proportions.
+  Rect _frameRect(Size size, EdgeInsets padding) {
+    final double top = padding.top + _topBarHeight;
+    final double bottom = size.height -
+        (padding.bottom +
+            _bottomPadding +
+            _captureButtonSize +
+            _guidanceGap +
+            _guidanceHeight);
+
+    final double availableWidth = size.width - _framePadding * 2;
+    final double availableHeight = bottom - top - _framePadding * 2;
+
+    final double scale = math.min(
+      1.0,
+      math.min(
+        availableWidth / _maxFrameWidth,
+        availableHeight / _maxFrameHeight,
+      ),
+    );
+
+    return Rect.fromCenter(
+      center: Offset(size.width / 2, (top + bottom) / 2),
+      width: _maxFrameWidth * scale,
+      height: _maxFrameHeight * scale,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.2,
+      child: AnimatedBuilder(
+        animation: controller,
+        builder: (context, _) {
+          if (!controller.isPermissionGranted ||
+              controller.cameraController == null ||
+              !controller.cameraController!.value.isInitialized) {
+            return const Scaffold(
+              backgroundColor: Colors.black,
+              body: Center(
+                child: CircularProgressIndicator(color: Colors.greenAccent),
+              ),
+            );
+          }
 
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        if (!controller.isPermissionGranted ||
-            controller.cameraController == null ||
-            !controller.cameraController!.value.isInitialized) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: Colors.black,
-            body: Center(
-              child: CircularProgressIndicator(color: Colors.greenAccent),
-            ),
-          );
-        }
+            body: LayoutBuilder(
+              builder: (context, constraints) {
+                final frameRect = _frameRect(
+                  constraints.biggest,
+                  MediaQuery.paddingOf(context),
+                );
 
-        return Scaffold(
-          backgroundColor: Colors.black,
-          body: Stack(
-            children: [
-              // 1. Camera Preview with Tap Gesture
-              GestureDetector(
-                onTapDown: _onTapToFocus,
-                child: SizedBox.expand(
-                  child: ClipRect(
-                    child: OverflowBox(
-                      alignment: Alignment.center,
-                      child: FittedBox(
-                        fit: BoxFit.cover,
-                        child: SizedBox(
-                          width: controller
-                              .cameraController!.value.previewSize!.height,
-                          height: controller
-                              .cameraController!.value.previewSize!.width,
-                          child: CameraPreview(controller.cameraController!),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // 2. Custom Pod Scanner Frame Overlay Mask
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: ScannerOverlayPainter(
-                    frameWidth: _frameWidth,
-                    frameHeight: _frameHeight,
-                  ),
-                ),
-              ),
-              if (_showFocusRing && _focusPoint != null)
-                Positioned(
-                  left: _focusPoint!.dx - 25,
-                  top: _focusPoint!.dy - 25,
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFF2EFA8A),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
-
-              // 5. Instruction banner & Guidance text
-              Positioned(
-                top: screenSize.height / 2 + _frameHeight / 2 + 20,
-                left: 0,
-                right: 0,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                return Stack(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0D291A),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFF184D32),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: const Text(
-                        "CENTER POD INSIDE FRAME",
-                        style: TextStyle(
-                          color: Color(0xFF2EFA8A),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "↔ Distance: ~30cm | Tap screen to focus",
-                      style: TextStyle(
-                        color: Colors.white.withAlpha(179),
-                        fontSize: 11,
-                        fontFamily: 'monospace',
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // 6. UI Navigation & Capture Action Bar
-              SafeArea(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildGlassIconButton(
-                            icon: Icons.close,
-                            onTap: () => Navigator.pop(context),
-                          ),
-                          const Text(
-                            "SCAN POD",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                              fontSize: 13,
+                    // 1. Camera Preview with Tap Gesture
+                    GestureDetector(
+                      onTapDown: _onTapToFocus,
+                      child: SizedBox.expand(
+                        child: ClipRect(
+                          child: OverflowBox(
+                            alignment: Alignment.center,
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width: controller
+                                    .cameraController!.value.previewSize!.height,
+                                height: controller
+                                    .cameraController!.value.previewSize!.width,
+                                child:
+                                    CameraPreview(controller.cameraController!),
+                              ),
                             ),
                           ),
-                          _buildGlassIconButton(
-                            icon: controller.isFlashOn
-                                ? Icons.flash_on
-                                : Icons.flash_off,
-                            color: controller.isFlashOn
-                                ? Colors.yellow
-                                : Colors.white,
-                            onTap: controller.toggleFlash,
+                        ),
+                      ),
+                    ),
+
+                    // 2. Custom Pod Scanner Frame Overlay Mask
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: ScannerOverlayPainter(frameRect: frameRect),
+                      ),
+                    ),
+                    if (_showFocusRing && _focusPoint != null)
+                      Positioned(
+                        left: _focusPoint!.dx - 25,
+                        top: _focusPoint!.dy - 25,
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF2EFA8A),
+                              width: 2,
+                            ),
                           ),
+                        ),
+                      ),
+
+                    // 3. UI Navigation, guidance & Capture Action Bar
+                    SafeArea(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 8.0,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildGlassIconButton(
+                                  icon: Icons.close,
+                                  onTap: () => Navigator.pop(context),
+                                ),
+                                const Text(
+                                  "SCAN POD",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                _buildGlassIconButton(
+                                  icon: controller.isFlashOn
+                                      ? Icons.flash_on
+                                      : Icons.flash_off,
+                                  color: controller.isFlashOn
+                                      ? Colors.yellow
+                                      : Colors.white,
+                                  onTap: controller.toggleFlash,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Spacer(),
+                          SizedBox(
+                            height: _guidanceHeight,
+                            child: _buildGuidance(),
+                          ),
+                          const SizedBox(height: _guidanceGap),
+                          GestureDetector(
+                            onTap: controller.isAnalyzing ? null : _onCapture,
+                            child: Container(
+                              height: _captureButtonSize,
+                              width: _captureButtonSize,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withAlpha(77),
+                                  width: 4,
+                                ),
+                              ),
+                              child: Center(
+                                child: Container(
+                                  height: 70,
+                                  width: 70,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    color: Colors.black,
+                                    size: 30,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: _bottomPadding),
                         ],
                       ),
                     ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: controller.isAnalyzing ? null : _onCapture,
-                      child: Container(
-                        height: 84,
-                        width: 84,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withAlpha(77),
-                            width: 4,
-                          ),
-                        ),
-                        child: Center(
-                          child: Container(
-                            height: 70,
-                            width: 70,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
+
+                    // 4. Analyzing Loading Screen Overlay
+                    if (controller.isAnalyzing)
+                      Container(
+                        color: Colors.black87,
+                        width: double.infinity,
+                        height: double.infinity,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(
+                              color: Colors.greenAccent,
                             ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              color: Colors.black,
-                              size: 30,
+                            const SizedBox(height: 20),
+                            const Text(
+                              "ANALYZING POD...",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Identifying disease patterns",
+                              style: TextStyle(
+                                color: Colors.white.withAlpha(179),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 40),
                   ],
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildGuidance() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0D291A),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFF184D32),
+                  width: 1.5,
                 ),
               ),
-
-              // 7. Analyzing Loading Screen Overlay
-              if (controller.isAnalyzing)
-                Container(
-                  color: Colors.black87,
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(
-                        color: Colors.greenAccent,
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        "ANALYZING POD...",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Identifying disease patterns",
-                        style: TextStyle(
-                          color: Colors.white.withAlpha(179),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
+              child: const Text(
+                "CENTER POD INSIDE FRAME",
+                style: TextStyle(
+                  color: Color(0xFF2EFA8A),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
                 ),
-            ],
-          ),
-        );
-      },
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "↔ Distance: ~30cm | Tap screen to focus",
+              style: TextStyle(
+                color: Colors.white.withAlpha(179),
+                fontSize: 11,
+                fontFamily: 'monospace',
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

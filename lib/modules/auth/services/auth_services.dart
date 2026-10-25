@@ -16,6 +16,9 @@ class AuthService {
       );
       return RequestOtpResult.fromJson(_asMap(res.data));
     } on DioException catch (e) {
+      if (_readServerStatus(e) == 'COOLDOWN') {
+        return RequestOtpResult.fromJson(_asMap(e.response?.data));
+      }
       throw Exception(
         _readServerStatus(e) ?? _readMessage(e) ?? 'Network/Server error',
       );

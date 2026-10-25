@@ -4,27 +4,31 @@ import 'package:flutter/services.dart';
 import '../controllers/verify_account_controller.dart';
 import '../services/auth_services.dart';
 import '../../../core/network/client.dart';
+import '../../../core/widgets/app_components.dart';
 import '../controllers/registration_controller.dart';
 import '../models/registration_model.dart';
 import 'registration_screen.dart';
 import 'verifying_overlay.dart';
 import 'verify_unsuccess_screen.dart';
-import 'verify_success_screen.dart'; // ← new import
+import 'verify_success_screen.dart';
 
 class VerifyAccountScreen extends StatefulWidget {
   final String email;
+  final int? initialSeconds;
 
-  const VerifyAccountScreen({super.key, required this.email});
+  const VerifyAccountScreen({
+    super.key,
+    required this.email,
+    this.initialSeconds,
+  });
 
   @override
   State<VerifyAccountScreen> createState() => _VerifyAccountScreenState();
 }
 
 class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
-  static const Color forestGreen = Color(0xFF1B5E20);
-  static const Color lightForest = Color(0xFFE8F5E9);
-
   late final VerifyAccountController controller;
+  bool _registrationPushed = false;
 
   @override
   void initState() {
@@ -33,13 +37,40 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
       auth: AuthService(DioClient.dio),
       email: widget.email,
     );
-    controller.requestOtp();
+    final initialSeconds = widget.initialSeconds;
+    if (initialSeconds != null) {
+      controller.startTimer(initialSeconds);
+    } else {
+      controller.requestOtp();
+    }
   }
 
   @override
   void dispose() {
     controller.dispose();
     super.dispose();
+  }
+
+  void _openRegistration() {
+    if (_registrationPushed) return;
+    _registrationPushed = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => RegistrationScreen(
+            controller: RegistrationController(AuthService(DioClient.dio)),
+            model: RegistrationRequest(
+              email: controller.email,
+              name: '',
+              address: '',
+              contactNumber: '',
+            ),
+          ),
+        ),
+      );
+    });
   }
 
   @override
@@ -50,22 +81,17 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
     final imageHeight = screenHeight < 700 ? 180.0 : 220.0;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-      ),
+      value: appOverlayStyle(context),
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         resizeToAvoidBottomInset: true,
         body: ListenableBuilder(
           listenable: controller,
           builder: (context, _) {
-            // ── Full-screen verifying overlay while loading ──
             if (controller.verificationStatus == VerificationStatus.verifying) {
               return const VerifyingOverlay();
             }
 
-            // ── Success screen after verified ──
             if (controller.verificationStatus == VerificationStatus.success) {
               return VerifySuccessScreen(
                 onContinue: () {
@@ -77,25 +103,9 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
               );
             }
 
-            // ── New user: go to registration (no success screen needed) ──
             if (controller.isNewUserRequired) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (_) => RegistrationScreen(
-                      controller: RegistrationController(
-                        AuthService(DioClient.dio),
-                      ),
-                      model: RegistrationRequest(
-                        email: controller.email,
-                        name: '',
-                        address: '',
-                        contactNumber: '',
-                      ),
-                    ),
-                  ),
-                );
-              });
+              _openRegistration();
+              return const SizedBox.shrink();
             }
 
             if (controller.verificationStatus == VerificationStatus.failed) {
@@ -121,37 +131,12 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 16),
-
-                              // ── Logo + name ──
-                              Center(
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Transform.translate(
-                                      offset: const Offset(10, 0),
-                                      child: Image.asset(
-                                        'assets/images/theobrotect.png',
-                                        width: 32,
-                                        height: 32,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                    const Text(
-                                      "TheobroTect",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                        color: forestGreen,
-                                        letterSpacing: -0.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              BrandTopBar(
+                                onBack: () => Navigator.pop(context),
                               ),
 
                               const Spacer(),
 
-                              // ── Illustration image ──
                               Center(
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
@@ -164,10 +149,10 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
                                         (context, error, stackTrace) =>
                                             SizedBox(
                                       height: imageHeight,
-                                      child: const Icon(
+                                      child: Icon(
                                         Icons.verified_user_outlined,
                                         size: 80,
-                                        color: forestGreen,
+                                        color: colorScheme.primary,
                                       ),
                                     ),
                                   ),
@@ -176,31 +161,23 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
 
                               const Spacer(),
 
-                              // ── Title ──
-                              Center(
-                                child: Text(
-                                  "Verify Identity",
-                                  textAlign: TextAlign.center,
-                                  style:
-                                      theme.textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: forestGreen,
-                                    letterSpacing: -0.8,
-                                  ),
+                              Text(
+                                "Verify Identity",
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 "We've sent a 6-digit code to your email. Enter it below to proceed.",
-                                style: theme.textTheme.bodyMedium?.copyWith(
+                                style: theme.textTheme.bodyLarge?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
-                                  height: 1.4,
                                 ),
                               ),
 
                               const SizedBox(height: 24),
 
-                              // ── OTP fields ──
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -213,49 +190,38 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
 
                               const SizedBox(height: 16),
 
-                              // ── Timer + resend ──
                               Center(
                                 child: Column(
                                   children: [
-                                    AnimatedBuilder(
-                                      animation: controller,
-                                      builder: (context, index) {
-                                        return Text(
-                                          "RESEND CODE IN ${controller.timerText}",
-                                          style: theme.textTheme.labelMedium
-                                              ?.copyWith(
-                                            color: controller.secondsLeft > 0
-                                                ? colorScheme.outline
-                                                : forestGreen,
-                                            letterSpacing: 1.2,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        );
-                                      },
+                                    Text(
+                                      "RESEND CODE IN ${controller.timerText}",
+                                      style:
+                                          theme.textTheme.labelMedium?.copyWith(
+                                        color: controller.secondsLeft > 0
+                                            ? colorScheme.outline
+                                            : colorScheme.primary,
+                                        letterSpacing: 1.2,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                    AnimatedBuilder(
-                                      animation: controller,
-                                      builder: (context, index) {
-                                        return TextButton(
-                                          onPressed: controller.secondsLeft == 0
-                                              ? () => controller.startTimer(200)
-                                              : null,
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: forestGreen,
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 4),
-                                          ),
-                                          child: Text(
-                                            controller.secondsLeft == 0
-                                                ? "Resend New Code"
-                                                : "Didn't get a code?",
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        );
-                                      },
+                                    TextButton(
+                                      onPressed: controller.secondsLeft == 0
+                                          ? controller.requestOtp
+                                          : null,
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: colorScheme.primary,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4),
+                                      ),
+                                      child: Text(
+                                        controller.secondsLeft == 0
+                                            ? "Resend New Code"
+                                            : "Didn't get a code?",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -263,58 +229,12 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
 
                               const Spacer(),
 
-                              // ── Verify button ──
-                              SizedBox(
-                                width: double.infinity,
-                                height: 56,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: forestGreen,
-                                    foregroundColor: Colors.white,
-                                    elevation: 4,
-                                    shadowColor: forestGreen.withAlpha(102),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
-                                  onPressed: () async {
-                                    await controller.verify();
-                                  },
-                                  child: const Text(
-                                    "VERIFY",
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 2,
-                                    ),
-                                  ),
-                                ),
+                              AppPrimaryButton(
+                                label: "Verify",
+                                onPressed: controller.verify,
                               ),
 
-                              const SizedBox(height: 8),
-
-                              // ── Back to sign in ──
-                              Center(
-                                child: TextButton.icon(
-                                  onPressed: () => Navigator.pop(context),
-                                  icon: const Icon(Icons.arrow_back_rounded,
-                                      size: 14),
-                                  label: const Text(
-                                    "BACK TO SIGN IN",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: colorScheme.outline,
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 4),
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 24),
                             ],
                           ),
                         ),
@@ -339,9 +259,9 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
       width: 44,
       height: 56,
       decoration: BoxDecoration(
-        color: lightForest.withAlpha(77),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: forestGreen.withAlpha(25), width: 1),
+        color: colorScheme.surfaceContainerHighest.withAlpha(77),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.primary.withAlpha(25), width: 1),
       ),
       child: TextField(
         controller: controller.otpControllers[index],
@@ -356,10 +276,10 @@ class _VerifyAccountScreenState extends State<VerifyAccountScreen> {
         },
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.bold,
-          color: forestGreen,
+          color: colorScheme.primary,
         ),
         inputFormatters: [
           LengthLimitingTextInputFormatter(1),

@@ -79,9 +79,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
                     ),
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                    itemCount: controller.alerts.length,
-                    itemBuilder: (BuildContext context, int index) {
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    itemCount: controller.alerts.length + 1,
+                    itemBuilder: (BuildContext context, int position) {
+                      if (position == 0) {
+                        return _SummaryHeader(count: controller.alerts.length);
+                      }
+
+                      final int index = position - 1;
                       final Map<String, dynamic> alert =
                           controller.alerts[index];
 
@@ -89,6 +94,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         disease: alert['disease']! as String,
                         severity: alert['severity']! as String,
                         date: alert['date']! as String,
+                        imagePath: alert['image_path'] as String?,
                         onIgnore: () async {
                           await controller.dismissAlert(index);
                         },
@@ -112,6 +118,59 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 }
 
+class _SummaryHeader extends StatelessWidget {
+  final int count;
+
+  const _SummaryHeader({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colors.primary.withAlpha(24),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.notifications_active_rounded,
+              size: 20,
+              color: colors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  count == 1 ? '1 follow-up scan due' : '$count follow-up scans due',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  'Regular rescans help you catch changes early.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EmptyNotifications extends StatelessWidget {
   const _EmptyNotifications();
 
@@ -129,16 +188,26 @@ class _EmptyNotifications extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 72,
-                height: 72,
+                width: 112,
+                height: 112,
                 decoration: BoxDecoration(
-                  color: colors.primary.withAlpha(24),
+                  color: colors.primary.withAlpha(18),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.notifications_none_rounded,
-                  size: 36,
-                  color: colors.primary,
+                child: Center(
+                  child: Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      color: colors.primary.withAlpha(36),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.notifications_none_rounded,
+                      size: 38,
+                      color: colors.primary,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

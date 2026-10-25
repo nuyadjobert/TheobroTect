@@ -15,6 +15,8 @@ class VerifyAccountController extends ChangeNotifier {
 
   final UserRepository _userRepository = UserRepository();
 
+  static const int _defaultResendSeconds = 200;
+
   VerifyAccountController({required AuthService auth, required this.email})
       : _auth = auth;
 
@@ -64,10 +66,6 @@ class VerifyAccountController extends ChangeNotifier {
         notifyListeners();
       }
     });
-  }
-
-  void disposeTimer() {
-    _timer?.cancel();
   }
 
   String get otp => otpControllers.map((c) => c.text).join().trim();
@@ -150,9 +148,19 @@ class VerifyAccountController extends ChangeNotifier {
     try {
       final result = await _auth.requestOtp(email);
 
-      startTimer(result.expiresInSeconds ?? 200);
+      switch (result.status) {
+        case 'OTP_SENT':
+          startTimer(result.expiresInSeconds ?? _defaultResendSeconds);
+        case 'COOLDOWN':
+          startTimer(result.retryAfterSeconds ?? _defaultResendSeconds);
+        default:
+          _verificationMessage = 'Could not send the code: ${result.status}';
+          _verificationStatus = VerificationStatus.failed;
+          notifyListeners();
+      }
     } catch (e) {
-      _verificationMessage = e.toString();
+      _verificationMessage = e.toString().replaceFirst('Exception: ', '');
+      _verificationStatus = VerificationStatus.failed;
       notifyListeners();
     }
   }
@@ -197,6 +205,7 @@ class VerifyAccountController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _timer?.cancel();
     for (final c in otpControllers) {
       c.dispose();
     }

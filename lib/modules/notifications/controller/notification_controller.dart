@@ -50,6 +50,7 @@ class NotificationController extends ChangeNotifier {
         "disease": row["disease_key"] as String,
         "severity": row["severity_key"] as String,
         "date": row["scanned_at"] as String,
+        "image_path": row["image_path"] as String?,
       });
     }
 

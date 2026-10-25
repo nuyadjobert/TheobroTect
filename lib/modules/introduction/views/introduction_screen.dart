@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cacao_apps/core/widgets/app_components.dart';
 import 'package:cacao_apps/modules/auth/login_factory.dart';
 
 import '../widgets/intro_background.dart';
 import '../widgets/intro_skip_button.dart';
 import '../widgets/intro_content_page.dart';
 import '../widgets/intro_page_indicators.dart';
-import '../widgets/intro_action_button.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -130,10 +130,10 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                         ),
                         const SizedBox(height: 30),
 
-                        IntroActionButton(
-                          currentPage: _currentPage,
-                          totalPages: introData.length,
-                          primaryGreen: primaryGreen,
+                        AppPrimaryButton(
+                          label: _currentPage == introData.length - 1
+                              ? 'Get Started'
+                              : 'Next',
                           onPressed: _handleNext,
                         ),
                       ],
