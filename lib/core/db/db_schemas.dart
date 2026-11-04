@@ -34,8 +34,7 @@ class DbSchemas {
       next_retry_at TEXT,
       idempotency_key TEXT NOT NULL,
       created_at TEXT NOT NULL,
-      updated_at TEXT,
-      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+      updated_at TEXT
     );
   ''';
 

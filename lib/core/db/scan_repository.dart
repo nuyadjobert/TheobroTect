@@ -66,6 +66,7 @@ class ScanRepository {
       await database.rawQuery('''
         SELECT COUNT(*) FROM scan_history 
         WHERE sync_state IN ('pending', 'error')
+          AND user_id IN (SELECT user_id FROM users)
       '''),
     );
     return (count ?? 0) > 0;

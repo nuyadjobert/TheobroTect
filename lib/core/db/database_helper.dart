@@ -20,12 +20,31 @@ class DatabaseHelper {
     final path = join(dbPath, 'cacao_app.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onConfigure: (Database db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _dropScanHistoryUserForeignKey(db);
+    }
+  }
+
+  /// Scan history must outlive the `users` row, which is removed on logout.
+  /// SQLite cannot drop a foreign key in place, so the table is rebuilt.
+  Future<void> _dropScanHistoryUserForeignKey(Database db) async {
+    await db.execute('ALTER TABLE scan_history RENAME TO scan_history_old');
+    await db.execute(DbSchemas.createScanHistoryTable);
+    await db.execute('INSERT INTO scan_history SELECT * FROM scan_history_old');
+    await db.execute('DROP TABLE scan_history_old');
+    for (String query in DbSchemas.createScanIndexes) {
+      await db.execute(query);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
