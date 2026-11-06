@@ -51,19 +51,16 @@ class SyncTrigger {
     _running = true;
 
     try {
-      // Check if server is reachable
       final ok = await _isServerReachable();
       if (!ok) {
         return;
       }
 
-      // Sync pending scans
       final hasPendingScans = await _scanRepository.hasPendingScans();
       if (hasPendingScans) {
         await _scanSync.syncPendingScans();
       }
 
-      // Sync pending queue items (profile updates, etc.)
       final pendingQueue = await _syncQueueRepository.getPendingJobs();
       if (pendingQueue.isNotEmpty) {
         await _queueSync.syncPendingQueue();
@@ -74,7 +71,6 @@ class SyncTrigger {
         onSyncComplete!();
       }
     } catch (_) {
-      // Background synchronization is best-effort; forceSync reports failures.
     } finally {
       _running = false;
     }
@@ -90,36 +86,33 @@ class SyncTrigger {
   }
 
   Future<bool> forceSync() async {
-    if (_running) return false; // Already running
+    if (_running) return false;
     _running = true;
 
     try {
       final ok = await _isServerReachable();
       if (!ok) {
-        return false; // No internet
+        return false;
       }
 
-      // Sync pending scans
       final hasPendingScans = await _scanRepository.hasPendingScans();
       if (hasPendingScans) {
         await _scanSync.syncPendingScans();
       }
 
-      // Sync pending queue items (profile updates, etc.)
       final pendingQueue = await _syncQueueRepository.getPendingJobs();
       if (pendingQueue.isNotEmpty) {
         await _queueSync.syncPendingQueue();
       }
 
-      // Call the callback after successful sync
       if (onSyncComplete != null &&
           (hasPendingScans || pendingQueue.isNotEmpty)) {
         onSyncComplete!();
       }
 
-      return true; // Sync successful
+      return true;
     } catch (e) {
-      return false; // Sync failed
+      return false;
     } finally {
       _running = false;
     }

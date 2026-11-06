@@ -10,8 +10,6 @@ class ProfileService {
     _serverReachability = ServerReachabilityService(dio: dio);
   }
 
-  /// Update user profile on the backend
-  /// Throws DioException on failure
   Future<void> updateProfile({
     required String userId,
     String? name,
@@ -33,7 +31,7 @@ class ProfileService {
     }
 
     if (payload.isEmpty) {
-      return; // Nothing to update
+      return;
     }
 
     final endpoint = '/api/theobrotect/users/$userId';
@@ -73,7 +71,6 @@ class ProfileService {
     }
   }
 
-  /// Check if the backend server is reachable
   Future<bool> isServerReachable() async {
     final reachable = await _serverReachability.isReachable();
     debugPrint(

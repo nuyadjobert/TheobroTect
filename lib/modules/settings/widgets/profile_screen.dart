@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../controllers/profile_controller.dart';
+import '../../../core/utils/barangay_options.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../theme/app_theme.dart';
 
@@ -19,22 +20,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _contactController;
   bool _isSaving = false;
-
-  final List<String> barangayOptions = const [
-    'Dacudao',
-    'Datu Balong',
-    'Igangon',
-    'Kipalili',
-    'Libuton',
-    'Linao',
-    'Mamangan',
-    'Monte Dujali',
-    'Pinamuno',
-    'Sabangan',
-    'San Miguel',
-    'Santo Niño',
-    'Poblacion',
-  ];
 
   String? _selectedBarangay;
 
@@ -112,7 +97,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
       if (!mounted) return;
 
-      // Show appropriate message based on result
       switch (result) {
         case ProfileUpdateResult.successOnline:
           TopToast.show(context, "✅ Profile updated successfully!");
@@ -267,7 +251,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ),
               const SizedBox(height: 28),
 
-              // Clean Card Container
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(

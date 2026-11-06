@@ -46,7 +46,6 @@ class CacaoModelService {
         'assets/models/2.6.tflite',
         options: InterpreterOptions()..threads = Platform.numberOfProcessors,
       );
-    //the 2.3 is good
       _isLoaded = true;
     } catch (e) {
       rethrow;
@@ -80,7 +79,6 @@ class CacaoModelService {
 
     img.Image targetImage;
 
-    // 1. CROP ACCORDING TO CROP_RECT IF PROVIDED
     if (cropRect != null) {
       final int cropX =
           (cropRect.left * decoded.width).round().clamp(0, decoded.width);
@@ -101,7 +99,6 @@ class CacaoModelService {
         height: cropH,
       );
     } else {
-      // Fallback: Default square crop centered in the image
       final int shortSide = min(decoded.width, decoded.height);
       final int offsetX = (decoded.width - shortSide) ~/ 2;
       final int offsetY = (decoded.height - shortSide) ~/ 2;
@@ -115,12 +112,10 @@ class CacaoModelService {
       );
     }
 
-    // 2. Get the two score arrays from inference using target cropped image
     final results = _runInference(targetImage);
     final diseaseScores = results['disease']!;
     final severityScores = results['severity']!;
 
-    // 3. Find the highest confidence for disease
     int bestDiseaseIdx = 0;
     double maxDiseaseConf = 0.0;
     for (int i = 0; i < diseaseScores.length; i++) {
@@ -130,7 +125,6 @@ class CacaoModelService {
       }
     }
 
-    // 4. Find the highest confidence for severity
     int bestSeverityIdx = 0;
     double maxSeverityConf = 0.0;
     for (int i = 0; i < severityScores.length; i++) {
@@ -154,14 +148,11 @@ class CacaoModelService {
     final inputTensor = _interpreter!.getInputTensor(0);
     final shape = inputTensor.shape; 
 
-    final int h = shape[1]; // Dynamically reads model input height (e.g., 384)
-    final int w = shape[2]; // Dynamically reads model input width (e.g., 384)
+    final int h = shape[1];
+    final int w = shape[2];
 
     final resized = img.copyResize(image, width: w, height: h);
 
-    // ============================================================
-    // OPTIMIZED TENSOR BUILDING WITH FLOAT32LIST
-    // ============================================================
     final floatInput = Float32List(1 * h * w * 3);
     int bufferIndex = 0;
 

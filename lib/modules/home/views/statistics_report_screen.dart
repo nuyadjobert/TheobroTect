@@ -69,7 +69,6 @@ class _StatisticsReportScreenState extends State<StatisticsReportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Year Selector
                   _buildYearSelector(
                     year,
                     cardBg,
@@ -79,7 +78,6 @@ class _StatisticsReportScreenState extends State<StatisticsReportScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Content based on state
                   if (state == StatisticsLoadState.loading)
                     _buildLoadingState(cardBg, accent)
                   else if (state == StatisticsLoadState.offline)
@@ -448,7 +446,6 @@ class _StatisticsReportScreenState extends State<StatisticsReportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Summary Card
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -489,7 +486,6 @@ class _StatisticsReportScreenState extends State<StatisticsReportScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Statistics Grid
         Row(
           children: [
             Expanded(
@@ -517,7 +513,6 @@ class _StatisticsReportScreenState extends State<StatisticsReportScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Disease Breakdown
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(

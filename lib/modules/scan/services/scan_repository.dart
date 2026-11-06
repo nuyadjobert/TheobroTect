@@ -17,23 +17,19 @@ class ScanRepositoryServices {
     required double confidence,
     String? imagePath,
 
-    // optional extras
     String? idempotencyKey,
     DateTime? scannedAt,
     DateTime? createdAt,
     DateTime? nextScanAt,
 
-    // location
     double? locationLat,
     double? locationLng,
     double? locationAccuracy,
     String? locationLabel,
 
-    // notification + SMS
     int? notifLocalId,
     bool smsEnabled = false,
 
-    // sync tracking
     String syncState = 'pending',
     String? backendId,
     int syncAttempts = 0,

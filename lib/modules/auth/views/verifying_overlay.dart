@@ -93,7 +93,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
 
               const Spacer(flex: 2),
 
-              // ── Central animation ──
               AnimatedBuilder(
                 animation: Listenable.merge([
                   _outerRingController,
@@ -108,7 +107,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Outermost soft glow
                         Container(
                           width: 210,
                           height: 210,
@@ -123,10 +121,8 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
                           ),
                         ),
 
-                        // Orbiting particles
                         ..._buildOrbitingParticles(colorScheme),
 
-                        // Outer spinning ring (clockwise, fast)
                         Transform.rotate(
                           angle:
                               _outerRingController.value * 2 * math.pi,
@@ -142,7 +138,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
                           ),
                         ),
 
-                        // Inner spinning ring (counter-clockwise, slower)
                         Transform.rotate(
                           angle:
                               -_innerRingController.value * 2 * math.pi,
@@ -158,7 +153,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
                           ),
                         ),
 
-                        // Background pale circle
                         Container(
                           width: 128,
                           height: 128,
@@ -175,7 +169,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
                           ),
                         ),
 
-                        // Pulsing white ring
                         ScaleTransition(
                           scale: _pulseAnimation,
                           child: Container(
@@ -192,7 +185,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
                           ),
                         ),
 
-                        // Inner circle
                         Container(
                           width: 96,
                           height: 96,
@@ -202,7 +194,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
                           ),
                         ),
 
-                        // Green core with lock icon
                         Container(
                           width: 82,
                           height: 82,
@@ -235,7 +226,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
 
               const SizedBox(height: 44),
 
-              // ── Title ──
               Text(
                 "Verifying Code...",
                 style: TextStyle(
@@ -259,7 +249,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
 
               const SizedBox(height: 28),
 
-              // ── Enhanced dot indicators ──
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -273,7 +262,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
 
               const Spacer(flex: 2),
 
-              // ── Bottom secure badge ──
               Padding(
                 padding: const EdgeInsets.only(bottom: 28),
                 child: Container(
@@ -360,7 +348,6 @@ class _VerifyingOverlayState extends State<VerifyingOverlay>
   }
 }
 
-// ── Multi-segment ring painter ──
 class _RingPainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
@@ -397,7 +384,6 @@ class _RingPainter extends CustomPainter {
       old.color != color || old.strokeWidth != strokeWidth;
 }
 
-// ── Wave-bouncing dot ──
 class _WaveDot extends StatefulWidget {
   final int delay;
   final Color color;

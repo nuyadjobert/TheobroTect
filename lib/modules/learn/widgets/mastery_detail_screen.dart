@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../../theme/app_theme.dart';
 
-// --- DATA MODEL ---
 class Lesson {
   final String title;
   final String duration;
@@ -50,8 +49,8 @@ class MasteryDetailScreen extends StatefulWidget {
 class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
   late YoutubePlayerController _controller;
   late List<Lesson> activeLessons;
-  int _currentIndex = 0; // tracks which lesson is currently loaded in the player
-  late Set<int> _completedIndices; // tracks which lessons have been fully watched
+  int _currentIndex = 0;
+  late Set<int> _completedIndices;
 
   @override
   void initState() {
@@ -59,7 +58,6 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
 
     activeLessons = courseDataMap[widget.title] ?? courseDataMap["Soil Fertility Secrets"]!;
 
-    // Seed completed set from any lessons already marked isCompleted in the data.
     _completedIndices = {
       for (int i = 0; i < activeLessons.length; i++)
         if (activeLessons[i].isCompleted) i,
@@ -76,7 +74,6 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
       ),
     );
 
-    // Watch for the video reaching its end to auto-mark the lesson complete.
     _controller.addListener(_onPlayerStateChanged);
   }
 
@@ -95,7 +92,7 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
     if (videoId != null) {
       _controller.load(videoId);
       setState(() {
-        _currentIndex = index; // update which tile shows as "active"
+        _currentIndex = index;
       });
     }
   }
@@ -143,7 +140,6 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                     pinned: true,
                     elevation: 0,
                     backgroundColor: scaffoldBg,
-                    // Wrapped in its own SafeArea so the back button always
                     leading: SafeArea(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 12, top: 8),
@@ -178,7 +174,6 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                     ),
                   ),
 
-                  // Header Information
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -203,7 +198,6 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                     ),
                   ),
 
-                  // Dynamic Lesson List
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     sliver: SliverList(
@@ -290,7 +284,6 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
                 ],
               ),
             ),
-            // Icon reflects whether this lesson is the one currently loaded.
             Icon(
               isActive ? Icons.pause_circle_filled : Icons.play_circle_fill,
               color: widget.themeColor,
@@ -310,7 +303,7 @@ class _MasteryDetailScreenState extends State<MasteryDetailScreen> {
         child: ElevatedButton(
           onPressed: () {},
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF7A5C4F), // Farming brown
+            backgroundColor: const Color(0xFF7A5C4F),
             minimumSize: const Size(double.infinity, 60),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             elevation: 4,

@@ -5,10 +5,10 @@ class GuideCard extends StatelessWidget {
   final String title;
   final String duration;
   final Color themeColor;
-  final VoidCallback? onTap; // Navigation trigger
-  final String? imageUrl; // Thumbnail (network URL or asset path)
-  final String? rating; // e.g. "4.8"
-  final String? enrollment; // e.g. "65"
+  final VoidCallback? onTap;
+  final String? imageUrl;
+  final String? rating;
+  final String? enrollment;
 
   const GuideCard({
     super.key,
@@ -38,7 +38,7 @@ class GuideCard extends StatelessWidget {
           BoxShadow(
             color: isDark
                 ? Colors.black.withAlpha(90)
-                : themeColor.withAlpha(30), // 0.12 * 255 = 30
+                : themeColor.withAlpha(30),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),

@@ -30,7 +30,6 @@ class HelpCenterScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           
-          // Pass 'context' into each tile method
           _buildFaqTile(
             context,
             "How do I scan a cacao leaf?", 
@@ -64,7 +63,6 @@ class HelpCenterScreen extends StatelessWidget {
     );
   }
 
-  // FIXED: Added BuildContext context to the parameters
   Widget _buildFaqTile(BuildContext context, String question, String answer) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),

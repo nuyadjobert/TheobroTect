@@ -22,7 +22,6 @@ class HistoryCard extends StatelessWidget {
     this.onDeleteComplete,
   });
 
-  // Helper function to format the date
   String _formatDate(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return 'No date';
     try {
@@ -33,15 +32,12 @@ class HistoryCard extends StatelessWidget {
     }
   }
 
-  // --- DELETE FUNCTION ---
   Future<void> _handleDelete(BuildContext context) async {
-    // If the parent screen passed a delete function (like from HistoryController), use that!
     if (onDelete != null) {
       onDelete!();
       return;
     }
 
-    // Otherwise, use the fallback manual deletion
     final bool? confirmed = await _showDeleteDialog(context);
     if(!context.mounted) return;
     
@@ -55,11 +51,9 @@ class HistoryCard extends StatelessWidget {
           return;
         }
 
-        // 2. Initialize Repositories
         final userRepo = UserRepository();
         final scanRepo = ScanRepository();
 
-        // 3. Get the current user to ensure we delete the correct record
         final currentUser = await userRepo.getCurrentUser();
         if (currentUser == null) {
             if (!context.mounted) return;
@@ -68,7 +62,6 @@ class HistoryCard extends StatelessWidget {
            return;
         }
         
-        // 4. Ask the ScanRepository to delete the record
         await scanRepo.deleteHistoryItem(
           localId: id,
           userId: currentUser.userId,
@@ -76,7 +69,6 @@ class HistoryCard extends StatelessWidget {
 
         if(!context.mounted) return;
 
-        // 5. Delete the physical image file
         if (imagePath != null && imagePath.isNotEmpty) {
           final file = File(imagePath);
           if (await file.exists()) {
@@ -99,7 +91,6 @@ class HistoryCard extends StatelessWidget {
     }
   }
 
-  // --- CONFIRMATION DIALOG ---
   Future<bool?> _showDeleteDialog(BuildContext context) {
     return showDialog<bool>(
       context: context,
@@ -136,7 +127,6 @@ class HistoryCard extends StatelessWidget {
     );
   }
 
-  // --- SNACKBAR HELPERS ---
   void _showSuccessSnackbar(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -276,7 +266,7 @@ class HistoryCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            _formatDate(data['date']), // Formatted date
+                            _formatDate(data['date']),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(color: Colors.grey[500], fontSize: 9, fontWeight: FontWeight.w500),

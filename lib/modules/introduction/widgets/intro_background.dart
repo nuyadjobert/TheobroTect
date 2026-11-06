@@ -24,7 +24,6 @@ class IntroBackground extends StatelessWidget {
           fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
-          // Error handling for missing assets
           errorBuilder: (context, error, stackTrace) => Container(color: Colors.black),
         ),
       ),

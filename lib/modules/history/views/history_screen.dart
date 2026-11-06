@@ -38,7 +38,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Header stays forest-dark in both modes — it's already dark themed.
     final headerBg = AppColors.forestDark;
     final contentBg = isDark ? AppColors.nightBg : const Color(0xFFFBFDFB);
     final searchFill = isDark ? AppColors.nightCard : Colors.white;
@@ -52,7 +51,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness:
-            Brightness.light, // white icons, since header bg is dark green
+            Brightness.light,
         systemNavigationBarColor: contentBg,
         systemNavigationBarIconBrightness:
             isDark ? Brightness.light : Brightness.dark,

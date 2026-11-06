@@ -38,7 +38,6 @@ class TotalScannedCard extends StatelessWidget {
         final state = controller.statsLoadState;
         final counts = controller.diseaseCounts;
 
-        // Show error/offline states with a different layout
         if (state == StatisticsLoadState.offline ||
             state == StatisticsLoadState.serverUnreachable ||
             state == StatisticsLoadState.authError ||
@@ -55,7 +54,6 @@ class TotalScannedCard extends StatelessWidget {
           );
         }
 
-        // Normal interactive card for loading, success, empty, and initial states
         return GestureDetector(
           onTap: () {
             Navigator.push(
@@ -256,7 +254,6 @@ class TotalScannedCard extends StatelessWidget {
       );
     }
 
-    // Default icon for other states
     return Container(
       height: 50,
       width: 50,
@@ -356,7 +353,6 @@ class TotalScannedCard extends StatelessWidget {
       );
     }
 
-    // Empty/Error/Offline states
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

@@ -1,10 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utils/barangay_options.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../../core/widgets/toast.dart';
 import '../controllers/registration_controller.dart';
 import '../models/registration_model.dart';
 import '../../home/views/home_screen.dart';
+import 'legal_sheet.dart';
 import 'verify_success_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -106,23 +108,48 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   TextField(
                     controller: controller.nameController,
                     keyboardType: TextInputType.name,
+                    onChanged: (_) {
+                      if (controller.nameError != null) {
+                        setState(() => controller.nameError = null);
+                      }
+                    },
                     decoration: appInputDecoration(
                       context,
                       hint: "Enter your full name",
                       prefixIcon: Icons.person,
+                      errorText: controller.nameError,
                     ),
                   ),
                   const SizedBox(height: 20),
                   _buildLabel("Address", theme),
                   const SizedBox(height: 8),
-                  TextField(
-                    controller: controller.addressController,
-                    keyboardType: TextInputType.streetAddress,
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    menuMaxHeight: 320,
+                    borderRadius: BorderRadius.circular(16),
+                    icon: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: colorScheme.primary,
+                    ),
                     decoration: appInputDecoration(
                       context,
-                      hint: "Enter your full address",
+                      hint: "Select your barangay",
                       prefixIcon: Icons.location_on,
+                      errorText: controller.addressError,
                     ),
+                    items: [
+                      for (final barangay in barangayOptions)
+                        DropdownMenuItem<String>(
+                          value: barangay,
+                          child: Text(barangay),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      controller.addressController.text = value ?? '';
+                      if (controller.addressError != null) {
+                        setState(() => controller.addressError = null);
+                      }
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildLabel("Contact Number", theme),
@@ -130,10 +157,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   TextField(
                     controller: controller.phoneController,
                     keyboardType: TextInputType.phone,
+                    onChanged: (_) {
+                      if (controller.phoneError != null) {
+                        setState(() => controller.phoneError = null);
+                      }
+                    },
                     decoration: appInputDecoration(
                       context,
                       hint: "Enter your contact number",
                       prefixIcon: Icons.phone,
+                      errorText: controller.phoneError,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -150,7 +183,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             color: colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
-                          recognizer: TapGestureRecognizer()..onTap = () {},
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => showTermsSheet(context),
                         ),
                         const TextSpan(text: "\nand "),
                         TextSpan(
@@ -159,7 +193,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             color: colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
-                          recognizer: TapGestureRecognizer()..onTap = () {},
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => showPrivacySheet(context),
                         ),
                         const TextSpan(text: "."),
                       ],

@@ -40,7 +40,7 @@ class TreatmentPlanSection extends StatelessWidget {
           child: Text(
             lang == 'tl' ? "Plano ng Paggamot" : "Treatment Plan",
             style: const TextStyle(
-              fontSize: 22, // Slightly larger for better hierarchy
+              fontSize: 22,
               fontWeight: FontWeight.w800,
               color: Color(0xFF1B3022),
               letterSpacing: 0.5,
@@ -65,16 +65,12 @@ class _RecommendationBlock extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        // 1. Soft base color (Crucial for claymorphism)
         color: const Color(0xFFF0F4F1), 
-        // 2. Large, friendly border radius
         borderRadius: BorderRadius.circular(24),
-        // 3. Subtle inner border to simulate the 3D edge highlight
         border: Border.all(
           color: Colors.white,
           width: 2,
         ),
-        // 4. The Clay Shadows (One dark bottom-right, one white top-left)
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(20),
@@ -93,7 +89,6 @@ class _RecommendationBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category Title
           Text(
             TreatmentPlanSection.getCategoryTitle(
               rec.category,
@@ -102,19 +97,17 @@ class _RecommendationBlock extends StatelessWidget {
             style: const TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 18,
-              color: Color(0xFF2A4D35), // Darker green for contrast
+              color: Color(0xFF2A4D35),
             ),
           ),
           const SizedBox(height: 12),
           
-          // Bullet Points (Upgraded to stylish rows)
           ...rec.content(lang).map(
             (item) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Custom clay-like bullet point
                   Container(
                     margin: const EdgeInsets.only(top: 4, right: 12),
                     height: 12,
@@ -131,13 +124,12 @@ class _RecommendationBlock extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Text
                   Expanded(
                     child: Text(
                       item,
                       style: const TextStyle(
                         fontSize: 15,
-                        height: 1.5, // Better readability
+                        height: 1.5,
                         color: Color(0xFF333333),
                         fontWeight: FontWeight.w500,
                       ),

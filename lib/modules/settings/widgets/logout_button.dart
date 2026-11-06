@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Solid-fill logout button. Owns only the confirmation dialog (UI
-/// concern); the actual logout + navigation work is delegated to
-/// [onConfirmed] so this widget has no knowledge of controllers or auth.
 class LogoutButton extends StatelessWidget {
   final Color textPrimary;
   final Color textSecondary;

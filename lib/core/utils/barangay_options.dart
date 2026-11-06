@@ -1,0 +1,15 @@
+const List<String> barangayOptions = [
+  'Dacudao',
+  'Datu Balong',
+  'Igangon',
+  'Kipalili',
+  'Libuton',
+  'Linao',
+  'Mamangan',
+  'Monte Dujali',
+  'Pinamuno',
+  'Sabangan',
+  'San Miguel',
+  'Santo Niño',
+  'Poblacion',
+];

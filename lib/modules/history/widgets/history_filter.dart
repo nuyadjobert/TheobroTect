@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class HistoryFilter extends StatelessWidget {
   final String selectedFilter;
   final Function(String) onFilterSelected;
-  final DateTime? selectedDate; // New: track the selected date
-  final Function(DateTime?) onDateSelected; // New: callback for date picker
+  final DateTime? selectedDate;
+  final Function(DateTime?) onDateSelected;
 
   const HistoryFilter({
     super.key,
@@ -19,17 +19,15 @@ class HistoryFilter extends StatelessWidget {
     final filters = ["All Scans", "Infected", "Healthy"];
 
     return SizedBox(
-      height: 45, // Slightly increased height for better tap targets
+      height: 45,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
-          // 1. Date Picker Trigger
           _buildDateChip(context),
           
           const SizedBox(width: 10),
           
-          // 2. Vertical Divider for visual separation
           VerticalDivider(
             color: Colors.white.withAlpha(77),
             thickness: 1,
@@ -39,7 +37,6 @@ class HistoryFilter extends StatelessWidget {
           
           const SizedBox(width: 10),
 
-          // 3. Existing Status Filters
           ...filters.map((filter) {
             bool isSelected = selectedFilter == filter;
             return Padding(
@@ -81,21 +78,20 @@ class HistoryFilter extends StatelessWidget {
             return Theme(
               data: Theme.of(context).copyWith(
                 colorScheme: const ColorScheme.light(
-                  primary: Color(0xFF2D6A4F), // Header background color
-                  onPrimary: Colors.white,    // Header text color
-                  onSurface: Color(0xFF1B3022), // Body text color
+                  primary: Color(0xFF2D6A4F),
+                  onPrimary: Colors.white,
+                  onSurface: Color(0xFF1B3022),
                 ),
               ),
               child: child!,
             );
           },
         );
-// If user picks the same date again, clear it — acts as a toggle
         if (picked != null && selectedDate != null &&
             picked.year == selectedDate!.year &&
             picked.month == selectedDate!.month &&
             picked.day == selectedDate!.day) {
-          onDateSelected(null); // clear
+          onDateSelected(null);
         } else {
           onDateSelected(picked);
         }

@@ -56,12 +56,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) setState(() {});
     });
 
-    // Using controller methods instead of handling it directly in view
     _controller.startSync();
     _controller.checkPendingScans();
     _controller.syncGuideData();
 
-    // Load scan statistics
     _controller.loadStatistics();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -73,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _pageController.dispose();
-    _controller.stopSync(); // Delegate to controller
+    _controller.stopSync();
     super.dispose();
   }
 
@@ -96,9 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       await _controller.fetchData(index);
-    } catch (e) {
-      // Error handled silently
-    } finally {
+    } catch (_) {} finally {
       if (mounted) {
         _pageController.jumpToPage(index);
         setState(() {
@@ -113,19 +109,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Core surfaces
     final scaffoldBg = isDark ? AppColors.nightBg : const Color(0xFFF5FAF3);
     final surfaceCard = isDark ? AppColors.nightCard : Colors.white;
     final avatarBg = isDark ? AppColors.nightCard : const Color(0xFFF1F1F1);
 
-    // Text
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white60 : Colors.grey[600];
     final navInactiveIcon = isDark ? Colors.white38 : Colors.grey[400];
     final navInactiveText = isDark ? Colors.white54 : Colors.grey[500];
 
-    // Brand / accent (green stays green, just lightens a touch in dark mode
-    // so it doesn't disappear against the dark surfaces)
     final accent = isDark ? AppColors.forestLight : const Color(0xFF2D6A4F);
     final avatarIconColor = isDark ? AppColors.forestLight : Colors.green;
 
@@ -187,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(top: 30),
           child: SizedBox(
-            height: 56, // Slightly increased for a better touch target
+            height: 56,
             width: 56,
             child: FloatingActionButton(
               onPressed: () {
@@ -200,12 +192,12 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: const Color(0xFF2D6A4F),
               elevation: 5,
               shape: const CircleBorder(),
-              tooltip: 'Detect Cacao Disease', // Added for UX & accessibility
+              tooltip: 'Detect Cacao Disease',
               child: const Icon(
                 Icons
-                    .camera_enhance_rounded, // Replaced QR icon with Smart Camera icon
+                    .camera_enhance_rounded,
                 color: Colors.white,
-                size: 28, // Made slightly larger for emphasis
+                size: 28,
               ),
             ),
           ),

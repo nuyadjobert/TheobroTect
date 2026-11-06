@@ -4,7 +4,6 @@ import '../../../core/model/user.model.dart';
 
 class SettingsController {
   final UserRepository userRepository =UserRepository();
-  // settings_controller.dart
 Future<void> logout() async {
   try {
     await TokenStorage().clear();

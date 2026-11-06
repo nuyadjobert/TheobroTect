@@ -105,8 +105,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
     });
   }
 
-  /// Fits the pod frame into the space between the top bar and the bottom
-  /// controls, scaling it down on small screens and keeping its proportions.
   Rect _frameRect(Size size, EdgeInsets padding) {
     final double top = padding.top + _topBarHeight;
     final double bottom = size.height -
@@ -163,7 +161,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
                 return Stack(
                   children: [
-                    // 1. Camera Preview with Tap Gesture
                     GestureDetector(
                       onTapDown: _onTapToFocus,
                       child: SizedBox.expand(
@@ -186,7 +183,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
                       ),
                     ),
 
-                    // 2. Custom Pod Scanner Frame Overlay Mask
                     Positioned.fill(
                       child: CustomPaint(
                         painter: ScannerOverlayPainter(frameRect: frameRect),
@@ -209,7 +205,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
                         ),
                       ),
 
-                    // 3. UI Navigation, guidance & Capture Action Bar
                     SafeArea(
                       child: Column(
                         children: [
@@ -286,7 +281,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
                       ),
                     ),
 
-                    // 4. Analyzing Loading Screen Overlay
                     if (controller.isAnalyzing)
                       Container(
                         color: Colors.black87,

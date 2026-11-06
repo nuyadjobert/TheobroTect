@@ -72,7 +72,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 24),
                           const Center(child: BrandHeader(large: true)),
 
-                          // ── Cacao farm image — fades on all edges, hides on keyboard ──
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 250),
                             curve: Curves.easeInOut,

@@ -106,7 +106,6 @@ class UserProfileController extends ChangeNotifier {
             'queueing retry. error=$lastError',
           );
           
-          // API failed, save offline
           await _saveOffline(name, address, contactNumber, payload);
           result = ProfileUpdateResult.savedOffline;
         } catch (e) {
@@ -116,7 +115,6 @@ class UserProfileController extends ChangeNotifier {
             'queueing retry. error=$lastError',
           );
           
-          // Unexpected error, save offline
           await _saveOffline(name, address, contactNumber, payload);
           result = ProfileUpdateResult.savedOffline;
         }
@@ -125,7 +123,6 @@ class UserProfileController extends ChangeNotifier {
         result = ProfileUpdateResult.savedOffline;
       }
     } else {
-      // No connection, save offline
       await _saveOffline(name, address, contactNumber, payload);
       result = ProfileUpdateResult.savedOffline;
     }

@@ -21,7 +21,6 @@ class _GuideCategory {
   });
 }
 
-// Represents one Mastery Course card.
 class _MasteryCourse {
   final String title;
   final String duration;
@@ -81,9 +80,6 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
     ),
   ];
 
-  // Full set of Mastery Courses. Image keywords are chosen to match each
-  // title (e.g. rain/crops for "Rainy Season Care") using LoremFlickr's
-  // tag-based photo endpoint: https://loremflickr.com/{w}/{h}/{tags}
   static const List<_MasteryCourse> _allCourses = [
     _MasteryCourse(
       title: "Soil Fertility Secrets",
@@ -194,7 +190,6 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                 children: [
                   const SizedBox(height: 4),
 
-                  // --> Sterilize Pruning Tools ----
                   PreventionTipCard(
                     label: "TODAY'S ACTION",
                     message:
@@ -207,7 +202,6 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  //  -> "Management Guides" ----
                   _buildSectionHeader(
                     context,
                     title: "Management Guides",
@@ -226,7 +220,6 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // "Mastery Courses" ----
                   _buildSectionHeader(
                     context,
                     title: "Mastery Courses",
@@ -262,7 +255,6 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
     );
   }
 
-  // "View all" for Mastery Courses -> bottom sheet with a scrollable grid
   void _showAllCourses(BuildContext context, Color cardBg, Color textPrimary) {
     showModalBottomSheet(
       context: context,
@@ -338,7 +330,6 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
     );
   }
 
-  // "View all" for Management Guide categories -> bottom sheet grid
   void _showAllCategories(
     BuildContext context,
     Color cardBg,
@@ -549,7 +540,6 @@ class _LearnHubScreenState extends State<LearnHubScreen> {
     );
   }
 
-  // Mastery Courses -> horizontal scroll using your real GuideCard
   Widget _buildHorizontalGuides(BuildContext context) {
     return SizedBox(
       height: 220,

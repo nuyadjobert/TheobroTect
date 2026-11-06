@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Single tappable row used inside settings cards (e.g. "My Profile",
-/// "Dark Mode", "Help Center"). Shared by every settings section so the
-/// icon/title/trailing layout only lives in one place.
 class SettingsListTile extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -57,8 +54,6 @@ class SettingsListTile extends StatelessWidget {
   }
 }
 
-/// Thin divider inset to align with the text (not the leading icon)
-/// of a [SettingsListTile] above/below it.
 class SettingsTileDivider extends StatelessWidget {
   final Color color;
 

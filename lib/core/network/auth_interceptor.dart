@@ -12,7 +12,6 @@ class AuthInterceptor extends Interceptor {
   ) async {
     final token = await getToken();
 
-    // ✅ Always expect JSON from backend
     options.headers['Accept'] = 'application/json';
 
     if (token != null && token.isNotEmpty) {

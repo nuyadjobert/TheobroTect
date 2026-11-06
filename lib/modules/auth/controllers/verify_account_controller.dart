@@ -167,7 +167,7 @@ class VerifyAccountController extends ChangeNotifier {
 
   Future<void> _saveUserLocally({
     required String userId,
-    required String name, // Add this
+    required String name,
     required String email,
     required String address,
     required String contactNumber,
@@ -177,7 +177,7 @@ class VerifyAccountController extends ChangeNotifier {
     final localUser = LocalUser(
       userId: userId,
       email: email,
-      name: name, // Use the variable, not null!
+      name: name,
       address: address,
       contactNumber: contactNumber,
       createdAt: now,

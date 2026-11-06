@@ -1,31 +1,26 @@
-import 'dart:developer' as developer; // Added for structured logging
+import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 
-// 1. Import your new repositories
 import 'package:cacao_apps/core/db/scan_repository.dart';
 import 'package:cacao_apps/core/db/user_repository.dart';
 
 class ScanSyncService {
   final Dio dio;
   
-  // 2. Define the new repository dependencies
   final ScanRepository scanRepository;
   final UserRepository _userRepository = UserRepository();
 
-  // 3. Update constructor to accept scanRepository (fixes your SyncTrigger error!)
   ScanSyncService({required this.dio, required this.scanRepository});
 
   Future<void> syncPendingScans() async {
     developer.log('Batch Sync started...', name: 'ScanSync');
 
-    // 4. Use the UserRepository to get the current user
     final currentUser = await _userRepository.getCurrentUser();
     if (currentUser == null) {
       developer.log('No user found. Aborting sync.', name: 'ScanSync');
       return;
     }
 
-    // 5. Use ScanRepository for all scan-related queries
     final pending = await scanRepository.getPendingScans(
       userId: currentUser.userId,
       limit: 50,
@@ -88,7 +83,6 @@ class ScanSyncService {
           final scan = result['data'];
           final backendId = (scan['id'] ?? scan['_id'] ?? localId).toString();
 
-          // 6. Update successful sync via repository
           await scanRepository.markScanSynced(localId: localId, backendId: backendId);
 
           developer.log('Synced $localId', name: 'ScanSync');
@@ -98,7 +92,6 @@ class ScanSyncService {
             name: 'ScanSync',
           );
         } else {
-          // 7. Update failed sync via repository
           await scanRepository.markScanSyncFailed(
             localId: localId,
             errorMessage: result['message'] ?? 'Batch error',

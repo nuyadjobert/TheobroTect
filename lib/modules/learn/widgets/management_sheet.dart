@@ -41,7 +41,6 @@ class _ManagementSheetState extends State<ManagementSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -58,7 +57,6 @@ class _ManagementSheetState extends State<ManagementSheet> {
             borderRadius: BorderRadius.circular(10),
           ),
           const SizedBox(height: 32),
-          // Step Icon
           CircleAvatar(
             radius: 40,
             backgroundColor: iconCircleBg,
@@ -73,7 +71,6 @@ class _ManagementSheetState extends State<ManagementSheet> {
               style: TextStyle(fontSize: 14, color: descriptionColor, height: 1.5)),
           const SizedBox(height: 40),
 
-          // Navigation Buttons (Previous + Next)
           Row(
             children: [
               if (!isFirstStep) ...[

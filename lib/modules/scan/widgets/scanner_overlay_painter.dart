@@ -12,23 +12,20 @@ class ScannerOverlayPainter extends CustomPainter {
     final double cy = frameRect.center.dy;
     final double frameWidth = frameRect.width;
     final double frameHeight = frameRect.height;
-    final double podRadius = frameRect.shortestSide * 0.2857; // The roundedness of the pod cutout
+    final double podRadius = frameRect.shortestSide * 0.2857;
 
-    // 1. Draw Semi-Transparent Dark Mask
-    final bgPaint = Paint()..color = Colors.black.withAlpha(204); // 80% opacity
+    final bgPaint = Paint()..color = Colors.black.withAlpha(204);
     final bgPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final cutoutRRect = RRect.fromRectAndRadius(frameRect, Radius.circular(podRadius));
     final cutoutPath = Path()..addRRect(cutoutRRect);
 
-    // Subtract the pod shape from the dark background
     final overlayPath =
         Path.combine(PathOperation.difference, bgPath, cutoutPath);
     canvas.drawPath(overlayPath, bgPaint);
 
-    // 2. Draw Inner Dashed Border
     final dashPaint = Paint()
-      ..color = Colors.white.withAlpha(102) // 40% opacity
+      ..color = Colors.white.withAlpha(102)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -37,7 +34,7 @@ class ScannerOverlayPainter extends CustomPainter {
       double distance = 0.0;
       bool draw = true;
       while (distance < measurePath.length) {
-        double length = draw ? 8.0 : 6.0; // 8px dash, 6px gap
+        double length = draw ? 8.0 : 6.0;
         canvas.drawPath(
           measurePath.extractPath(distance, distance + length),
           dashPaint,
@@ -47,9 +44,8 @@ class ScannerOverlayPainter extends CustomPainter {
       }
     }
 
-    // 3. Draw Center Crosshair
     final crosshairPaint = Paint()
-      ..color = Colors.white.withAlpha(77) // 30% opacity
+      ..color = Colors.white.withAlpha(77)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -59,15 +55,14 @@ class ScannerOverlayPainter extends CustomPainter {
     canvas.drawLine(Offset(cx, cy - crosshairSize / 2),
         Offset(cx, cy + crosshairSize / 2), crosshairPaint);
 
-    // 4. Draw Neon Green Corner Brackets
     final cornerPaint = Paint()
-      ..color = const Color(0xFF2EFA8A) // Match the neon green from the design
+      ..color = const Color(0xFF2EFA8A)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round;
 
-    final double margin = 12.0; // Distance of the corners from the inner dashed line
-    final double cornerRadius = podRadius + (margin / 2); // Expanding curve logically
+    final double margin = 12.0;
+    final double cornerRadius = podRadius + (margin / 2);
     final double cornerLength = 30.0;
 
     final double left = cx - (frameWidth / 2) - margin;
@@ -75,7 +70,6 @@ class ScannerOverlayPainter extends CustomPainter {
     final double top = cy - (frameHeight / 2) - margin;
     final double bottom = cy + (frameHeight / 2) + margin;
 
-    // Top-Left Corner
     Path tl = Path()
       ..moveTo(left, top + cornerRadius + cornerLength)
       ..lineTo(left, top + cornerRadius)
@@ -84,7 +78,6 @@ class ScannerOverlayPainter extends CustomPainter {
       ..lineTo(left + cornerRadius + cornerLength, top);
     canvas.drawPath(tl, cornerPaint);
 
-    // Top-Right Corner
     Path tr = Path()
       ..moveTo(right - cornerRadius - cornerLength, top)
       ..lineTo(right - cornerRadius, top)
@@ -93,7 +86,6 @@ class ScannerOverlayPainter extends CustomPainter {
       ..lineTo(right, top + cornerRadius + cornerLength);
     canvas.drawPath(tr, cornerPaint);
 
-    // Bottom-Right Corner
     Path br = Path()
       ..moveTo(right, bottom - cornerRadius - cornerLength)
       ..lineTo(right, bottom - cornerRadius)
@@ -102,7 +94,6 @@ class ScannerOverlayPainter extends CustomPainter {
       ..lineTo(right - cornerRadius - cornerLength, bottom);
     canvas.drawPath(br, cornerPaint);
 
-    // Bottom-Left Corner
     Path bl = Path()
       ..moveTo(left + cornerRadius + cornerLength, bottom)
       ..lineTo(left + cornerRadius, bottom)

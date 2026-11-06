@@ -46,11 +46,9 @@ class HistoryController {
     }
   }
 
-  // NEW — add this method
   Future<Map<String, dynamic>> getFarmStats() async {
   final fullHistory = await getHistory();
 
-  // Sort newest first, then take the most recent 20 (or fewer if not enough)
   final sorted = List<Map<String, dynamic>>.from(fullHistory)
     ..sort((a, b) {
       final dateA = DateTime.tryParse(a['created_at'].toString()) ?? DateTime(2000);
@@ -61,7 +59,7 @@ class HistoryController {
   const int windowSize = 20;
   final recentScans = sorted.take(windowSize).toList();
 
-  final totalScans = fullHistory.length; // overall count stays lifetime
+  final totalScans = fullHistory.length;
   final recentCount = recentScans.length;
 
   final healthyCount = recentScans.where((item) {

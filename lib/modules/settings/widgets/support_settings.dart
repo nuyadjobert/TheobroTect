@@ -3,7 +3,6 @@ import 'help_center_screen.dart';
 import 'about_screen.dart';
 import 'setting_list_tile.dart';
 
-/// "Support" settings card: Help Center + About TheobroTect.
 class SupportSettingsCard extends StatelessWidget {
   final Color cardBg;
   final Color textPrimary;

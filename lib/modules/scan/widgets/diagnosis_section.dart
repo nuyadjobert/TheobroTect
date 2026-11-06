@@ -18,10 +18,10 @@ class DiagnosisSection extends StatelessWidget {
 void _showFullDescription(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFFF2F5F3), // Matching the matte background base
-      isScrollControlled: true, // Allows the sheet to adjust dynamically to content height
+      backgroundColor: const Color(0xFFF2F5F3),
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)), // Matching your signature round curves
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       builder: (BuildContext context) {
         return SafeArea(
@@ -31,7 +31,6 @@ void _showFullDescription(BuildContext context) {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Grab Handle (Standard Sheet Ergonomics)
                 Center(
                   child: Container(
                     width: 48,
@@ -44,7 +43,6 @@ void _showFullDescription(BuildContext context) {
                 ),
                 const SizedBox(height: 24),
                 
-                // Bottom Sheet Header: Title + Badge
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -65,7 +63,6 @@ void _showFullDescription(BuildContext context) {
                 ),
                 const Divider(height: 32, color: Color(0xFFD1D6D2), thickness: 1),
                 
-                // Scrollable Full Description Text
                 Flexible(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -151,7 +148,6 @@ void _showFullDescription(BuildContext context) {
           ),
           child: Column(
             children: [
-              // Header Row for the meter
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -179,17 +175,15 @@ void _showFullDescription(BuildContext context) {
               ),
               const SizedBox(height: 14),
 
-              // The Progress Bar Track & Fill
               Container(
                 height: 14,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD1D6D2), // Darker matte background (looks pressed in)
+                  color: const Color(0xFFD1D6D2),
                   borderRadius: BorderRadius.circular(12),
-                  // Subtle inner shadow effect
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x1A000000), // Very faint black inside
+                      color: Color(0x1A000000),
                       offset: Offset(0, 2),
                       blurRadius: 2,
                     )
@@ -200,7 +194,6 @@ void _showFullDescription(BuildContext context) {
                     return Align(
                       alignment: Alignment.centerLeft,
                       child: Container(
-                        // Width dynamically calculates based on confidence double
                         width: constraints.maxWidth * confidence.clamp(0.0, 1.0),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
@@ -208,11 +201,10 @@ void _showFullDescription(BuildContext context) {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Color(0xFF34D399), // Light emerald highlight
-                              Color(0xFF10B981), // Core emerald
+                              Color(0xFF34D399),
+                              Color(0xFF10B981),
                             ],
                           ),
-                          // Give the fill bar its own mini pop-out shadow
                           boxShadow: const [
                             BoxShadow(
                               color: Color(0x3310B981),
@@ -306,11 +298,10 @@ void _showFullDescription(BuildContext context) {
               ),
               const SizedBox(height: 16),
 
-              // ─── TRUNCATED BODY TEXT ───
               Text(
                 description,
-                maxLines: 3, // Limits presentation text layer depth
-                overflow: TextOverflow.ellipsis, // Ends text with gracefully placed "..."
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 15,
                   height: 1.6,
@@ -321,7 +312,6 @@ void _showFullDescription(BuildContext context) {
               ),
               const SizedBox(height: 12),
               
-              // ─── SEE MORE LINK INTERFACE ───
               GestureDetector(
                 onTap: () => _showFullDescription(context),
                 child: Row(
@@ -332,7 +322,7 @@ void _showFullDescription(BuildContext context) {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF10B981), // Stands out in accent green
+                        color: Color(0xFF10B981),
                       ),
                     ),
                     SizedBox(width: 4),

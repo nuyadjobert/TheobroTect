@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Required for SystemUiOverlayStyle
+import 'package:flutter/services.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // This ensures the status bar icons (time, battery) are DARK and visible
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // Keeps the status bar seamless
-        statusBarIconBrightness: Brightness.dark, // Dark icons for Android
-        statusBarBrightness: Brightness.light, // Dark icons for iOS
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
       child: Scaffold(
         backgroundColor: const Color(0xFFF9FBF9),
@@ -19,7 +18,6 @@ class AboutScreen extends StatelessWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          // Secondary backup to ensure status bar icons stay visible
           systemOverlayStyle: SystemUiOverlayStyle.dark, 
           leading: const BackButton(color: Color(0xFF1B3022)),
         ),
@@ -28,7 +26,6 @@ class AboutScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
-              // --- EXTENDED SYSTEM INTRODUCTION ---
               Center(
                 child: Column(
                   children: [
@@ -40,7 +37,7 @@ class AboutScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF2D6A4F).withAlpha(51), // 0.2 * 255 = 51
+                            color: const Color(0xFF2D6A4F).withAlpha(51),
                             blurRadius: 15,
                             offset: const Offset(0, 8),
                           )
@@ -89,7 +86,6 @@ class AboutScreen extends StatelessWidget {
               const Divider(thickness: 1, color: Color(0xFFE8EDE8)),
               const SizedBox(height: 40),
 
-              // --- CENTERED TEAM SECTION ---
               const Text(
                 "OUR DEDICATED TEAM",
                 style: TextStyle(
@@ -155,7 +151,7 @@ class AboutScreen extends StatelessWidget {
             border: Border.all(color: Colors.white, width: 4),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(20), // 0.08 * 255 = 20
+                color: Colors.black.withAlpha(20),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               )
@@ -180,7 +176,7 @@ class AboutScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFF2D6A4F).withAlpha(25), // 0.1 * 255 = 25
+            color: const Color(0xFF2D6A4F).withAlpha(25),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(

@@ -84,7 +84,6 @@ class ScanResultController extends ChangeNotifier {
       _error != null;
 
   void toggleBookmark() {
-    // saveScan.toggleSaveRecord();
     notifyListeners();
   }
 

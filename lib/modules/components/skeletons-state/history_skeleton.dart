@@ -9,7 +9,6 @@ class HistorySkeleton extends StatelessWidget {
       children: [
         const SizedBox(height: 10),
 
-        // Filter pills row — matches HistoryFilter
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -44,7 +43,6 @@ class HistorySkeleton extends StatelessWidget {
           ),
         ),
 
-        // Search bar — matches _buildSearchBar
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           child: Container(
@@ -57,7 +55,6 @@ class HistorySkeleton extends StatelessWidget {
           ),
         ),
 
-        // Grid — matches the real GridView (2 cols, aspect ratio 0.68)
         Expanded(
           child: GridView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

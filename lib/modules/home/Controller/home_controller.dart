@@ -33,7 +33,6 @@ class HomeController extends ChangeNotifier {
   StatisticsLoadState _statsLoadState = StatisticsLoadState.initial;
   String? _statsError;
 
-  // Getters for statistics state
   DiseaseCountsModel? get diseaseCounts => _diseaseCounts;
   int? get selectedYear => _selectedYear;
   bool get isLoadingStats => _isLoadingStats;
@@ -65,15 +64,7 @@ class HomeController extends ChangeNotifier {
 
       rawData.map((row) => row['disease_key']).join(', ');
 
-      // Fluttertoast.showToast(
-      //   msg: "✅ DB has ${rawData.length} diseases: $diseaseList",
-      //   toastLength: Toast.LENGTH_LONG,
-      //   gravity: ToastGravity.BOTTOM,
-      // );
-
-    } catch (e) {
-      // Fluttertoast.showToast(msg: "Error reading DB: $e");
-    }
+    } catch (_) {}
   }
 
   final List<Map<String, dynamic>> diseaseData = [
@@ -171,12 +162,9 @@ class HomeController extends ChangeNotifier {
       await _initializeAI();
 
       _isResourcesLoaded = true;
-    } catch (e) {
-      // Error handled silently
-    }
+    } catch (_) {}
   }
 
-  // Moved repository logic from View to Controller
   Future<void> checkPendingScans() async {
     final UserRepository userRepository = UserRepository();
     final ScanRepository scanRepository = ScanRepository();
@@ -196,24 +184,19 @@ class HomeController extends ChangeNotifier {
   void startSync() => _syncTrigger.start();
   void stopSync() => _syncTrigger.stop();
 
-  // UPDATED: Sync and then verify
   Future<void> syncGuideData() async {
     try {
       final syncSuccess = await _guideSyncService.fetchUpdatesFromServer();
 
-      // If sync was successful, run our test to read from SQLite
       if (syncSuccess) {
         await _verifyLocalDatabase();
 
         await showDatabaseDebugToast();
       }
-    } catch (e) {
-      // Error handled silently
-    }
+    } catch (_) {}
   }
 
   Future<void> _verifyLocalDatabase() async {
-    // 1. Fetch all raw rows directly to get the keys
     final db = await DatabaseHelper().db;
     final rawDiseases = await db.query('guide_diseases');
 
@@ -221,15 +204,12 @@ class HomeController extends ChangeNotifier {
       return;
     }
 
-    // 2. Loop through every disease found in the database
     for (var row in rawDiseases) {
       final String diseaseKey = row['disease_key'] as String;
 
-      // Use your repository to get the properly formatted (JSON decoded) data
       final diseaseData = await _guideRepo.getDisease(diseaseKey);
 
       if (diseaseData != null) {
-        // Optional: Test fetching recommendations for this specific disease
         await _guideRepo.getRecommendations(diseaseKey, 'mild');
       }
     }
@@ -272,13 +252,7 @@ class HomeController extends ChangeNotifier {
   Future<void> _fetchEducationalContent() async =>
       await Future.delayed(const Duration(milliseconds: 1000));
 
-  // ========== SCAN STATISTICS METHODS ==========
-
-  /// Load scan statistics for the authenticated user
-  /// [year] - Optional year filter. If null, loads all-time statistics
-  /// [forceRefresh] - If true, bypasses cache and fetches fresh data
   Future<void> loadStatistics({int? year, bool forceRefresh = false}) async {
-    // Don't reload if already loading
     if (_isLoadingStats && !forceRefresh) return;
 
     _isLoadingStats = true;
@@ -288,7 +262,6 @@ class HomeController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Check connectivity first
       final connectivity = await Connectivity().checkConnectivity();
       final hasConnection = connectivity.any((r) => r != ConnectivityResult.none);
 
@@ -298,7 +271,6 @@ class HomeController extends ChangeNotifier {
         return;
       }
 
-      // Check if server is reachable
       final serverReachable = await _statisticsService.isServerReachable();
       if (!serverReachable) {
         _statsLoadState = StatisticsLoadState.serverUnreachable;
@@ -306,7 +278,6 @@ class HomeController extends ChangeNotifier {
         return;
       }
 
-      // Fetch statistics from API
       _diseaseCounts = await _statisticsService.getUserDiseaseCounts(year: year);
 
       if (_diseaseCounts!.isEmpty) {
@@ -335,24 +306,20 @@ class HomeController extends ChangeNotifier {
     }
   }
 
-  /// Refresh statistics after sync completes
   Future<void> refreshStatisticsAfterSync() async {
     await loadStatistics(year: _selectedYear, forceRefresh: true);
   }
 
-  /// Change the selected year and reload statistics
   Future<void> changeYear(int? year) async {
-    if (_selectedYear == year) return; // Already selected
+    if (_selectedYear == year) return;
     await loadStatistics(year: year);
   }
 
-  /// Retry loading statistics after error or offline state
   Future<void> retryLoadStatistics() async {
     await loadStatistics(year: _selectedYear, forceRefresh: true);
   }
 }
 
-/// Statistics load state enum
 enum StatisticsLoadState {
   initial,
   loading,

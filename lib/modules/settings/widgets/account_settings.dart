@@ -3,7 +3,6 @@ import '../../../theme/theme_controller.dart';
 import '../../../theme/app_theme.dart';
 import 'setting_list_tile.dart';
 
-/// "Account" settings card: My Profile + Dark Mode toggle.
 class AccountSettingsCard extends StatelessWidget {
   final Color cardBg;
   final Color textPrimary;

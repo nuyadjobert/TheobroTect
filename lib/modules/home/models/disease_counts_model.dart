@@ -1,5 +1,3 @@
-/// Disease counts response model from the backend API
-/// Represents the authenticated user's scan statistics
 class DiseaseCountsModel {
   final int healthy;
   final int blackPodDisease;
@@ -13,13 +11,10 @@ class DiseaseCountsModel {
     required this.mealybug,
   });
 
-  /// Total number of scans across all categories
   int get totalScans => healthy + blackPodDisease + cacaoPodBorer + mealybug;
 
-  /// Total disease/pest detections (excludes healthy)
   int get totalDiseased => blackPodDisease + cacaoPodBorer + mealybug;
 
-  /// Create model from JSON response
   factory DiseaseCountsModel.fromJson(Map<String, dynamic> json) {
     return DiseaseCountsModel(
       healthy: (json['healthy'] ?? 0) as int,
@@ -29,7 +24,6 @@ class DiseaseCountsModel {
     );
   }
 
-  /// Convert model to JSON
   Map<String, dynamic> toJson() {
     return {
       'healthy': healthy,
@@ -39,7 +33,6 @@ class DiseaseCountsModel {
     };
   }
 
-  /// Empty/zero state
   factory DiseaseCountsModel.empty() {
     return DiseaseCountsModel(
       healthy: 0,
@@ -49,6 +42,5 @@ class DiseaseCountsModel {
     );
   }
 
-  /// Check if all counts are zero
   bool get isEmpty => totalScans == 0;
 }

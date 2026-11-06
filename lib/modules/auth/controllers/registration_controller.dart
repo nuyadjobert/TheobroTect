@@ -18,6 +18,10 @@ class RegistrationController extends ChangeNotifier {
   final TextEditingController addressController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
 
+  String? nameError;
+  String? addressError;
+  String? phoneError;
+
   bool _isLoading = false;
   String? _errorMessage;
   RegistrationResponse? _lastResponse;
@@ -53,6 +57,15 @@ class RegistrationController extends ChangeNotifier {
     );
   }
 
+  bool _validateFields(RegistrationRequest req) {
+    nameError = req.name.trim().isEmpty ? 'Full name is required' : null;
+    addressError =
+        req.address.trim().isEmpty ? 'Please select your barangay' : null;
+    phoneError =
+        req.contactNumber.trim().isEmpty ? 'Contact number is required' : null;
+    return nameError == null && addressError == null && phoneError == null;
+  }
+
   Future<RegistrationResponse?> submitRegistration({
     required String email,
     required String name,
@@ -68,6 +81,11 @@ class RegistrationController extends ChangeNotifier {
       address: address,
       contactNumber: contactNumber,
     );
+
+    if (!_validateFields(req)) {
+      notifyListeners();
+      return null;
+    }
 
     if (!req.isValid) {
       _errorMessage = "Please enter valid registration details.";
@@ -100,7 +118,6 @@ class RegistrationController extends ChangeNotifier {
             return null;
           }
 
-          // ✅ only mark success AFTER everything is saved
           _lastResponse = resp;
           break;
 

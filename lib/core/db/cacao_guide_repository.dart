@@ -188,7 +188,6 @@ class CacaoGuideRepository {
     final monitoringPlan = await getMonitoringPlan(diseaseKey, severityLevel);
     final recommendations = await getRecommendations(diseaseKey, severityLevel);
 
-    // 4. Return a bundled map ready for the UI
     return {
       'is_disease': true,
       'ml_prediction': mlPrediction,

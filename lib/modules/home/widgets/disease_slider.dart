@@ -16,7 +16,6 @@ class DiseaseSlider extends StatefulWidget {
 
 class _DiseaseSliderState extends State<DiseaseSlider> {
   late PageController _pageController;
-  // Start tracking from index 1 (the 2nd image)
   int _activePage = 1;
 
   @override
@@ -85,7 +84,6 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // 1. Background Image
               Image.asset(
                 widget.diseaseData[index]["image"]!,
                 fit: BoxFit.cover,
@@ -111,7 +109,6 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
                 child: _buildBadge(),
               ),
 
-              // 4. Information Layer
               Positioned(
                 bottom: 15,
                 left: 15,
@@ -133,7 +130,7 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
                     Text(
                       widget.diseaseData[index]["origin"] ?? "Global",
                       style: TextStyle(
-                        color: Colors.white.withAlpha(204), // 0.8 * 255 = 204
+                        color: Colors.white.withAlpha(204),
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
@@ -152,9 +149,9 @@ class _DiseaseSliderState extends State<DiseaseSlider> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(51), // 0.2 * 255 = 51
+        color: Colors.white.withAlpha(51),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withAlpha(77)), // 0.3 * 255 = 77
+        border: Border.all(color: Colors.white.withAlpha(77)),
       ),
       child: const Text(
         "COMMON DISEASE",

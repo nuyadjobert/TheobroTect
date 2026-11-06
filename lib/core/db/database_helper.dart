@@ -35,8 +35,6 @@ class DatabaseHelper {
     }
   }
 
-  /// Scan history must outlive the `users` row, which is removed on logout.
-  /// SQLite cannot drop a foreign key in place, so the table is rebuilt.
   Future<void> _dropScanHistoryUserForeignKey(Database db) async {
     await db.execute('ALTER TABLE scan_history RENAME TO scan_history_old');
     await db.execute(DbSchemas.createScanHistoryTable);
@@ -48,14 +46,12 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // 1. Core Tables
     await db.execute(DbSchemas.createUsersTable);
     await db.execute(DbSchemas.createScanHistoryTable);
     for (String query in DbSchemas.createScanIndexes) {
       await db.execute(query);
     }
 
-    // 2. Guide Tables
     await db.execute(DbSchemas.createGuideDiseasesTable);
     await db.execute(DbSchemas.createGuideSeveritiesTable);
     await db.execute(DbSchemas.createGuideMonitoringPlansTable);

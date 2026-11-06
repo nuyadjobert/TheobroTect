@@ -31,11 +31,10 @@ class ScanDetailsSheet extends StatefulWidget {
 class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
   String _activeLang = "en";
 
-  // Refined Color Palette
   static const Color forestGreen = Color(0xFF1B3022);
   static const Color leafGreen = Color(0xFF2D6A4F);
-  static const Color creamBg = Color(0xFFFBFBF9); // Slightly cleaner cream
-  static const Color dangerRed = Color(0xFFD9534F); // For infections
+  static const Color creamBg = Color(0xFFFBFBF9);
+  static const Color dangerRed = Color(0xFFD9534F);
 
   String _formatDate(String? rawDate) {
     if (rawDate == null) return "N/A";
@@ -62,14 +61,13 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
         final String desc = c.description[lang] ?? '';
 
         return Container(
-          height: MediaQuery.of(context).size.height * 0.92, // Slightly taller
+          height: MediaQuery.of(context).size.height * 0.92,
           decoration: const BoxDecoration(
             color: creamBg,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
             children: [
-              // --- DRAG HANDLE ---
               const SizedBox(height: 12),
               Container(
                 width: 48,
@@ -87,11 +85,9 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // --- IMAGE ---
                       _buildImageFrame(imagePath, isLocal),
                       const SizedBox(height: 24),
 
-                      // --- BADGE & LANG TOGGLE ---
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -101,7 +97,6 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
                       ),
                       const SizedBox(height: 16),
 
-                      // --- TITLE & DATE ---
                       Text(
                         title, 
                         style: const TextStyle(
@@ -129,12 +124,10 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
                       ),
                       const SizedBox(height: 24),
 
-                      // --- DESCRIPTION CARD ---
                       if (desc.isNotEmpty) _buildDescriptionCard(desc),
 
                       const SizedBox(height: 24),
 
-                      // --- TREATMENT PLAN ---
                       TreatmentPlanSection(
                         recommendations: c.recommendations,
                         lang: lang,
@@ -151,8 +144,6 @@ class _ScanDetailsSheetState extends State<ScanDetailsSheet> {
       },
     );
   }
-
-  // --- HELPER WIDGETS ---
 
   Widget _buildImageFrame(String path, bool isLocal) {
     return Container(

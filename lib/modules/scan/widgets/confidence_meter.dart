@@ -38,13 +38,12 @@ class ConfidenceMeter extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold, 
                 fontSize: 14,
-                color: primaryColor.withAlpha(153), // 0.6 * 255 = 153
+                color: primaryColor.withAlpha(153),
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        // Modern Gradient Progress Bar
         Stack(
           children: [
             Container(
@@ -62,14 +61,14 @@ class ConfidenceMeter extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      primaryColor.withAlpha(153), // 0.6 * 255 = 153
+                      primaryColor.withAlpha(153),
                       primaryColor,
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withAlpha(77), // 0.3 * 255 = 77
+                      color: primaryColor.withAlpha(77),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -80,7 +79,6 @@ class ConfidenceMeter extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        // Dynamic Status Badge
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(

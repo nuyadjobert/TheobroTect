@@ -25,7 +25,6 @@ class SaveScanController extends ChangeNotifier {
   String? get saveError => _saveError;
   bool get isSaved => _isSaved;
 
-  /// True when GPS is low/offline — UI should show the map picker sheet
   bool get needsManualLocation => locationPicker.needsManualPick;
 
   Future<void> detectLocation() => locationPicker.detectLocation();

@@ -18,7 +18,7 @@ class _TheobroTectLoaderState extends State<TheobroTectLoader>
     _controller = AnimationController(
       duration: const Duration(milliseconds: 2500),
       vsync: this,
-    )..repeat(); // Continues the circular reveal
+    )..repeat();
 
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.linear),
@@ -35,12 +35,11 @@ class _TheobroTectLoaderState extends State<TheobroTectLoader>
 Widget build(BuildContext context) {
   return Center(
     child: SizedBox(
-      height: 600, // Increased to accommodate bigger text
-      width: 600,  // Increased to accommodate bigger text
+      height: 600,
+      width: 600,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 1. THE CIRCLE FRAME (1.png)
           Positioned(
             left: -13, 
             child: AnimatedBuilder(
